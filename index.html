@@ -647,6 +647,10 @@ const canvas=document.getElementById('main-canvas');
 const ctx=canvas.getContext('2d');
 const wrap=document.getElementById('canvas-wrap');
 
+const vCanvas=document.getElementById('viewer-canvas');
+const vCtx=vCanvas.getContext('2d');
+const vWrap=document.getElementById('viewer-wrap');
+
 function resizeCanvas(){canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;redraw();}
 window.addEventListener('resize',()=>{resizeCanvas();resizeViewerCanvas();});
 resizeCanvas();
@@ -803,10 +807,6 @@ function drawVertexHandles(){
 // ═══════════════════════════════════════════════════════════════
 //  VIEWER CANVAS
 // ═══════════════════════════════════════════════════════════════
-const vCanvas=document.getElementById('viewer-canvas');
-const vCtx=vCanvas.getContext('2d');
-const vWrap=document.getElementById('viewer-wrap');
-
 function resizeViewerCanvas(){
   const w=vWrap.clientWidth||window.innerWidth;
   const h=vWrap.clientHeight||(window.innerHeight-80);
