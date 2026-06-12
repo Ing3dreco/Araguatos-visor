@@ -416,7 +416,7 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 // ═══════════════════════════════════════════════════════════════
 //  ⚙️  CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════════════
-const PLANO_URL         = 'https://github.com/Ing3dreco/Araguatos-visor/blob/main/Araguatos%20Lotes.png?raw=true';
+const PLANO_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
 const EDITOR_HASH       = '0b27ac7c3f03e61edeb9c5d4a831e9aa49773ad5d753b7a3f86926400b1cba20';
 const SUPABASE_URL      = 'https://ninaxwddpqqgaflacdfm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
@@ -577,28 +577,35 @@ function cargarImagenDesdeURL(url) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
-    const onSuccess = () => {
+    img.onload = () => {
       imgEl = img;
-      // ── FIX: Obtener dimensiones reales (nunca dejar en 1×1) ──
-      imgW = (img.naturalWidth  > 1) ? img.naturalWidth  : 1200;
-      imgH = (img.naturalHeight > 1) ? img.naturalHeight : 900;
+      // raw.githubusercontent.com siempre devuelve dimensiones reales
+      imgW = img.naturalWidth  || 1920;
+      imgH = img.naturalHeight || 1080;
       console.log('[Imagen] Cargada OK:', imgW, 'x', imgH);
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
       resolve();
     };
 
-    img.onload = onSuccess;
-    img.onerror = () => {
-      // Si falla CORS, intentar sin crossOrigin (solo lectura, sin exportar)
-      console.warn('[Imagen] CORS falló, intentando sin crossOrigin…');
+    img.onerror = (e) => {
+      console.error('[Imagen] Error al cargar:', url, e);
+      // Fallback: intentar sin crossOrigin
       const img2 = new Image();
-      img2.onload = () => { imgEl=img2; imgW=img2.naturalWidth||1200; imgH=img2.naturalHeight||900; document.getElementById('placeholder').classList.add('hidden'); document.getElementById('v-placeholder').classList.add('hidden'); console.log('[Imagen] Cargada sin CORS:', imgW,'x',imgH); resolve(); };
-      img2.onerror = () => { console.error('[Imagen] No se pudo cargar:', url); resolve(); };
-      img2.src = url;
+      img2.onload = () => {
+        imgEl = img2;
+        imgW = img2.naturalWidth || 1920;
+        imgH = img2.naturalHeight || 1080;
+        document.getElementById('placeholder').classList.add('hidden');
+        document.getElementById('v-placeholder').classList.add('hidden');
+        console.warn('[Imagen] Cargada sin CORS:', imgW, 'x', imgH);
+        resolve();
+      };
+      img2.onerror = () => { console.error('[Imagen] Falló todo:', url); resolve(); };
+      img2.src = url;  // Sin crossOrigin, sin cache-bust
     };
 
-    img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    img.src = url;  // ← Sin ?_t=... que añade una query string y puede romper la caché/CORS
   });
 }
 
