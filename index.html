@@ -207,7 +207,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 #fade.fading{opacity:1;pointer-events:all}
 #v-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none}
 #v-placeholder.hidden{display:none}
-/* SUPABASE STATUS TOAST */
 #sb-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(6,8,13,.95);border:1px solid var(--bdr2);border-radius:20px;padding:8px 18px;font-size:11px;color:var(--txt2);z-index:9998;display:none;align-items:center;gap:8px;backdrop-filter:blur(12px);white-space:nowrap}
 #sb-toast.show{display:flex}
 #sb-toast.ok{border-color:rgba(46,204,113,.4);color:var(--green)}
@@ -416,7 +415,7 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 // ═══════════════════════════════════════════════════════════════
 //  ⚙️  CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════════════
-const PLANO_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
+const PLANO_URL         = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
 const EDITOR_HASH       = '0b27ac7c3f03e61edeb9c5d4a831e9aa49773ad5d753b7a3f86926400b1cba20';
 const SUPABASE_URL      = 'https://ninaxwddpqqgaflacdfm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
@@ -433,7 +432,7 @@ let showPrice = false, showPriceViewer = false;
 let imgOriginalDataUrl = null;
 let svgRawText = null;
 
-// Editor
+// Editor state
 let mode = 'draw', activeLayer = 'lote';
 let drawing = false, drawPts = [], mousePos = null;
 let selectedId = null, hoveredId = null;
@@ -442,7 +441,7 @@ let vertexSelectedId = null, vtxDragging = false, vtxDragIdx = -1;
 let vtxDragOffset = {x:0,y:0}, origPoints = null;
 let currentRot = 0, currentScl = 100, lastClickTime = 0;
 
-// Viewer
+// Viewer state
 let vHoveredId = null, vSelectedId = null;
 let viewerSoundOn = false, viewerFxOn = true;
 
@@ -452,6 +451,18 @@ let eZoomLevel=1,ePanX=0,ePanY=0,eIsPanning=false,ePanStart={x:0,y:0};
 
 // Audio
 let audioCtx=null,ambNodes=[];
+
+// ═══════════════════════════════════════════════════════════════
+//  CANVAS REFERENCES — declaradas aquí para que todas las
+//  funciones las encuentren independientemente del orden de llamada
+// ═══════════════════════════════════════════════════════════════
+const canvas  = document.getElementById('main-canvas');
+const ctx     = canvas.getContext('2d');
+const wrap    = document.getElementById('canvas-wrap');
+
+const vCanvas = document.getElementById('viewer-canvas');
+const vCtx    = vCanvas.getContext('2d');
+const vWrap   = document.getElementById('viewer-wrap');
 
 // ═══════════════════════════════════════════════════════════════
 //  AUTH
@@ -484,134 +495,108 @@ function sbToast(msg,type='ok',duration=3000){
   if(duration>0)_toastTimer=setTimeout(()=>{el.className='';},duration);
 }
 
-// ── FIX: Normaliza puntos que vienen de Supabase JSONB ──────────
-// Supabase puede devolver [{x,y}], [[x,y]], o strings
-function normalizePts(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.map(p => {
-    if (p && typeof p === 'object' && !Array.isArray(p) && 'x' in p)
-      return { x: +p.x, y: +p.y };
-    if (Array.isArray(p) && p.length >= 2)
-      return { x: +p[0], y: +p[1] };
+function normalizePts(raw){
+  if(!Array.isArray(raw))return[];
+  return raw.map(p=>{
+    if(p&&typeof p==='object'&&!Array.isArray(p)&&'x' in p)return{x:+p.x,y:+p.y};
+    if(Array.isArray(p)&&p.length>=2)return{x:+p[0],y:+p[1]};
     return null;
-  }).filter(p => p !== null && isFinite(p.x) && isFinite(p.y));
+  }).filter(p=>p!==null&&isFinite(p.x)&&isFinite(p.y));
 }
 
-async function cargarDesdeSB() {
-  sbToast('Cargando datos…', 'saving', 0);
-  try {
-    const { data, error } = await getSbVisor()
-      .from('lotes').select('*').order('id');
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      sbToast('Sin datos en la tabla lotes', 'ok', 4000);
-      return;
-    }
-    items = data.map(r => ({
-      ...r,
-      desc:   r.description || r.desc || '',
-      points: normalizePts(r.points || []),
-    }));
-    nextId = Math.max(...items.map(i => i.id)) + 1;
-    console.log('[SB] Cargados:', items.length, 'elementos');
-    console.log('[SB] Muestra puntos item[0]:', items[0]?.points?.slice(0,2));
-    console.log('[SB] imgW/imgH al cargar:', imgW, imgH);
-    redraw(); renderLayerList(); redrawViewer();
-    sbToast('✓ ' + items.length + ' elementos cargados', 'ok');
-  } catch(err) {
-    sbToast('Error: ' + err.message, 'err', 8000);
-    console.error('[Supabase]', err);
-  }
+async function cargarDesdeSB(){
+  sbToast('Cargando datos…','saving',0);
+  try{
+    const{data,error}=await getSbVisor().from('lotes').select('*').order('id');
+    if(error)throw error;
+    if(!data||data.length===0){sbToast('Sin datos en la tabla lotes','ok',4000);return;}
+    items=data.map(r=>({...r,desc:r.description||r.desc||'',points:normalizePts(r.points||[])}));
+    nextId=Math.max(...items.map(i=>i.id))+1;
+    console.log('[SB] Cargados:',items.length,'elementos');
+    console.log('[SB] Muestra puntos item[0]:',items[0]?.points?.slice(0,2));
+    console.log('[SB] imgW/imgH al cargar:',imgW,imgH);
+    redraw();renderLayerList();redrawViewer();
+    sbToast('✓ '+items.length+' elementos cargados','ok');
+  }catch(err){sbToast('Error: '+err.message,'err',8000);console.error('[Supabase]',err);}
 }
 
-async function guardarEnSB() {
+async function guardarEnSB(){
   const btn=document.getElementById('btn-save-sb');
   btn.textContent='⏳ Guardando…';btn.disabled=true;
   sbToast('Guardando en Supabase…','saving',0);
-  try {
+  try{
     const rows=items.map(item=>buildRow(item));
     const{error}=await getSbEditor().from('lotes').upsert(rows,{onConflict:'id'});
     if(error)throw error;
     sbToast('✓ '+rows.length+' elementos guardados','ok');
-  } catch(err){
-    sbToast('Error al guardar: '+err.message,'err',7000);
-    console.error('[Supabase]',err);
-  } finally{btn.textContent='☁️ Guardar en Supabase';btn.disabled=false;}
+  }catch(err){sbToast('Error al guardar: '+err.message,'err',7000);console.error('[Supabase]',err);}
+  finally{btn.textContent='☁️ Guardar en Supabase';btn.disabled=false;}
 }
 
-async function guardarLoteEnSB(item) {
+async function guardarLoteEnSB(item){
   try{
     const{error}=await getSbEditor().from('lotes').upsert([buildRow(item)],{onConflict:'id'});
     if(error)throw error;
     sbToast('✓ Guardado','ok');
-  } catch(err){sbToast('Error: '+err.message,'err',5000);console.error('[SB]',err);}
+  }catch(err){sbToast('Error: '+err.message,'err',5000);console.error('[SB]',err);}
 }
 
-async function eliminarLoteSB(id) {
+async function eliminarLoteSB(id){
   try{
     const{error}=await getSbEditor().from('lotes').delete().eq('id',id);
     if(error)throw error;
     sbToast('Elemento eliminado','ok');
-  } catch(err){sbToast('Error al eliminar: '+err.message,'err',5000);}
+  }catch(err){sbToast('Error al eliminar: '+err.message,'err',5000);}
 }
 
-function buildRow(item) {
-  return {
-    id: item.id, type: item.type||'lote',
-    // ── FIX: guardar puntos como [{x,y}] explícito ──
-    points: (item.points||[]).map(p=>({x:+p.x,y:+p.y})),
-    mzName: item.mzName||'', num: item.num||'', mzRef: item.mzRef||'',
-    area: item.area||'', price: item.price||'', status: item.status||'available',
-    frente: item.frente||'', fondo: item.fondo||'', orientacion: item.orientacion||'',
-    description: item.desc||'', notas: item.notas||'', _svgId: item._svgId||'',
+function buildRow(item){
+  return{
+    id:item.id,type:item.type||'lote',
+    points:(item.points||[]).map(p=>({x:+p.x,y:+p.y})),
+    mzName:item.mzName||'',num:item.num||'',mzRef:item.mzRef||'',
+    area:item.area||'',price:item.price||'',status:item.status||'available',
+    frente:item.frente||'',fondo:item.fondo||'',orientacion:item.orientacion||'',
+    description:item.desc||'',notas:item.notas||'',_svgId:item._svgId||'',
   };
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  IMAGEN
 // ═══════════════════════════════════════════════════════════════
-
-// ── FIX: Carga la imagen desde URL con manejo robusto de CORS y dimensiones ──
-function cargarImagenDesdeURL(url) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-
-    img.onload = () => {
-      imgEl = img;
-      // raw.githubusercontent.com siempre devuelve dimensiones reales
-      imgW = img.naturalWidth  || 1920;
-      imgH = img.naturalHeight || 1080;
-      console.log('[Imagen] Cargada OK:', imgW, 'x', imgH);
+function cargarImagenDesdeURL(url){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      imgEl=img;
+      imgW=img.naturalWidth||1920;
+      imgH=img.naturalHeight||1080;
+      console.log('[Imagen] Cargada OK:',imgW,'x',imgH);
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
       resolve();
     };
-
-    img.onerror = (e) => {
-      console.error('[Imagen] Error al cargar:', url, e);
-      // Fallback: intentar sin crossOrigin
-      const img2 = new Image();
-      img2.onload = () => {
-        imgEl = img2;
-        imgW = img2.naturalWidth || 1920;
-        imgH = img2.naturalHeight || 1080;
+    img.onerror=(e)=>{
+      console.error('[Imagen] Error al cargar:',url,e);
+      const img2=new Image();
+      img2.onload=()=>{
+        imgEl=img2;
+        imgW=img2.naturalWidth||1920;
+        imgH=img2.naturalHeight||1080;
         document.getElementById('placeholder').classList.add('hidden');
         document.getElementById('v-placeholder').classList.add('hidden');
-        console.warn('[Imagen] Cargada sin CORS:', imgW, 'x', imgH);
+        console.warn('[Imagen] Cargada sin CORS:',imgW,'x',imgH);
         resolve();
       };
-      img2.onerror = () => { console.error('[Imagen] Falló todo:', url); resolve(); };
-      img2.src = url;  // Sin crossOrigin, sin cache-bust
+      img2.onerror=()=>{console.error('[Imagen] Falló todo:',url);resolve();};
+      img2.src=url;
     };
-
-    img.src = url;  // ← Sin ?_t=... que añade una query string y puede romper la caché/CORS
+    img.src=url;
   });
 }
 
-// Carga imagen desde archivo local (editor)
-document.getElementById('img-file').addEventListener('change', e => {
-  const f=e.target.files[0]; if(!f) return;
+document.getElementById('img-file').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
   const reader=new FileReader();
   reader.onload=ev=>{
     imgOriginalDataUrl=ev.target.result;
@@ -626,37 +611,39 @@ document.getElementById('img-file').addEventListener('change', e => {
 // ═══════════════════════════════════════════════════════════════
 //  WINDOW SWITCHING
 // ═══════════════════════════════════════════════════════════════
-function switchWindow(win) {
+function switchWindow(win){
   document.getElementById('auth-gate').classList.add('hidden');
   document.querySelectorAll('.win-tab').forEach(t=>t.classList.toggle('active',t.dataset.win===win));
   document.getElementById('editor-window').classList.toggle('active',win==='editor');
   document.getElementById('viewer-window').classList.toggle('active',win==='viewer');
   if(win==='viewer'){
-  setTimeout(()=>{
-    vCanvas.width=vWrap.clientWidth||window.innerWidth;
-    vCanvas.height=vWrap.clientHeight||(window.innerHeight-80);
-    redrawViewer();
-  },60);
-}
+    setTimeout(()=>{
+      const w=vWrap.clientWidth||window.innerWidth;
+      const h=vWrap.clientHeight||(window.innerHeight-80);
+      if(w>0&&h>0){vCanvas.width=w;vCanvas.height=h;}
+      redrawViewer();
+    },60);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  CANVAS SETUP
+//  CANVAS RESIZE
 // ═══════════════════════════════════════════════════════════════
-const canvas=document.getElementById('main-canvas');
-const ctx=canvas.getContext('2d');
-const wrap=document.getElementById('canvas-wrap');
-
-const vCanvas=document.getElementById('viewer-canvas');
-const vCtx=vCanvas.getContext('2d');
-const vWrap=document.getElementById('viewer-wrap');
-
 function resizeCanvas(){canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;redraw();}
-window.addEventListener('resize',()=>{resizeCanvas();resizeViewerCanvas();});
-resizeCanvas();
-resizeViewerCanvas();
 
-function getImgRect(c,mode_cover) {
+function resizeViewerCanvas(){
+  const w=vWrap.clientWidth||window.innerWidth;
+  const h=vWrap.clientHeight||(window.innerHeight-80);
+  if(w>0&&h>0){vCanvas.width=w;vCanvas.height=h;}
+  redrawViewer();
+}
+
+window.addEventListener('resize',()=>{resizeCanvas();resizeViewerCanvas();});
+
+// ═══════════════════════════════════════════════════════════════
+//  COORDINATE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function getImgRect(c,mode_cover){
   const cw=c.width,ch=c.height;
   if(!imgEl)return{x:0,y:0,w:cw,h:ch};
   const ir=imgW/imgH,wr=cw/ch;
@@ -671,6 +658,7 @@ function canvasToImg(cx,cy){
   const r=getImgRect(canvas,false);
   return{x:(lx-r.x)/r.w*imgW,y:(ly-r.y)/r.h*imgH};
 }
+
 function imgToCanvas(ix,iy,c,cover){
   const r=getImgRect(c||canvas,cover||false);
   return{x:r.x+ix/imgW*r.w,y:r.y+iy/imgH*r.h};
@@ -700,6 +688,7 @@ function onMouseDown(e){
   if(mode==='vertex'&&vertexSelectedId!==null){const item=items.find(i=>i.id===vertexSelectedId);if(!item)return;const hitR=8/getImgRect(canvas,false).w*imgW;for(let i=0;i<item.points.length;i++){const p=item.points[i];if(Math.hypot(p.x-ip.x,p.y-ip.y)<hitR*2){if(e.shiftKey&&item.points.length>3){item.points.splice(i,1);redraw();return;}vtxDragging=true;vtxDragIdx=i;return;}}for(let i=0;i<item.points.length;i++){const a=item.points[i],b=item.points[(i+1)%item.points.length];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;if(Math.hypot(mx-ip.x,my-ip.y)<hitR*2.5){item.points.splice(i+1,0,{x:mx,y:my});vtxDragging=true;vtxDragIdx=i+1;redraw();return;}}const cx=item.points.reduce((s,p)=>s+p.x,0)/item.points.length;const cy=item.points.reduce((s,p)=>s+p.y,0)/item.points.length;if(Math.hypot(cx-ip.x,cy-ip.y)<hitR*3){vtxDragging=true;vtxDragIdx=-1;vtxDragOffset={lastX:ip.x,lastY:ip.y};}}
 }
 function onMouseUp(){if(dragging){dragging=false;canvas.style.cursor='pointer';}if(vtxDragging){vtxDragging=false;vtxDragIdx=-1;}}
+
 function onCanvasClick(e){
   const pos=evPos(e);const ip=canvasToImg(pos.x,pos.y);const now=Date.now();
   if(now-lastClickTime<280){lastClickTime=0;return;}lastClickTime=now;
@@ -729,18 +718,16 @@ function redraw(){
   ctx.clearRect(0,0,cw,ch);ctx.fillStyle='#04050A';ctx.fillRect(0,0,cw,ch);
   ctx.save();ctx.translate(ePanX,ePanY);ctx.scale(eZoomLevel,eZoomLevel);
   if(imgEl){const r=getImgRect(canvas,false);ctx.drawImage(imgEl,r.x,r.y,r.w,r.h);}
-  items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(ctx,i,canvas,false));
-  items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(ctx,i,canvas,false));
+  items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(ctx,i,canvas,false,false));
+  items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(ctx,i,canvas,false,false));
   if(drawing&&drawPts.length>0)drawPreview();
   if(mode==='vertex'&&vertexSelectedId!==null)drawVertexHandles();
   ctx.restore();updateCounters();
 }
 
-// ── FIX CORE: drawItemOnCtx ─────────────────────────────────────
-// El viewer llama esto dentro de un contexto ya transformado (save/translate/scale).
-// imgToCanvas devuelve coords en espacio pre-zoom (relativo al canvas sin transform),
-// lo cual es CORRECTO porque el ctx ya tiene el transform aplicado.
-// El único cambio necesario: compensar el lineWidth por el zoom en viewer.
+// ═══════════════════════════════════════════════════════════════
+//  DRAW ITEM (editor + viewer)
+// ═══════════════════════════════════════════════════════════════
 function drawItemOnCtx(c,item,canvasEl,isCover,isViewerMode,vSel,vHov){
   if(!item.points||item.points.length<3)return;
   const pts=item.points.map(p=>imgToCanvas(p.x,p.y,canvasEl,isCover));
@@ -748,19 +735,14 @@ function drawItemOnCtx(c,item,canvasEl,isCover,isViewerMode,vSel,vHov){
   const isHovered=isViewerMode?(item.id===vHov):(item.id===hoveredId);
   const isMz=item.type==='manzana';
 
-  // Compute fill/stroke
   let fill,stroke,lw;
   if(isMz){fill=isSelected?'rgba(201,168,76,0.10)':'rgba(201,168,76,0.04)';stroke=isSelected?'#E8CC82':isHovered?'rgba(232,204,130,0.7)':'rgba(201,168,76,0.35)';lw=isSelected?3:isHovered?2.5:2;}
   else if(item.status==='sold'){fill=isHovered||isSelected?'rgba(46,204,113,0.45)':'rgba(46,204,113,0.22)';stroke=isSelected?'#2ECC71':isHovered?'rgba(46,204,113,0.9)':'#2ECC71';lw=isSelected?3:1.8;}
   else if(item.status==='reserved'){fill=isHovered||isSelected?'rgba(243,156,18,0.42)':'rgba(243,156,18,0.22)';stroke=isSelected?'#F39C12':isHovered?'rgba(243,156,18,0.9)':'#F39C12';lw=isSelected?3:1.8;}
   else{fill=isSelected?'rgba(201,168,76,0.14)':isHovered?'rgba(255,255,255,0.13)':'rgba(255,255,255,0.06)';stroke=isSelected?'#C9A84C':isHovered?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.40)';lw=isSelected?3:1.5;}
 
-  // ── FIX: compensar lineWidth por el zoom del contexto ──
-  // El canvas tiene el transform save/scale ya aplicado al contexto,
-  // así que lineWidth se escala automáticamente. Para que se vea igual
-  // en todos los niveles de zoom, dividimos por el factor de zoom activo.
-  const zoomFactor = isViewerMode ? vZoomLevel : eZoomLevel;
-  const lwActual = lw / zoomFactor;
+  const zoomFactor=isViewerMode?vZoomLevel:eZoomLevel;
+  const lwActual=lw/zoomFactor;
 
   c.beginPath();c.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(p=>c.lineTo(p.x,p.y));c.closePath();
   c.fillStyle=fill;c.fill();
@@ -773,8 +755,7 @@ function drawItemOnCtx(c,item,canvasEl,isCover,isViewerMode,vSel,vHov){
 
   const baseMz=isViewerMode?16:13;const baseAt=isViewerMode?11:10;
   const fs=isMz?Math.max(baseMz,Math.min(baseMz+4,pts.length*1.8)):Math.max(baseAt,Math.min(baseAt+3,pts.length*1.2));
-  // ── FIX: ajustar tamaño fuente por zoom ──
-  const fsActual = fs / zoomFactor;
+  const fsActual=fs/zoomFactor;
 
   c.font=`${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
   c.textAlign='center';c.textBaseline='middle';
@@ -805,45 +786,29 @@ function drawVertexHandles(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIEWER CANVAS
+//  REDRAW VIEWER
 // ═══════════════════════════════════════════════════════════════
-function resizeViewerCanvas(){
-  const w=vWrap.clientWidth||window.innerWidth;
-  const h=vWrap.clientHeight||(window.innerHeight-80);
-  if(w>0&&h>0){vCanvas.width=w;vCanvas.height=h;}
-  redrawViewer();
-}
-resizeViewerCanvas();
-
-// ── FIX PRINCIPAL: redrawViewer correcto ─────────────────────────
-// El zoom/pan se aplica al contexto con save/translate/scale.
-// drawItemOnCtx recibe vCanvas y cover=true, y calcula pts en espacio
-// pre-zoom (coordenadas relativas al canvas sin transformar).
-// El context ya escalado lo lleva al lugar correcto en pantalla.
 function redrawViewer(){
   const cw=vCanvas.width,ch=vCanvas.height;
   vCtx.clearRect(0,0,cw,ch);
   vCtx.fillStyle='#04050A';vCtx.fillRect(0,0,cw,ch);
   if(!imgEl){updateViewerCounters();return;}
-
   vCtx.save();
   vCtx.translate(vPanX,vPanY);
   vCtx.scale(vZoomLevel,vZoomLevel);
-
   const r=getImgRect(vCanvas,false);
   vCtx.drawImage(imgEl,r.x,r.y,r.w,r.h);
-
-  // Dibujar manzanas primero (fondo), lotes encima
   items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,false,true,vSelectedId,vHoveredId));
   items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,false,true,vSelectedId,vHoveredId));
-
   vCtx.restore();
   updateViewerCounters();
 }
 
 function syncViewer(){redrawViewer();}
 
-// ── Editor zoom/pan ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  EDITOR ZOOM / PAN
+// ═══════════════════════════════════════════════════════════════
 function eZoom(factor){const cx=canvas.width/2,cy=canvas.height/2;const newZ=Math.min(8,Math.max(0.15,eZoomLevel*factor));ePanX=cx-(cx-ePanX)*(newZ/eZoomLevel);ePanY=cy-(cy-ePanY)*(newZ/eZoomLevel);eZoomLevel=newZ;document.getElementById('e-zoom-lbl').textContent=Math.round(eZoomLevel*100)+'%';redraw();}
 function eZoomReset(){eZoomLevel=1;ePanX=0;ePanY=0;document.getElementById('e-zoom-lbl').textContent='100%';redraw();}
 canvas.addEventListener('wheel',e=>{e.preventDefault();const pos=evPos(e,canvas);const factor=e.deltaY<0?1.12:0.89;const newZ=Math.min(8,Math.max(0.15,eZoomLevel*factor));ePanX=pos.x-(pos.x-ePanX)*(newZ/eZoomLevel);ePanY=pos.y-(pos.y-ePanY)*(newZ/eZoomLevel);eZoomLevel=newZ;document.getElementById('e-zoom-lbl').textContent=Math.round(eZoomLevel*100)+'%';redraw();},{passive:false});
@@ -851,7 +816,9 @@ canvas.addEventListener('mousedown',e=>{if(e.button===1){e.preventDefault();eIsP
 canvas.addEventListener('mousemove',e=>{if(eIsPanning){ePanX=e.clientX-ePanStart.x;ePanY=e.clientY-ePanStart.y;redraw();}});
 canvas.addEventListener('mouseup',e=>{if(e.button===1)eIsPanning=false;});
 
-// ── Viewer zoom/pan ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  VIEWER ZOOM / PAN
+// ═══════════════════════════════════════════════════════════════
 function vZoom(factor){const cx=vCanvas.width/2,cy=vCanvas.height/2;const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));vPanX=cx-(cx-vPanX)*(newZ/vZoomLevel);vPanY=cy-(cy-vPanY)*(newZ/vZoomLevel);vZoomLevel=newZ;document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';redrawViewer();}
 function vZoomReset(){vZoomLevel=1;vPanX=0;vPanY=0;document.getElementById('v-zoom-lbl').textContent='100%';redrawViewer();}
 vCanvas.addEventListener('wheel',e=>{e.preventDefault();const pos=evPos(e,vCanvas);const factor=e.deltaY<0?1.12:0.89;const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));vPanX=pos.x-(pos.x-vPanX)*(newZ/vZoomLevel);vPanY=pos.y-(pos.y-vPanY)*(newZ/vZoomLevel);vZoomLevel=newZ;document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';redrawViewer();},{passive:false});
@@ -860,11 +827,12 @@ vCanvas.addEventListener('mousemove',e=>{if(vIsPanning){vPanX=e.clientX-vPanStar
 vCanvas.addEventListener('mouseup',e=>{if(vIsPanning){vIsPanning=false;vCanvas.style.cursor='default';}});
 vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-// ── Viewer mouse events ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  VIEWER MOUSE EVENTS
+// ═══════════════════════════════════════════════════════════════
 vCanvas.addEventListener('mousemove',onViewerMouseMove);
 vCanvas.addEventListener('click',onViewerClick);
 
-// ── FIX: vImgCoord corrige por zoom/pan antes de calcular la posición en imgSpace ──
 function vImgCoord(pos){
   const cx=(pos.x-vPanX)/vZoomLevel;
   const cy=(pos.y-vPanY)/vZoomLevel;
@@ -1009,7 +977,7 @@ function renderLayerList(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  PRICE/TOGGLES
+//  PRICE / TOGGLES
 // ═══════════════════════════════════════════════════════════════
 document.getElementById('tog-price').addEventListener('change',e=>{showPrice=e.target.checked;});
 document.getElementById('tog-price-v').addEventListener('change',e=>{showPriceViewer=e.target.checked;redrawViewer();});
@@ -1027,7 +995,9 @@ document.getElementById('btn-load-json').addEventListener('click',async()=>{try{
 
 function loadImageFromBase64(dataUrl){return new Promise(resolve=>{const img=new Image();img.onload=()=>{imgEl=img;imgW=img.naturalWidth;imgH=img.naturalHeight;imgOriginalDataUrl=dataUrl;document.getElementById('placeholder').classList.add('hidden');document.getElementById('v-placeholder').classList.add('hidden');resolve();};img.src=dataUrl;});}
 
-// ── SVG/JSON unified loader ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  SVG / JSON LOADER
+// ═══════════════════════════════════════════════════════════════
 document.getElementById('svg-json-file').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';const name=f.name.toLowerCase();
   if(name.endsWith('.json')){const reader=new FileReader();reader.onload=async ev=>{try{const data=JSON.parse(ev.target.result);items=data.items||[];nextId=data.nextId||(items.length+1);selectedId=null;vertexSelectedId=null;document.getElementById('edit-hint').style.display='block';document.getElementById('edit-form').style.display='none';if(data.image&&!imgEl)await loadImageFromBase64(data.image);redraw();renderLayerList();syncViewer();sbToast('✅ Proyecto cargado','ok');}catch(err){alert('JSON inválido: '+err.message);}};reader.readAsText(f);return;}
@@ -1068,37 +1038,31 @@ function playConfirm(){const ctx=getAudioCtx();[392,523.25,659.25].forEach((f,i)
 function toggleViewerSound(){viewerSoundOn=!viewerSoundOn;document.getElementById('v-sound-btn').classList.toggle('on',viewerSoundOn);if(viewerSoundOn){getAudioCtx();startAmbient();}else stopAmbient();}
 function toggleViewerFx(){viewerFxOn=!viewerFxOn;document.getElementById('v-fx-btn').classList.toggle('on',viewerFxOn);if(viewerFxOn)getAudioCtx();}
 
-// Guardar Supabase
 document.getElementById('btn-save-sb').addEventListener('click',guardarEnSB);
 
 // ═══════════════════════════════════════════════════════════════
-//  INIT — Secuencia de arranque correcta
-//  ── FIX CLAVE: cargar imagen PRIMERO, luego datos, luego redibujar
+//  INIT — orden correcto: canvas → imagen → datos → dibujar
 // ═══════════════════════════════════════════════════════════════
 switchTab('layers');
 renderLayerList();
-redraw();
+resizeCanvas();
+resizeViewerCanvas();  // vCanvas y vWrap ya están declarados arriba
 document.getElementById('v-fx-btn').classList.add('on');
 
-(async function init() {
-  // 1. Cargar imagen del plano desde GitHub
-  //    PRIMERO la imagen — los puntos se mapean contra imgW/imgH
-  sbToast('Cargando imagen del plano…', 'saving', 0);
+(async function init(){
+  // 1. Imagen primero — los puntos se mapean contra imgW/imgH
+  sbToast('Cargando imagen del plano…','saving',0);
   await cargarImagenDesdeURL(PLANO_URL);
 
-  // 2. Ahora cargar los datos de Supabase
-  //    Con imgEl e imgW/imgH ya disponibles, redrawViewer dibujará correctamente
+  // 2. Datos de Supabase — imgEl ya existe, redrawViewer funciona
   await cargarDesdeSB();
 
-  // 3. Forzar resize del viewer (puede estar oculto al inicio) y redibujar
-  const vw = vWrap.clientWidth || window.innerWidth;
-  const vh = vWrap.clientHeight || (window.innerHeight - 80);
-  if(vw > 0 && vh > 0){ vCanvas.width = vw; vCanvas.height = vh; }
+  // 3. Redibujo final con todo listo
+  resizeViewerCanvas();
   redraw();
   redrawViewer();
   renderLayerList();
 })();
-
 </script>
 </body>
 </html>
