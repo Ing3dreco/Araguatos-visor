@@ -818,12 +818,12 @@ function redrawViewer(){
   vCtx.translate(vPanX,vPanY);
   vCtx.scale(vZoomLevel,vZoomLevel);
 
-  const r=getImgRect(vCanvas,true);
+  const r=getImgRect(vCanvas,false);
   vCtx.drawImage(imgEl,r.x,r.y,r.w,r.h);
 
   // Dibujar manzanas primero (fondo), lotes encima
-  items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,true,true,vSelectedId,vHoveredId));
-  items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,true,true,vSelectedId,vHoveredId));
+  items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,false,true,vSelectedId,vHoveredId));
+  items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,false,true,vSelectedId,vHoveredId));
 
   vCtx.restore();
   updateViewerCounters();
@@ -856,7 +856,7 @@ vCanvas.addEventListener('click',onViewerClick);
 function vImgCoord(pos){
   const cx=(pos.x-vPanX)/vZoomLevel;
   const cy=(pos.y-vPanY)/vZoomLevel;
-  const r=getImgRect(vCanvas,true);
+  const r=getImgRect(vCanvas,false);
   return{x:(cx-r.x)/r.w*imgW,y:(cy-r.y)/r.h*imgH};
 }
 
