@@ -530,7 +530,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Para guardar desde el Editor también necesitas la service_role en el HTML.
 // Si prefieres que solo el editor guarde: usa la service_role aquí (acepta lectura+escritura).
 // Si el HTML es público/compartido: usa solo la anon key y actualiza desde Supabase dashboard.
-const SUPABASE_EDITOR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';                // ← reemplaza (service_role)'; // ← service_role key (solo para el editor)
+const SUPABASE_EDITOR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDE1NTcyMywiZXhwIjoyMDg5NzMxNzIzfQ.uL7TvWl3Ndco03D9589adb6X1zg9qXBOUONRDOBEHM8';                // ← reemplaza (service_role)'; // ← service_role key (solo para el editor)
 
 let _sbVisor  = null; // cliente anon (solo lectura — visor)
 let _sbEditor = null; // cliente service_role (lectura+escritura — editor)
