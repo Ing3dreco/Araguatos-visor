@@ -23,6 +23,43 @@
 }
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px}
 
+/* ══ AUTH GATE ══════════════════════════════════════════════════ */
+#auth-gate{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:99999;flex-direction:column;gap:18px;
+}
+#auth-gate.hidden{display:none}
+.auth-card{
+  background:var(--surf);border:1px solid var(--bdr2);
+  border-radius:14px;padding:36px 40px;width:340px;
+  display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 24px 64px rgba(0,0,0,.7);
+}
+.auth-logo{font-family:'DM Serif Display',serif;font-size:22px;color:var(--gold);letter-spacing:.4px}
+.auth-sub{font-size:11px;color:var(--txt3);line-height:1.7}
+.auth-card input{
+  width:100%;background:var(--surf2);border:1px solid var(--bdr);
+  border-radius:6px;color:var(--txt);padding:9px 13px;
+  font-size:13px;outline:none;font-family:inherit;transition:var(--tr);
+}
+.auth-card input:focus{border-color:var(--gold)}
+.btn-auth{
+  width:100%;padding:10px;background:var(--golda);border:1px solid var(--gold);
+  border-radius:7px;color:var(--gold2);font-size:12px;font-weight:700;
+  cursor:pointer;transition:var(--tr);font-family:inherit;letter-spacing:.4px;
+  text-transform:uppercase;
+}
+.btn-auth:hover{background:rgba(201,168,76,.28)}
+.auth-error{color:var(--red);font-size:11px;display:none;padding:3px 0}
+.auth-error.on{display:block}
+.auth-public-hint{
+  font-size:10px;color:var(--txt3);text-align:center;
+  padding-top:6px;border-top:1px solid var(--bdr);
+  cursor:pointer;transition:var(--tr);
+}
+.auth-public-hint:hover{color:var(--txt2)}
+
 /* ══ WINDOW TABS ══ */
 #win-tabs{display:flex;align-items:center;background:var(--surf);border-bottom:1px solid var(--bdr);padding:0 14px;gap:0;flex-shrink:0;height:38px}
 .win-tab{display:flex;align-items:center;gap:7px;padding:0 18px;height:100%;border-bottom:2px solid transparent;cursor:pointer;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--txt3);transition:var(--tr);white-space:nowrap;border-right:1px solid var(--bdr)}
@@ -230,7 +267,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 </style>
 
-<!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
@@ -238,15 +274,30 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 <div id="fade"></div>
 <div id="sb-toast"><span class="sb-dot"></span><span id="sb-msg">Conectando...</span></div>
 
+<!-- ══ AUTH GATE ══════════════════════════════════════════════════ -->
+<div id="auth-gate" class="hidden">
+  <div class="auth-card">
+    <div class="auth-logo">Araguatos · Editor</div>
+    <div class="auth-sub">
+      El visor es público y no requiere contraseña.<br>
+      Para acceder al editor ingresa la clave de administrador.
+    </div>
+    <input type="password" id="auth-input" placeholder="Contraseña del editor…" autocomplete="current-password">
+    <div class="auth-error" id="auth-error">Contraseña incorrecta. Intenta de nuevo.</div>
+    <button class="btn-auth" onclick="checkAuth()">Entrar al Editor</button>
+    <div class="auth-public-hint" onclick="goToViewer()">← Volver al Visor público</div>
+  </div>
+</div>
+
 <div id="app">
 
   <!-- WINDOW TABS -->
   <div id="win-tabs">
     <span class="win-brand">Araguatos</span>
-    <div class="win-tab active" data-win="editor" onclick="switchWindow('editor')">
+    <div class="win-tab" data-win="editor" onclick="requestEditor()">
       <span class="tab-dot"></span> Editor
     </div>
-    <div class="win-tab" data-win="viewer" onclick="switchWindow('viewer')">
+    <div class="win-tab active" data-win="viewer" onclick="switchWindow('viewer')">
       <span class="tab-dot"></span> Visor
     </div>
     <div class="win-spacer"></div>
@@ -254,9 +305,7 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
   </div>
 
   <!-- ══════════ EDITOR WINDOW ══════════ -->
-  <div class="window active" id="editor-window">
-
-    <!-- TOPBAR -->
+  <div class="window" id="editor-window">
     <div id="topbar">
       <div class="tool-group">
         <button class="btn" id="btn-layer-mz">🏘 Manzana</button>
@@ -282,10 +331,7 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
       <button class="btn" id="btn-export">💾 Exportar JSON</button>
     </div>
 
-    <!-- EDITOR MAIN -->
     <div id="editor-main">
-
-      <!-- CANVAS -->
       <div id="canvas-wrap" class="mode-draw">
         <canvas id="main-canvas"></canvas>
         <div id="placeholder">
@@ -295,7 +341,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         </div>
         <div id="draw-hint">Clic: punto · Doble clic: cerrar · Esc: cancelar</div>
         <div id="tool-hint">Modo dibujar — selecciona Manzana o Lote arriba</div>
-        <!-- Zoom controls editor -->
         <div id="e-zoom-controls">
           <button class="zoom-btn" onclick="eZoom(1.25)" title="Acercar">+</button>
           <div class="zoom-level" id="e-zoom-lbl">100%</div>
@@ -304,7 +349,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         </div>
       </div>
 
-      <!-- SIDEBAR -->
       <div id="sidebar">
         <div id="stabs">
           <div class="stab active" data-tab="layers">Capas</div>
@@ -312,7 +356,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
           <div class="stab" data-tab="data">Datos</div>
         </div>
         <div id="scontent">
-
           <div id="tab-layers">
             <div style="margin-bottom:14px">
               <div class="sec-title">Manzanas</div>
@@ -341,7 +384,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
                   <div class="sbtn re" data-s="reserved">Reservado</div>
                 </div>
               </div>
-              <!-- Toggle campos extra -->
               <div onclick="toggleExtraFields()" style="font-size:9px;color:var(--txt3);cursor:pointer;display:flex;align-items:center;gap:5px;padding:5px 0 3px;user-select:none;border-top:1px solid var(--bdr);margin-top:6px" id="extra-toggle">
                 <span id="extra-arrow" style="font-size:8px">▶</span>
                 <span style="text-transform:uppercase;letter-spacing:.5px">Más campos</span>
@@ -407,9 +449,7 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
   </div>
 
   <!-- ══════════ VIEWER WINDOW ══════════ -->
-  <div class="window" id="viewer-window">
-
-    <!-- Viewer topbar -->
+  <div class="window active" id="viewer-window">
     <div id="viewer-topbar">
       <h2>Proyecto Araguatos</h2>
       <div class="vbar-sep"></div>
@@ -428,22 +468,19 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
     <div id="viewer-wrap">
       <canvas id="viewer-canvas"></canvas>
 
-      <!-- No image placeholder -->
       <div id="v-placeholder">
-        <div class="ph-ico">🔍</div>
-        <div class="ph-ttl" style="opacity:.25">Visor</div>
-        <p class="ph-sub">Ve al Editor, carga una imagen y traza los lotes. El visor se actualiza automáticamente.</p>
+        <div class="ph-ico">⏳</div>
+        <div class="ph-ttl" style="opacity:.25">Cargando mapa…</div>
+        <p class="ph-sub">Conectando con Supabase y cargando la imagen del plano.</p>
       </div>
 
-      <!-- Title top-left -->
       <div id="v-title">
         <h3>Plan Parcial</h3>
         <p>Florencia · Caquetá · Colombia</p>
       </div>
 
-      <!-- Sound controls -->
       <div id="v-sound-controls">
-        <button id="v-sound-btn" onclick="toggleViewerSound()" title="Sonido ambiental (viento, pájaros)">
+        <button id="v-sound-btn" onclick="toggleViewerSound()" title="Sonido ambiental">
           <span class="sound-wave">
             <span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span>
           </span>
@@ -455,7 +492,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         </button>
       </div>
 
-      <!-- Zoom controls viewer -->
       <div id="v-zoom-controls">
         <button class="zoom-btn" onclick="vZoom(1.25)" title="Acercar">+</button>
         <div class="zoom-level" id="v-zoom-lbl">100%</div>
@@ -463,7 +499,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         <button class="zoom-btn" onclick="vZoomReset()" title="Restablecer" style="font-size:11px;font-family:'JetBrains Mono',monospace">⊙</button>
       </div>
 
-      <!-- Hover popup -->
       <div id="v-popup">
         <div class="pop-card">
           <div class="pop-badge" id="vp-badge"></div>
@@ -474,7 +509,6 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         </div>
       </div>
 
-      <!-- Selected panel (pinned) -->
       <div id="v-sel-panel">
         <div class="sel-card">
           <div class="sel-header">
@@ -494,14 +528,12 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
         </div>
       </div>
 
-      <!-- Legend -->
       <div id="v-legend">
         <div class="leg-row"><div class="leg-box available"></div>Disponible</div>
         <div class="leg-row"><div class="leg-box sold"></div>Vendido</div>
         <div class="leg-row"><div class="leg-box reserved"></div>Reservado</div>
       </div>
 
-      <!-- Counters -->
       <div id="v-counters">
         <div style="text-align:center"><div class="cnt-n" id="cnt-av2">0</div><div class="cnt-l">Disponibles</div></div>
         <div class="cnt-div"></div>
@@ -518,22 +550,81 @@ kbd{background:var(--surf3);border:1px solid var(--bdr2);border-radius:3px;paddi
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════
-//  SUPABASE CONFIG
-//  ⚠️  Reemplaza con tus credenciales reales de:
-//      Supabase → Settings → API
+//  ⚙️  CONFIGURACIÓN — EDITA ESTAS 3 LÍNEAS
 // ═══════════════════════════════════════════════════════════════
-const SUPABASE_URL      = 'https://ninaxwddpqqgaflacdfm.supabase.co';   // ← Project URL
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';                // ← anon public key (para el visor)
-// La SERVICE_ROLE key va SOLO en el script de importación (02_importar_lotes.js)
-// NUNCA la pongas en el HTML — es pública.
 
-// Para guardar desde el Editor también necesitas la service_role en el HTML.
-// Si prefieres que solo el editor guarde: usa la service_role aquí (acepta lectura+escritura).
-// Si el HTML es público/compartido: usa solo la anon key y actualiza desde Supabase dashboard.
-const SUPABASE_EDITOR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDE1NTcyMywiZXhwIjoyMDg5NzMxNzIzfQ.uL7TvWl3Ndco03D9589adb6X1zg9qXBOUONRDOBEHM8';                // ← reemplaza (service_role)'; // ← service_role key (solo para el editor)
+// 1. Tu URL e imagen (sube el plano a GitHub y pon la URL raw aquí)
+//    Ejemplo: 'https://raw.githubusercontent.com/tuusuario/turepo/main/assets/plano.jpg'
+const PLANO_URL = 'PON_AQUI_LA_URL_RAW_DE_GITHUB';
 
-let _sbVisor  = null; // cliente anon (solo lectura — visor)
-let _sbEditor = null; // cliente service_role (lectura+escritura — editor)
+// 2. Hash SHA-256 de la contraseña del editor
+//    Genera el hash en: https://emn178.github.io/online-tools/sha256.html
+//    Ejemplo con contraseña "admin2024": pega el resultado aquí
+const EDITOR_HASH = 'PON_AQUI_EL_SHA256_DE_TU_PASSWORD';
+
+// 3. Supabase (no tocar — ya están bien)
+const SUPABASE_URL      = 'https://ninaxwddpqqgaflacdfm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
+const SUPABASE_EDITOR_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDE1NTcyMywiZXhwIjoyMDg5NzMxNzIzfQ.uL7TvWl3Ndco03D9589adb6X1zg9qXBOUONRDOBEHM8';
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH — Protección del Editor
+// ═══════════════════════════════════════════════════════════════
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function isEditorUnlocked() {
+  return sessionStorage.getItem('araguatos_editor') === EDITOR_HASH;
+}
+
+async function checkAuth() {
+  const val = document.getElementById('auth-input').value;
+  if (!val) return;
+  const hash = await hashStr(val);
+  if (hash === EDITOR_HASH) {
+    sessionStorage.setItem('araguatos_editor', EDITOR_HASH);
+    document.getElementById('auth-gate').classList.add('hidden');
+    _switchToEditor();
+  } else {
+    const errEl = document.getElementById('auth-error');
+    errEl.classList.add('on');
+    document.getElementById('auth-input').value = '';
+    setTimeout(() => errEl.classList.remove('on'), 3000);
+  }
+}
+
+document.getElementById('auth-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAuth();
+});
+
+function goToViewer() {
+  document.getElementById('auth-gate').classList.add('hidden');
+  switchWindow('viewer');
+}
+
+function requestEditor() {
+  if (isEditorUnlocked()) {
+    _switchToEditor();
+  } else {
+    document.getElementById('auth-gate').classList.remove('hidden');
+    setTimeout(() => document.getElementById('auth-input').focus(), 100);
+  }
+}
+
+function _switchToEditor() {
+  document.querySelectorAll('.win-tab').forEach(t => t.classList.toggle('active', t.dataset.win === 'editor'));
+  document.getElementById('editor-window').classList.add('active');
+  document.getElementById('viewer-window').classList.remove('active');
+  setTimeout(() => { resizeCanvas(); redraw(); }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SUPABASE CLIENTS
+// ═══════════════════════════════════════════════════════════════
+let _sbVisor  = null;
+let _sbEditor = null;
 
 function getSbVisor() {
   if (!_sbVisor) _sbVisor = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -544,7 +635,7 @@ function getSbEditor() {
   return _sbEditor;
 }
 
-// ── Toast de estado ─────────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────────────────
 let _toastTimer = null;
 function sbToast(msg, type = 'ok', duration = 3000) {
   const el  = document.getElementById('sb-toast');
@@ -555,16 +646,40 @@ function sbToast(msg, type = 'ok', duration = 3000) {
   if (duration > 0) _toastTimer = setTimeout(() => { el.className = ''; }, duration);
 }
 
-// ── Cargar lotes desde Supabase (inicio de la app) ─────────────
+// ═══════════════════════════════════════════════════════════════
+//  IMAGEN DESDE URL (GitHub raw) — sin base64, sin pérdida
+// ═══════════════════════════════════════════════════════════════
+async function cargarImagenDesdeURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      imgEl = img;
+      imgW  = img.naturalWidth  || 1200;
+      imgH  = img.naturalHeight || 900;
+      document.getElementById('placeholder').classList.add('hidden');
+      document.getElementById('v-placeholder').classList.add('hidden');
+      resolve();
+    };
+    img.onerror = () => {
+      // Si falla (ej. URL no configurada), no bloquear la app
+      console.warn('[Imagen] No se pudo cargar desde URL:', url);
+      resolve(); // resolve anyway so data still shows
+    };
+    img.src = url + '?t=' + Date.now(); // cache-bust mínimo
+  });
+}
+
+// ── Cargar lotes desde Supabase ────────────────────────────────
 async function cargarDesdeSB() {
-  sbToast('Cargando lotes desde Supabase…', 'saving', 0);
+  sbToast('Cargando datos…', 'saving', 0);
   try {
     const { data, error } = await getSbVisor()
       .from('lotes')
       .select('*')
       .order('id');
     if (error) throw error;
-    // Mapear columna description → desc (el visor usa item.desc internamente)
+    // Normalizar: description → desc (uso interno del visor)
     items  = data.map(r => ({ ...r, desc: r.description || '' }));
     nextId = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1;
     redraw(); renderLayerList(); syncViewer();
@@ -575,34 +690,17 @@ async function cargarDesdeSB() {
   }
 }
 
-// ── Guardar todos los items en Supabase (Editor → ☁️ Guardar) ───
 async function guardarEnSB() {
   const btn = document.getElementById('btn-save-sb');
   btn.textContent = '⏳ Guardando…'; btn.disabled = true;
   sbToast('Guardando en Supabase…', 'saving', 0);
   try {
-    const rows = items.map(item => ({
-      id:          item.id,
-      type:        item.type        || 'lote',
-      points:      item.points      || [],
-      mzName:      item.mzName      || '',
-      num:         item.num         || '',
-      mzRef:       item.mzRef       || '',
-      area:        item.area        || '',
-      price:       item.price       || '',
-      status:      item.status      || 'available',
-      frente:      item.frente      || '',
-      fondo:       item.fondo       || '',
-      orientacion: item.orientacion || '',
-      description: item.desc        || '',  // desc → description
-      notas:       item.notas       || '',
-      _svgId:      item._svgId      || '',
-    }));
+    const rows = items.map(item => buildRow(item));
     const { error } = await getSbEditor()
       .from('lotes')
       .upsert(rows, { onConflict: 'id' });
     if (error) throw error;
-    sbToast(`✓ ${rows.length} elementos guardados en Supabase`, 'ok');
+    sbToast(`✓ ${rows.length} elementos guardados`, 'ok');
   } catch(err) {
     sbToast('Error al guardar: ' + err.message, 'err', 7000);
     console.error('[Supabase]', err);
@@ -611,29 +709,11 @@ async function guardarEnSB() {
   }
 }
 
-// ── Guardar UN solo lote (al hacer clic en 💾 Guardar del sidebar) ─
 async function guardarLoteEnSB(item) {
   try {
-    const row = {
-      id:          item.id,
-      type:        item.type        || 'lote',
-      points:      item.points      || [],
-      mzName:      item.mzName      || '',
-      num:         item.num         || '',
-      mzRef:       item.mzRef       || '',
-      area:        item.area        || '',
-      price:       item.price       || '',
-      status:      item.status      || 'available',
-      frente:      item.frente      || '',
-      fondo:       item.fondo       || '',
-      orientacion: item.orientacion || '',
-      description: item.desc        || '',
-      notas:       item.notas       || '',
-      _svgId:      item._svgId      || '',
-    };
     const { error } = await getSbEditor()
       .from('lotes')
-      .upsert([row], { onConflict: 'id' });
+      .upsert([buildRow(item)], { onConflict: 'id' });
     if (error) throw error;
     sbToast(`✓ Lote ${item.num || item.id} guardado`, 'ok');
   } catch(err) {
@@ -642,7 +722,6 @@ async function guardarLoteEnSB(item) {
   }
 }
 
-// ── Eliminar un lote de Supabase ────────────────────────────────
 async function eliminarLoteSB(id) {
   try {
     const { error } = await getSbEditor()
@@ -657,6 +736,26 @@ async function eliminarLoteSB(id) {
   }
 }
 
+function buildRow(item) {
+  return {
+    id:          item.id,
+    type:        item.type        || 'lote',
+    points:      item.points      || [],
+    mzName:      item.mzName      || '',
+    num:         item.num         || '',
+    mzRef:       item.mzRef       || '',
+    area:        item.area        || '',
+    price:       item.price       || '',
+    status:      item.status      || 'available',
+    frente:      item.frente      || '',
+    fondo:       item.fondo       || '',
+    orientacion: item.orientacion || '',
+    description: item.desc        || '',
+    notas:       item.notas       || '',
+    _svgId:      item._svgId      || '',
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  SHARED STATE
 // ═══════════════════════════════════════════════════════════════
@@ -666,6 +765,8 @@ let imgEl = null;
 let imgW = 1, imgH = 1;
 let showPrice = false;
 let showPriceViewer = false;
+let imgOriginalDataUrl = null;
+let svgRawText = null;
 
 // Editor state
 let mode = 'draw';
@@ -690,19 +791,11 @@ let lastClickTime = 0;
 let vHoveredId = null;
 let vSelectedId = null;
 let viewerSoundOn = false;
-let viewerFxOn = true; // efectos de sonido activos por defecto
+let viewerFxOn = true;
 
-// Viewer zoom/pan state
-let vZoomLevel = 1;
-let vPanX = 0, vPanY = 0;
-let vIsPanning = false;
-let vPanStart = {x:0, y:0};
-
-// Editor zoom/pan state
-let eZoomLevel = 1;
-let ePanX = 0, ePanY = 0;
-let eIsPanning = false;
-let ePanStart = {x:0, y:0};
+// Zoom/pan
+let vZoomLevel = 1, vPanX = 0, vPanY = 0, vIsPanning = false, vPanStart = {x:0,y:0};
+let eZoomLevel = 1, ePanX = 0, ePanY = 0, eIsPanning = false, ePanStart = {x:0,y:0};
 
 // Audio
 let audioCtx = null;
@@ -712,23 +805,22 @@ let ambNodes = [];
 //  WINDOW SWITCHING
 // ═══════════════════════════════════════════════════════════════
 function switchWindow(win) {
+  document.getElementById('auth-gate').classList.add('hidden');
   document.querySelectorAll('.win-tab').forEach(t => t.classList.toggle('active', t.dataset.win === win));
   document.getElementById('editor-window').classList.toggle('active', win === 'editor');
   document.getElementById('viewer-window').classList.toggle('active', win === 'viewer');
-  if (win === 'viewer') {
-    setTimeout(() => { resizeViewerCanvas(); redrawViewer(); }, 50);
-  }
+  if (win === 'viewer') setTimeout(() => { resizeViewerCanvas(); redrawViewer(); }, 50);
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  EDITOR CANVAS
 // ═══════════════════════════════════════════════════════════════
 const canvas = document.getElementById('main-canvas');
-const ctx = canvas.getContext('2d');
-const wrap = document.getElementById('canvas-wrap');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('canvas-wrap');
 
 function resizeCanvas() {
-  canvas.width = wrap.clientWidth;
+  canvas.width  = wrap.clientWidth;
   canvas.height = wrap.clientHeight;
   redraw();
 }
@@ -751,10 +843,9 @@ function getImgRect(c, mode_cover) {
 }
 
 function canvasToImg(cx, cy) {
-  // Convert screen coords to zoomed canvas space
   const lx = (cx - ePanX) / eZoomLevel;
   const ly = (cy - ePanY) / eZoomLevel;
-  const r = getImgRect(canvas, false);
+  const r  = getImgRect(canvas, false);
   return { x:(lx-r.x)/r.w*imgW, y:(ly-r.y)/r.h*imgH };
 }
 function imgToCanvas(ix, iy, c, cover) {
@@ -762,19 +853,12 @@ function imgToCanvas(ix, iy, c, cover) {
   return { x: r.x + ix/imgW*r.w, y: r.y + iy/imgH*r.h };
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  IMAGE LOAD
-//  Guarda el dataURL ORIGINAL (sin recomprimir) para que al
-//  exportar/importar JSON la imagen no pierda calidad jamás.
-// ═══════════════════════════════════════════════════════════════
-let imgOriginalDataUrl = null; // dataURL tal como salió del archivo original
-
+// Carga manual desde archivo (solo editor)
 document.getElementById('img-file').addEventListener('change', e => {
   const f = e.target.files[0]; if(!f) return;
-  // Leer el archivo DIRECTAMENTE como base64 — sin pasar por canvas, sin recomprimir
   const reader = new FileReader();
   reader.onload = ev => {
-    imgOriginalDataUrl = ev.target.result; // data:image/xxx;base64,...
+    imgOriginalDataUrl = ev.target.result;
     const img = new Image();
     img.onload = () => {
       imgEl = img; imgW = img.naturalWidth; imgH = img.naturalHeight;
@@ -792,23 +876,23 @@ document.getElementById('img-file').addEventListener('change', e => {
 //  EDITOR EVENT HANDLERS
 // ═══════════════════════════════════════════════════════════════
 function evPos(e, c) {
-  const r = (c||canvas).getBoundingClientRect();
+  const r   = (c||canvas).getBoundingClientRect();
   const src = e.touches ? e.touches[0] : e;
   return { x: src.clientX - r.left, y: src.clientY - r.top };
 }
 
 canvas.addEventListener('mousemove', onMouseMove);
-canvas.addEventListener('click', onCanvasClick);
-canvas.addEventListener('dblclick', onDblClick);
+canvas.addEventListener('click',     onCanvasClick);
+canvas.addEventListener('dblclick',  onDblClick);
 canvas.addEventListener('mousedown', onMouseDown);
-canvas.addEventListener('mouseup', onMouseUp);
+canvas.addEventListener('mouseup',   onMouseUp);
 
 function onMouseMove(e) {
   const pos = evPos(e);
   mousePos = pos;
   if (mode === 'draw') { redraw(); return; }
   if (mode === 'select' && dragging) {
-    const ip = canvasToImg(pos.x, pos.y);
+    const ip   = canvasToImg(pos.x, pos.y);
     const item = items.find(i=>i.id===selectedId);
     if (item) { item.points = dragOffsets.map(o=>({x:ip.x+o.x,y:ip.y+o.y})); redraw(); renderLayerList(); syncViewer(); }
     return;
@@ -826,8 +910,8 @@ function onMouseMove(e) {
     redraw(); syncViewer(); return;
   }
   if (mode === 'select' || mode === 'vertex') {
-    const ip = canvasToImg(pos.x, pos.y);
-    let found = null;
+    const ip   = canvasToImg(pos.x, pos.y);
+    let found  = null;
     for (let i=items.length-1;i>=0;i--) { if(pointInPoly(ip,items[i].points)){found=items[i];break;} }
     const newHov = found?found.id:null;
     if (newHov !== hoveredId) { hoveredId = newHov; redraw(); }
@@ -837,7 +921,7 @@ function onMouseMove(e) {
 
 function onMouseDown(e) {
   const pos = evPos(e);
-  const ip = canvasToImg(pos.x, pos.y);
+  const ip  = canvasToImg(pos.x, pos.y);
   if (mode === 'select') {
     const item = items.find(i=>i.id===selectedId);
     if (item && pointInPoly(ip, item.points)) {
@@ -870,14 +954,14 @@ function onMouseDown(e) {
   }
 }
 
-function onMouseUp(e) {
-  if (dragging) { dragging=false; canvas.style.cursor='pointer'; }
+function onMouseUp() {
+  if (dragging)    { dragging=false;    canvas.style.cursor='pointer'; }
   if (vtxDragging) { vtxDragging=false; vtxDragIdx=-1; }
 }
 
 function onCanvasClick(e) {
   const pos = evPos(e);
-  const ip = canvasToImg(pos.x, pos.y);
+  const ip  = canvasToImg(pos.x, pos.y);
   const now = Date.now();
   if (now - lastClickTime < 280) { lastClickTime=0; return; }
   lastClickTime = now;
@@ -918,10 +1002,7 @@ function onCanvasClick(e) {
   }
 }
 
-function onDblClick(e) {
-  if (mode==='draw' && drawing) finishDraw();
-  lastClickTime=0;
-}
+function onDblClick() { if (mode==='draw' && drawing) finishDraw(); lastClickTime=0; }
 
 // ═══════════════════════════════════════════════════════════════
 //  POLYGON DRAW
@@ -933,7 +1014,8 @@ function finishDraw() {
     points: [...drawPts],
     mzName: activeLayer==='manzana'?'M'+(items.filter(i=>i.type==='manzana').length+1):'',
     num: activeLayer==='lote'?String(items.filter(i=>i.type==='lote').length+1):'',
-    mzRef:'', area:'', price:'', status:'available'
+    mzRef:'', area:'', price:'', status:'available',
+    frente:'', fondo:'', orientacion:'', desc:'', notas:''
   };
   items.push(item);
   cancelDraw(); selectItem(item.id); switchTab('edit');
@@ -956,24 +1038,18 @@ function redraw() {
   const cw=canvas.width, ch=canvas.height;
   ctx.clearRect(0,0,cw,ch);
   ctx.fillStyle='#04050A'; ctx.fillRect(0,0,cw,ch);
-
   ctx.save();
   ctx.translate(ePanX, ePanY);
   ctx.scale(eZoomLevel, eZoomLevel);
-
   if (imgEl) { const r=getImgRect(canvas,false); ctx.drawImage(imgEl,r.x,r.y,r.w,r.h); }
   items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(ctx,i,canvas,false));
   items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(ctx,i,canvas,false));
   if (drawing && drawPts.length>0) drawPreview();
   if (mode==='vertex' && vertexSelectedId!==null) drawVertexHandles();
-
   ctx.restore();
   updateCounters();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SHARED DRAW ITEM (used by both editor and viewer)
-// ═══════════════════════════════════════════════════════════════
 function drawItemOnCtx(c, item, canvasEl, isCover, isViewerMode, vSel, vHov) {
   if (item.points.length < 2) return;
   const pts = item.points.map(p => imgToCanvas(p.x, p.y, canvasEl, isCover));
@@ -1005,28 +1081,20 @@ function drawItemOnCtx(c, item, canvasEl, isCover, isViewerMode, vSel, vHov) {
     lw     = isSelected ? 3 : 1.5;
   }
 
-  c.fillStyle = fill;
-  c.fill();
-
-  // Glow on hover (viewer only)
+  c.fillStyle = fill; c.fill();
   if (isViewerMode && (isHovered || isSelected)) {
     c.shadowColor = isMz ? '#C9A84C' : item.status==='sold' ? '#2ECC71' : item.status==='reserved' ? '#F39C12' : '#ffffff';
     c.shadowBlur = isSelected ? 20 : 12;
   }
-  c.strokeStyle = stroke;
-  c.lineWidth = lw;
-  c.lineJoin = 'round';
-  c.stroke();
+  c.strokeStyle = stroke; c.lineWidth = lw; c.lineJoin = 'round'; c.stroke();
   c.shadowBlur = 0;
 
-  // Label
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
   const label = isMz
     ? (item.mzName || '?')
     : ((item.mzRef ? item.mzRef+'-' : '') + (item.num || '#'+item.id));
 
-  // Manzana font bigger (+2 in viewer mode)
   const baseMz = isViewerMode ? 18 : 13;
   const baseAt = isViewerMode ? 12 : 10;
   const fs = isMz
@@ -1095,11 +1163,11 @@ function drawVertexHandles() {
 //  VIEWER CANVAS
 // ═══════════════════════════════════════════════════════════════
 const vCanvas = document.getElementById('viewer-canvas');
-const vCtx = vCanvas.getContext('2d');
-const vWrap = document.getElementById('viewer-wrap');
+const vCtx    = vCanvas.getContext('2d');
+const vWrap   = document.getElementById('viewer-wrap');
 
 function resizeViewerCanvas() {
-  vCanvas.width = vWrap.clientWidth;
+  vCanvas.width  = vWrap.clientWidth;
   vCanvas.height = vWrap.clientHeight;
   redrawViewer();
 }
@@ -1110,25 +1178,20 @@ function redrawViewer() {
   vCtx.clearRect(0,0,cw,ch);
   vCtx.fillStyle='#04050A'; vCtx.fillRect(0,0,cw,ch);
   if (!imgEl) return;
-
-  // Apply zoom/pan transform
   vCtx.save();
   vCtx.translate(vPanX, vPanY);
   vCtx.scale(vZoomLevel, vZoomLevel);
-
   const r=getImgRect(vCanvas,true);
   vCtx.drawImage(imgEl,r.x,r.y,r.w,r.h);
   items.filter(i=>i.type==='manzana').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,true,true,vSelectedId,vHoveredId));
   items.filter(i=>i.type==='lote').forEach(i=>drawItemOnCtx(vCtx,i,vCanvas,true,true,vSelectedId,vHoveredId));
-
   vCtx.restore();
   updateViewerCounters();
 }
 
-// sync on any change
 function syncViewer() { redrawViewer(); }
 
-// ══ EDITOR ZOOM & PAN ══
+// ── Editor zoom/pan ─────────────────────────────────────────────
 function eZoom(factor) {
   const cx = canvas.width/2, cy = canvas.height/2;
   const newZ = Math.min(8, Math.max(0.15, eZoomLevel * factor));
@@ -1139,12 +1202,10 @@ function eZoom(factor) {
   redraw();
 }
 function eZoomReset() {
-  eZoomLevel = 1; ePanX = 0; ePanY = 0;
-  document.getElementById('e-zoom-lbl').textContent = '100%';
+  eZoomLevel=1; ePanX=0; ePanY=0;
+  document.getElementById('e-zoom-lbl').textContent='100%';
   redraw();
 }
-
-// Scroll wheel zoom on editor canvas
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
   const pos = evPos(e, canvas);
@@ -1156,97 +1217,18 @@ canvas.addEventListener('wheel', e => {
   document.getElementById('e-zoom-lbl').textContent = Math.round(eZoomLevel*100)+'%';
   redraw();
 }, { passive: false });
-
-// Middle-click pan on editor canvas
 canvas.addEventListener('mousedown', e => {
-  if (e.button === 1) {
-    e.preventDefault();
-    eIsPanning = true;
-    ePanStart = { x: e.clientX - ePanX, y: e.clientY - ePanY };
-  }
+  if (e.button===1) { e.preventDefault(); eIsPanning=true; ePanStart={x:e.clientX-ePanX,y:e.clientY-ePanY}; }
 });
 canvas.addEventListener('mousemove', e => {
-  if (eIsPanning) {
-    ePanX = e.clientX - ePanStart.x;
-    ePanY = e.clientY - ePanStart.y;
-    redraw();
-  }
+  if (eIsPanning) { ePanX=e.clientX-ePanStart.x; ePanY=e.clientY-ePanStart.y; redraw(); }
 });
-canvas.addEventListener('mouseup', e => {
-  if (eIsPanning) { eIsPanning = false; }
-});
+canvas.addEventListener('mouseup', e => { if (e.button===1) eIsPanning=false; });
 
-// Viewer mouse events
-vCanvas.addEventListener('mousemove', onViewerMouseMove);
-vCanvas.addEventListener('click', onViewerClick);
-
-function vImgCoord(pos) {
-  // Convert screen pos to canvas space (accounting for zoom/pan)
-  const cx = (pos.x - vPanX) / vZoomLevel;
-  const cy = (pos.y - vPanY) / vZoomLevel;
-  const r = getImgRect(vCanvas, true);
-  return { x:(cx-r.x)/r.w*imgW, y:(cy-r.y)/r.h*imgH };
-}
-
-let vHoverThrottle = 0;
-function onViewerMouseMove(e) {
-  const pos = evPos(e, vCanvas);
-  const now = Date.now();
-  if (now - vHoverThrottle < 30) return; // throttle
-  vHoverThrottle = now;
-
-  const ip = vImgCoord(pos);
-  let found = null;
-  for(let i=items.length-1;i>=0;i--) { if(pointInPoly(ip,items[i].points)){found=items[i];break;} }
-  const newHov = found?found.id:null;
-  if (newHov !== vHoveredId) {
-    const hadHov = vHoveredId;
-    vHoveredId = newHov;
-    if (found && found.id !== vSelectedId) {
-      showVPopup(found, pos);
-      playEtherealHover(found);
-    } else {
-      hideVPopup();
-    }
-    redrawViewer();
-  } else if (found && found.id !== vSelectedId) {
-    // Update popup position
-    moveVPopup(pos);
-  }
-  vCanvas.style.cursor = found ? 'pointer' : 'default';
-}
-
-function onViewerClick(e) {
-  const pos = evPos(e, vCanvas);
-  const ip = vImgCoord(pos);
-  let found = null;
-  for(let i=items.length-1;i>=0;i--){ if(pointInPoly(ip,items[i].points)){found=items[i];break;} }
-  if (found) {
-    if (vSelectedId === found.id) {
-      clearViewerSelection();
-    } else {
-      vSelectedId = found.id;
-      hideVPopup();
-      showSelPanel(found);
-      playEtherealSelect(found);
-      redrawViewer();
-    }
-  } else {
-    clearViewerSelection();
-  }
-}
-
-function clearViewerSelection() {
-  vSelectedId = null;
-  document.getElementById('v-sel-panel').classList.remove('on');
-  redrawViewer();
-}
-
-// ══ VIEWER ZOOM & PAN ══
+// ── Viewer zoom/pan ─────────────────────────────────────────────
 function vZoom(factor) {
   const cx = vCanvas.width/2, cy = vCanvas.height/2;
   const newZ = Math.min(8, Math.max(0.2, vZoomLevel * factor));
-  // Zoom towards center
   vPanX = cx - (cx - vPanX) * (newZ / vZoomLevel);
   vPanY = cy - (cy - vPanY) * (newZ / vZoomLevel);
   vZoomLevel = newZ;
@@ -1254,12 +1236,10 @@ function vZoom(factor) {
   redrawViewer();
 }
 function vZoomReset() {
-  vZoomLevel = 1; vPanX = 0; vPanY = 0;
-  document.getElementById('v-zoom-lbl').textContent = '100%';
+  vZoomLevel=1; vPanX=0; vPanY=0;
+  document.getElementById('v-zoom-lbl').textContent='100%';
   redrawViewer();
 }
-
-// Scroll wheel zoom on viewer
 vCanvas.addEventListener('wheel', e => {
   e.preventDefault();
   const pos = evPos(e, vCanvas);
@@ -1271,88 +1251,110 @@ vCanvas.addEventListener('wheel', e => {
   document.getElementById('v-zoom-lbl').textContent = Math.round(vZoomLevel*100)+'%';
   redrawViewer();
 }, { passive: false });
-
-// Middle-click/right-click pan on viewer
 vCanvas.addEventListener('mousedown', e => {
-  if (e.button === 1 || e.button === 2) {
-    e.preventDefault();
-    vIsPanning = true;
-    vPanStart = { x: e.clientX - vPanX, y: e.clientY - vPanY };
-    vCanvas.style.cursor = 'grab';
-  }
+  if (e.button===1||e.button===2) { e.preventDefault(); vIsPanning=true; vPanStart={x:e.clientX-vPanX,y:e.clientY-vPanY}; vCanvas.style.cursor='grab'; }
 });
 vCanvas.addEventListener('mousemove', e => {
-  if (vIsPanning) {
-    vPanX = e.clientX - vPanStart.x;
-    vPanY = e.clientY - vPanStart.y;
-    vCanvas.style.cursor = 'grabbing';
-    redrawViewer();
-  }
+  if (vIsPanning) { vPanX=e.clientX-vPanStart.x; vPanY=e.clientY-vPanStart.y; vCanvas.style.cursor='grabbing'; redrawViewer(); }
 });
-vCanvas.addEventListener('mouseup', e => {
-  if (vIsPanning) { vIsPanning = false; vCanvas.style.cursor = 'default'; }
-});
+vCanvas.addEventListener('mouseup', e => { if (vIsPanning) { vIsPanning=false; vCanvas.style.cursor='default'; } });
 vCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// ── Viewer mouse events ─────────────────────────────────────────
+vCanvas.addEventListener('mousemove', onViewerMouseMove);
+vCanvas.addEventListener('click',     onViewerClick);
+
+function vImgCoord(pos) {
+  const cx = (pos.x - vPanX) / vZoomLevel;
+  const cy = (pos.y - vPanY) / vZoomLevel;
+  const r  = getImgRect(vCanvas, true);
+  return { x:(cx-r.x)/r.w*imgW, y:(cy-r.y)/r.h*imgH };
+}
+
+let vHoverThrottle = 0;
+function onViewerMouseMove(e) {
+  const pos = evPos(e, vCanvas);
+  const now = Date.now();
+  if (now - vHoverThrottle < 30) return;
+  vHoverThrottle = now;
+  const ip = vImgCoord(pos);
+  let found = null;
+  for(let i=items.length-1;i>=0;i--) { if(pointInPoly(ip,items[i].points)){found=items[i];break;} }
+  const newHov = found?found.id:null;
+  if (newHov !== vHoveredId) {
+    vHoveredId = newHov;
+    if (found && found.id !== vSelectedId) { showVPopup(found, pos); playEtherealHover(found); }
+    else { hideVPopup(); }
+    redrawViewer();
+  } else if (found && found.id !== vSelectedId) {
+    moveVPopup(pos);
+  }
+  vCanvas.style.cursor = found ? 'pointer' : 'default';
+}
+
+function onViewerClick(e) {
+  if (vIsPanning) return;
+  const pos = evPos(e, vCanvas);
+  const ip  = vImgCoord(pos);
+  let found = null;
+  for(let i=items.length-1;i>=0;i--){ if(pointInPoly(ip,items[i].points)){found=items[i];break;} }
+  if (found) {
+    if (vSelectedId === found.id) { clearViewerSelection(); }
+    else { vSelectedId=found.id; hideVPopup(); showSelPanel(found); playEtherealSelect(found); redrawViewer(); }
+  } else { clearViewerSelection(); }
+}
+
+function clearViewerSelection() {
+  vSelectedId = null;
+  document.getElementById('v-sel-panel').classList.remove('on');
+  redrawViewer();
+}
 
 function showSelPanel(item) {
   const isMz = item.type === 'manzana';
   const labels = {available:'Disponible', sold:'Vendido', reserved:'Reservado'};
-  const badge = document.getElementById('vs-badge');
   document.getElementById('vs-name').textContent = isMz
     ? 'Manzana '+(item.mzName||'?')
     : (item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
+  const badge = document.getElementById('vs-badge');
   badge.textContent = isMz ? 'Manzana' : (labels[item.status]||'');
-  badge.className = 'sel-badge ' + (isMz?'manzana':item.status);
+  badge.className   = 'sel-badge ' + (isMz?'manzana':item.status);
   document.getElementById('vs-area').textContent = item.area ? item.area+' m²' : '—';
 
-  // Medidas frente × fondo
   const dimsRow = document.getElementById('vs-dims-row');
-  if (!isMz && (item.frente || item.fondo)) {
-    dimsRow.style.display='flex';
-    document.getElementById('vs-dims').textContent =
-      (item.frente||'?')+'m × '+(item.fondo||'?')+'m';
-  } else { dimsRow.style.display='none'; }
+  if (!isMz && (item.frente||item.fondo)) { dimsRow.style.display='flex'; document.getElementById('vs-dims').textContent=(item.frente||'?')+'m × '+(item.fondo||'?')+'m'; }
+  else dimsRow.style.display='none';
 
-  // Orientación
   const orientRow = document.getElementById('vs-orient-row');
-  if (!isMz && item.orientacion) {
-    orientRow.style.display='flex';
-    document.getElementById('vs-orient').textContent = item.orientacion;
-  } else { orientRow.style.display='none'; }
+  if (!isMz && item.orientacion) { orientRow.style.display='flex'; document.getElementById('vs-orient').textContent=item.orientacion; }
+  else orientRow.style.display='none';
 
-  // Descripción
   const descRow = document.getElementById('vs-desc-row');
-  if (!isMz && (item.desc || item.description)) {
-    descRow.style.display='flex';
-    document.getElementById('vs-desc').textContent = item.desc || item.description;
-  } else { descRow.style.display='none'; }
+  if (!isMz && (item.desc||item.description)) { descRow.style.display='flex'; document.getElementById('vs-desc').textContent=item.desc||item.description; }
+  else descRow.style.display='none';
 
-  const pr = document.getElementById('vs-price-row');
+  const pr  = document.getElementById('vs-price-row');
   const mzr = document.getElementById('vs-mz-row');
-  if (!isMz && showPriceViewer && item.price) {
-    pr.style.display='flex';
-    document.getElementById('vs-price').textContent = '$'+Number(item.price).toLocaleString('es-CO');
-  } else { pr.style.display='none'; }
-  if (!isMz && item.mzRef) {
-    mzr.style.display='flex';
-    document.getElementById('vs-mz').textContent = item.mzRef;
-  } else { mzr.style.display='none'; }
+  if (!isMz && showPriceViewer && item.price) { pr.style.display='flex'; document.getElementById('vs-price').textContent='$'+Number(item.price).toLocaleString('es-CO'); }
+  else pr.style.display='none';
+  if (!isMz && item.mzRef) { mzr.style.display='flex'; document.getElementById('vs-mz').textContent=item.mzRef; }
+  else mzr.style.display='none';
+
   document.getElementById('v-sel-panel').classList.add('on');
 }
 
-// Hover popup viewer
 function showVPopup(item, pos) {
   const isMz = item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
   document.getElementById('vp-badge').textContent = isMz?'Manzana':(labels[item.status]||'');
-  document.getElementById('vp-badge').className = 'pop-badge '+(isMz?'manzana':item.status);
-  document.getElementById('vp-name').textContent = isMz
+  document.getElementById('vp-badge').className   = 'pop-badge '+(isMz?'manzana':item.status);
+  document.getElementById('vp-name').textContent  = isMz
     ?'Manzana '+(item.mzName||'?')
     :(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
   document.getElementById('vp-area').textContent = item.area?item.area+' m²':'—';
   const pr=document.getElementById('vp-price-row');
   if(!isMz&&showPriceViewer&&item.price){pr.style.display='flex';document.getElementById('vp-price').textContent='$'+Number(item.price).toLocaleString('es-CO');}
-  else{pr.style.display='none';}
+  else pr.style.display='none';
   moveVPopup(pos);
   const popup=document.getElementById('v-popup');
   popup.style.display='block';
@@ -1397,30 +1399,24 @@ function updateViewerCounters() {
   const av=lts.filter(i=>i.status==='available').length;
   const so=lts.filter(i=>i.status==='sold').length;
   const re=lts.filter(i=>i.status==='reserved').length;
-  document.getElementById('cnt-av2').textContent=av;
-  document.getElementById('cnt-so2').textContent=so;
-  document.getElementById('cnt-re2').textContent=re;
-  document.getElementById('v-cnt-av').textContent=av;
-  document.getElementById('v-cnt-so').textContent=so;
-  document.getElementById('v-cnt-re').textContent=re;
+  ['cnt-av2','v-cnt-av'].forEach(id=>document.getElementById(id).textContent=av);
+  ['cnt-so2','v-cnt-so'].forEach(id=>document.getElementById(id).textContent=so);
+  ['cnt-re2','v-cnt-re'].forEach(id=>document.getElementById(id).textContent=re);
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  MODE BUTTONS
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('btn-draw').addEventListener('click', ()=>setMode('draw'));
+document.getElementById('btn-draw').addEventListener('click',   ()=>setMode('draw'));
 document.getElementById('btn-select').addEventListener('click', ()=>setMode('select'));
 document.getElementById('btn-vertex').addEventListener('click', ()=>setMode('vertex'));
 
 function setMode(m) {
   if(drawing) cancelDraw();
   mode=m;
-  document.getElementById('btn-draw').classList.toggle('active',m==='draw');
-  document.getElementById('btn-select').classList.toggle('active',m==='select');
-  document.getElementById('btn-vertex').classList.toggle('active',m==='vertex');
+  ['draw','select','vertex'].forEach(n=>document.getElementById('btn-'+n).classList.toggle('active',n===m));
   wrap.className='mode-'+m;
-  const vp=document.getElementById('vertex-panel');
-  vp.style.display=m==='vertex'?'block':'none';
+  document.getElementById('vertex-panel').style.display=m==='vertex'?'block':'none';
   const hints={draw:'Clic para agregar puntos · Doble clic para cerrar',select:'Clic para seleccionar · Arrastra para mover',vertex:'Clic en polígono · Arrastra vértices'};
   document.getElementById('tool-hint').textContent=hints[m];
   if(m!=='vertex'){vertexSelectedId=null;origPoints=null;}
@@ -1448,19 +1444,18 @@ document.addEventListener('keydown',e=>{
   if((e.key==='Delete'||e.key==='Backspace')&&selectedId) {
     if(confirm('¿Eliminar elemento seleccionado?')) deleteSelected();
   }
-  // Zoom shortcuts
-  const inViewer = document.getElementById('viewer-window').classList.contains('active');
+  const inViewer=document.getElementById('viewer-window').classList.contains('active');
   if(e.key==='='||e.key==='+') { if(inViewer) vZoom(1.2); else eZoom(1.2); }
   if(e.key==='-') { if(inViewer) vZoom(0.83); else eZoom(0.83); }
   if(e.key==='0'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); if(inViewer) vZoomReset(); else eZoomReset(); }
 });
 
 function toggleExtraFields() {
-  const el = document.getElementById('extra-fields');
+  const el    = document.getElementById('extra-fields');
   const arrow = document.getElementById('extra-arrow');
-  const open = el.style.display === 'none';
-  el.style.display = open ? 'block' : 'none';
-  arrow.textContent = open ? '▼' : '▶';
+  const open  = el.style.display==='none';
+  el.style.display = open?'block':'none';
+  arrow.textContent = open?'▼':'▶';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1474,12 +1469,8 @@ function selectItem(id) {
   document.getElementById('edit-form').style.display='block';
   const isMz=item.type==='manzana';
   document.getElementById('edit-type-ind').textContent=(isMz?'🏘 Manzana':'📐 Lote')+(item._svgId?' · ID: '+item._svgId:'');
-  document.getElementById('fg-mz').style.display=isMz?'block':'none';
-  document.getElementById('fg-num').style.display=isMz?'none':'block';
-  document.getElementById('fg-mzref').style.display=isMz?'none':'block';
-  document.getElementById('fg-price').style.display=isMz?'none':'block';
-  document.getElementById('fg-status').style.display=isMz?'none':'block';
-  document.getElementById('extra-toggle').style.display=isMz?'none':'flex';
+  ['fg-mz'].forEach(id=>document.getElementById(id).style.display=isMz?'block':'none');
+  ['fg-num','fg-mzref','fg-price','fg-status','extra-toggle'].forEach(id=>document.getElementById(id).style.display=isMz?'none':(id==='extra-toggle'?'flex':'block'));
   document.getElementById('f-mz').value=item.mzName||'';
   document.getElementById('f-num').value=item.num||'';
   document.getElementById('f-area').value=item.area||'';
@@ -1526,20 +1517,18 @@ document.getElementById('btn-save').addEventListener('click',()=>{
   }
   item.area=document.getElementById('f-area').value;
   redraw(); renderLayerList(); playConfirm(); syncViewer();
-  // ── Guardar este lote en Supabase automáticamente ──
   guardarLoteEnSB(item);
 });
 
-document.getElementById('btn-del').addEventListener('click',deleteSelected);
+document.getElementById('btn-del').addEventListener('click', deleteSelected);
 function deleteSelected() {
   if(!selectedId) return;
-  const idToDelete = selectedId;
+  const idToDelete=selectedId;
   items=items.filter(i=>i.id!==selectedId);
   selectedId=null; vertexSelectedId=null;
   document.getElementById('edit-hint').style.display='block';
   document.getElementById('edit-form').style.display='none';
   redraw(); renderLayerList(); syncViewer();
-  // ── Eliminar de Supabase ──
   eliminarLoteSB(idToDelete);
 }
 
@@ -1567,8 +1556,8 @@ document.getElementById('btn-reset-xform').addEventListener('click',()=>{
   const item=items.find(i=>i.id===vertexSelectedId);
   if(item) item.points=JSON.parse(JSON.stringify(origPoints));
   currentRot=0;currentScl=100;
-  document.getElementById('rot-slider').value=0;document.getElementById('rot-val').value=0;
-  document.getElementById('scl-slider').value=100;document.getElementById('scl-val').value=100;
+  document.getElementById('rot-slider').value=0; document.getElementById('rot-val').value=0;
+  document.getElementById('scl-slider').value=100; document.getElementById('scl-val').value=100;
   redraw(); syncViewer();
 });
 
@@ -1578,9 +1567,7 @@ document.getElementById('btn-reset-xform').addEventListener('click',()=>{
 document.querySelectorAll('.stab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
 function switchTab(tab) {
   document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
-  document.getElementById('tab-layers').style.display=tab==='layers'?'block':'none';
-  document.getElementById('tab-edit').style.display=tab==='edit'?'block':'none';
-  document.getElementById('tab-data').style.display=tab==='data'?'block':'none';
+  ['layers','edit','data'].forEach(n=>document.getElementById('tab-'+n).style.display=n===tab?'block':'none');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1621,41 +1608,71 @@ function renderLayerList() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  PRICE & SOUND TOGGLES
+//  PRICE TOGGLE
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('tog-price').addEventListener('change',e=>{showPrice=e.target.checked;});
+document.getElementById('tog-price').addEventListener('change',  e=>{showPrice=e.target.checked;});
 document.getElementById('tog-price-v').addEventListener('change',e=>{showPriceViewer=e.target.checked;redrawViewer();});
 
 // ═══════════════════════════════════════════════════════════════
-//  EXPORT / IMPORT
+//  EXPORT / IMPORT (sin imagen en JSON — imagen vive en GitHub)
 // ═══════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════
-//  EXPORT / IMPORT — Proyecto completo (imagen + trazos + datos)
-// ═══════════════════════════════════════════════════════════════
+document.getElementById('btn-export').addEventListener('click', () => {
+  const data = { version: 4, items, nextId };
+  const json = JSON.stringify(data, null, 2);
+  document.getElementById('json-ta').value = json;
+  switchTab('data');
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'araguatos-v4.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
 
-// Devuelve la imagen como dataURL para exportar.
-// PRIORIDAD: usa el dataURL original capturado del archivo (calidad perfecta, 0 pérdida).
-// Solo recurre al canvas como fallback si la imagen fue cargada desde un JSON anterior
-// que no tenía el flag original (compatibilidad hacia atrás).
-function getImageBase64() {
-  if (!imgEl) return null;
-  // ✅ Caso ideal: tenemos el original intacto del FileReader → devolver tal cual
-  if (imgOriginalDataUrl) return imgOriginalDataUrl;
-  // ⚠️ Fallback (imagen cargada desde JSON sin original guardado): canvas PNG lossless
-  const tmp = document.createElement('canvas');
-  tmp.width = imgEl.naturalWidth; tmp.height = imgEl.naturalHeight;
-  tmp.getContext('2d').drawImage(imgEl, 0, 0);
-  return tmp.toDataURL('image/png'); // PNG lossless — sin pérdida de calidad
-}
+document.getElementById('btn-copy-json').addEventListener('click', () => {
+  const ta = document.getElementById('json-ta');
+  if (!ta.value) ta.value = JSON.stringify({ version:4, items, nextId }, null, 2);
+  navigator.clipboard.writeText(ta.value).then(() => { sbToast('JSON copiado ✅', 'ok'); });
+});
 
-// Restaura imagen desde base64 y guarda el dataURL original
-// para que futuros exports no recomprimam la imagen
+document.getElementById('btn-load-json').addEventListener('click', async () => {
+  try {
+    const data = JSON.parse(document.getElementById('json-ta').value);
+    items = data.items || []; nextId = data.nextId || (items.length + 1);
+    selectedId=null; vertexSelectedId=null;
+    document.getElementById('edit-hint').style.display='block';
+    document.getElementById('edit-form').style.display='none';
+    redraw(); renderLayerList(); syncViewer();
+    sbToast('✅ Proyecto cargado', 'ok');
+  } catch(err) { alert('JSON inválido: ' + err.message); }
+});
+
+document.getElementById('json-file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      items = data.items || []; nextId = data.nextId || (items.length+1);
+      selectedId=null; vertexSelectedId=null;
+      document.getElementById('edit-hint').style.display='block';
+      document.getElementById('edit-form').style.display='none';
+      // Compatibilidad con v3 (imagen embebida)
+      if (data.image && !imgEl) {
+        await loadImageFromBase64(data.image);
+      }
+      redraw(); renderLayerList(); syncViewer();
+      sbToast('✅ Proyecto cargado', 'ok');
+    } catch(err) { alert('Archivo inválido: ' + err.message); }
+  };
+  reader.readAsText(f); e.target.value='';
+});
+
 function loadImageFromBase64(dataUrl) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
-      imgEl = img; imgW = img.naturalWidth; imgH = img.naturalHeight;
-      imgOriginalDataUrl = dataUrl; // ← preservar para exports sin pérdida
+      imgEl=img; imgW=img.naturalWidth; imgH=img.naturalHeight;
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
       resolve();
@@ -1664,532 +1681,207 @@ function loadImageFromBase64(dataUrl) {
   });
 }
 
-document.getElementById('btn-export').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-export');
-  const orig = btn.textContent;
-  btn.textContent = '⏳ Guardando…'; btn.disabled = true;
-
-  // Pequeño delay para que el navegador pinte el estado del botón
-  await new Promise(r => setTimeout(r, 10));
-
-  const imageB64 = getImageBase64();
-  const data = { version: 3, items, nextId, image: imageB64, svgText: svgRawText };
-  const json = JSON.stringify(data);
-
-  // No poner el JSON enorme en el textarea — solo mostrar resumen
-  const preview = JSON.stringify({ version: 3, items, nextId, image: imageB64 ? '[imagen incluida]' : null }, null, 2);
-  document.getElementById('json-ta').value = preview;
-  switchTab('data');
-
-  const blob = new Blob([json], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'araguatos-v3.json';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-
-  btn.textContent = orig; btn.disabled = false;
-});
-
-document.getElementById('btn-copy-json').addEventListener('click', () => {
-  const ta = document.getElementById('json-ta');
-  if (!ta.value) {
-    const preview = JSON.stringify({ version: 3, items, nextId, image: imgEl ? '[use Exportar para incluir imagen]' : null }, null, 2);
-    ta.value = preview;
-  }
-  navigator.clipboard.writeText(ta.value).then(() => { alert('JSON copiado ✅'); });
-});
-
-document.getElementById('btn-load-json').addEventListener('click', async () => {
-  try {
-    const raw = document.getElementById('json-ta').value;
-    // Si el usuario pegó el preview resumido (con '[imagen incluida]'), avisar
-    if (raw.includes('"[imagen incluida]"') || raw.includes('"[use Exportar')) {
-      alert('⚠️ Por favor carga el archivo .json directamente con el botón "Cargar archivo" en la barra superior, o usa el botón de Cargar (📂) con el JSON completo exportado.');
-      return;
-    }
-    const data = JSON.parse(raw);
-    items = data.items || []; nextId = data.nextId || (items.length + 1);
-    selectedId = null; vertexSelectedId = null;
-    document.getElementById('edit-hint').style.display = 'block';
-    document.getElementById('edit-form').style.display = 'none';
-    if (data.image) {
-      await loadImageFromBase64(data.image);
-    }
-    redraw(); renderLayerList(); syncViewer();
-    alert('✅ Proyecto cargado');
-  } catch(err) { alert('JSON inválido: ' + err.message); }
-});
-
-document.getElementById('json-file').addEventListener('change', e => {
-  const f = e.target.files[0]; if (!f) return;
-  const btn = document.getElementById('btn-export');
-
-  // Mostrar progreso si el archivo es grande
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      items = data.items || []; nextId = data.nextId || (items.length + 1);
-      selectedId = null; vertexSelectedId = null;
-      document.getElementById('edit-hint').style.display = 'block';
-      document.getElementById('edit-form').style.display = 'none';
-      if (data.image) {
-        await loadImageFromBase64(data.image);
-      }
-      // Si no hay imagen en el JSON, conservar la imagen actual (no limpiarla)
-      redraw(); renderLayerList(); syncViewer();
-      alert('✅ Proyecto cargado' + (data.image ? ' (con imagen)' : imgEl ? ' — usa la imagen ya cargada' : ' — carga la imagen del plano con 📷 Imagen'));
-    } catch(err) { alert('Archivo inválido: ' + err.message); }
-  };
-  reader.readAsText(f); e.target.value = '';
-});
-
-// ═══════════════════════════════════════════════════════════════
-//  AUDIO — ETHEREAL ORACLE SYSTEM
-//  Filosofía: armónicos naturales (quintas justas), reverb
-//  artificial, pad espectral tipo cristal de cuarzo + campanas
-// ═══════════════════════════════════════════════════════════════
-function getAudioCtx() {
-  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  return audioCtx;
-}
-
-// Convolution reverb (artificial impulse)
-function createReverb(ctx, duration, decay) {
-  const sampleRate = ctx.sampleRate;
-  const length = sampleRate * duration;
-  const impulse = ctx.createBuffer(2, length, sampleRate);
-  for (let c=0;c<2;c++) {
-    const ch = impulse.getChannelData(c);
-    for (let i=0;i<length;i++) {
-      ch[i] = (Math.random()*2-1) * Math.pow(1 - i/length, decay);
-    }
-  }
-  const conv = ctx.createConvolver();
-  conv.buffer = impulse;
-  return conv;
-}
-
-// Master chain: reverb → master gain
-let masterReverb = null;
-let masterGain = null;
-function getMasterChain() {
-  const ctx = getAudioCtx();
-  if (!masterReverb) {
-    masterReverb = createReverb(ctx, 2.2, 3.5); // shorter, more natural decay
-    masterGain = ctx.createGain();
-    masterGain.gain.value = 0.55;
-    masterReverb.connect(masterGain);
-    masterGain.connect(ctx.destination);
-  }
-  return { reverb: masterReverb, gain: masterGain };
-}
-
-// ── AMBIENT PAD — Naturaleza suave (viento + pájaros) ───────────
-function startAmbient() {
-  if(!viewerSoundOn) return;
-  const ctx = getAudioCtx();
-  const { reverb } = getMasterChain();
-
-  // ── VIENTO — ruido rosa filtrado, suave ──
-  const windBuf = ctx.createBuffer(1, ctx.sampleRate * 8, ctx.sampleRate);
-  const windData = windBuf.getChannelData(0);
-  // Pink-ish noise (filtered white)
-  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-  for(let i=0;i<windData.length;i++){
-    const w=Math.random()*2-1;
-    b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
-    b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
-    b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
-    windData[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
-    b6=w*0.115926;
-  }
-  const windSrc = ctx.createBufferSource();
-  windSrc.buffer = windBuf; windSrc.loop = true;
-
-  // Low-pass to make it feel like distant wind
-  const lpf = ctx.createBiquadFilter(); lpf.type='lowpass'; lpf.frequency.value=320; lpf.Q.value=0.5;
-  const windGain = ctx.createGain();
-  windGain.gain.setValueAtTime(0, ctx.currentTime);
-  windGain.gain.linearRampToValueAtTime(0.28, ctx.currentTime+4);
-
-  // Slow LFO for wind gusts
-  const windLFO = ctx.createOscillator(); windLFO.type='sine'; windLFO.frequency.value=0.07;
-  const windLFOG = ctx.createGain(); windLFOG.gain.value=0.08;
-  windLFO.connect(windLFOG); windLFOG.connect(windGain.gain); windLFO.start();
-
-  windSrc.connect(lpf); lpf.connect(windGain); windGain.connect(reverb);
-  windSrc.start();
-  ambNodes.push(windSrc, lpf, windGain, windLFO, windLFOG);
-
-  // ── PÁJAROS — chirps sinusoidales programados ──
-  function scheduleBird() {
-    if(!viewerSoundOn) return;
-    const ctx2 = getAudioCtx();
-    const { reverb:rev } = getMasterChain();
-
-    // Pick a random bird call pattern
-    const patterns = [
-      [{ f:1800, dur:0.06 }, { f:2200, dur:0.09 }],
-      [{ f:2100, dur:0.05 }, { f:1900, dur:0.05 }, { f:2300, dur:0.07 }],
-      [{ f:1600, dur:0.12 }],
-      [{ f:2400, dur:0.04 }, { f:2600, dur:0.08 }, { f:2400, dur:0.04 }],
-      [{ f:1400, dur:0.08 }, { f:1700, dur:0.10 }, { f:1500, dur:0.06 }],
-    ];
-    const pattern = patterns[Math.floor(Math.random()*patterns.length)];
-    let offset = 0;
-
-    pattern.forEach(({f, dur}) => {
-      const osc = ctx2.createOscillator();
-      osc.type = 'sine';
-      // Slight frequency glide for natural chirp
-      const t0 = ctx2.currentTime + offset;
-      osc.frequency.setValueAtTime(f * 0.92, t0);
-      osc.frequency.exponentialRampToValueAtTime(f, t0 + dur * 0.3);
-      osc.frequency.exponentialRampToValueAtTime(f * 0.97, t0 + dur);
-
-      const g = ctx2.createGain();
-      g.gain.setValueAtTime(0, t0);
-      g.gain.linearRampToValueAtTime(0.055, t0 + dur * 0.2);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-
-      osc.connect(g); g.connect(rev);
-      osc.start(t0); osc.stop(t0 + dur + 0.05);
-      offset += dur + 0.04 + Math.random()*0.05;
-    });
-
-    // Schedule next bird call (2–7 seconds from now, random)
-    const nextIn = 2000 + Math.random() * 5000;
-    const birdTimer = setTimeout(scheduleBird, nextIn);
-    ambNodes.push({ _timer: birdTimer, disconnect:()=>{}, stop:()=>clearTimeout(birdTimer) });
-  }
-
-  // Start first bird after 1.5s to let wind fade in first
-  const initTimer = setTimeout(scheduleBird, 1500);
-  ambNodes.push({ _timer: initTimer, disconnect:()=>{}, stop:()=>clearTimeout(initTimer) });
-
-  // ── GRILLO SUAVE (noche/tarde) — muy sutil ──
-  const crickBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-  const crickData = crickBuf.getChannelData(0);
-  for(let i=0;i<crickData.length;i++){
-    // High-freq chirping oscillation
-    const t = i / ctx.sampleRate;
-    crickData[i] = Math.sin(2*Math.PI*4200*t) * Math.max(0, Math.sin(2*Math.PI*18*t)) * 0.018;
-  }
-  const crickSrc = ctx.createBufferSource();
-  crickSrc.buffer = crickBuf; crickSrc.loop = true;
-  const crickGain = ctx.createGain();
-  crickGain.gain.setValueAtTime(0, ctx.currentTime);
-  crickGain.gain.linearRampToValueAtTime(0.12, ctx.currentTime+6);
-  crickSrc.connect(crickGain); crickGain.connect(reverb);
-  crickSrc.start();
-  ambNodes.push(crickSrc, crickGain);
-}
-
-function stopAmbient() {
-  const ctx = audioCtx;
-  if(!ctx) return;
-  const t = ctx.currentTime;
-  ambNodes.forEach(n=>{
-    try{
-      if(n._timer !== undefined) { clearTimeout(n._timer); return; }
-      if(n.gain&&n.gain.linearRampToValueAtTime) n.gain.linearRampToValueAtTime(0,t+1.0);
-      setTimeout(()=>{try{n.stop&&n.stop();n.disconnect&&n.disconnect();}catch(e){}},1500);
-    }catch(e){}
-  });
-  ambNodes=[];
-}
-
-// ── HOVER TONE — suave, natural, tipo xilófono/madera ──────────
-let hoverCooldown = 0;
-function playEtherealHover(item) {
-  if(!viewerFxOn||!item) return;
-  const now = Date.now();
-  if(now-hoverCooldown<220) return;
-  hoverCooldown=now;
-
-  const ctx=getAudioCtx();
-  const { reverb }=getMasterChain();
-
-  // Natural wood-tone frequencies (pentatónico mayor, cálido)
-  const baseMap={available:523.25, sold:440, reserved:392, manzana:587.33};
-  const base = item.type==='manzana' ? baseMap.manzana : (baseMap[item.status]||523.25);
-
-  // Soft mallet hit: fundamental + 3rd harmonic only, quick decay
-  [[base, 0.055], [base*3.011, 0.018]].forEach(([f, amp], i)=>{
-    const osc=ctx.createOscillator();
-    osc.type='triangle';
-    osc.frequency.value=f;
-    const g=ctx.createGain();
-    const t0=ctx.currentTime + i*0.01;
-    g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(amp, t0+0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0+0.35+i*0.1);
-    osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+0.45);
-  });
-}
-
-// ── SELECT TONE — campanita clara, ascendente ───────────────────
-function playEtherealSelect(item) {
-  if(!viewerFxOn||!item) return;
-  const ctx=getAudioCtx();
-  const { reverb }=getMasterChain();
-
-  const isMz = item.type==='manzana';
-  const root = isMz ? 349.23 : 523.25;
-  // Two-note ascending chime
-  const notes = isMz
-    ? [root, root*1.333, root*1.5]
-    : [root, root*1.25, root*1.5];
-
-  notes.forEach((f,i)=>{
-    const osc=ctx.createOscillator();
-    osc.type='sine';
-    osc.frequency.value=f;
-    const g=ctx.createGain();
-    const t0=ctx.currentTime + i*0.10;
-    g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(0.07, t0+0.01);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0+0.8);
-    osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+0.9);
-  });
-}
-
-// ── EDITOR TONES ─────────────────────────────────────────────────
-function playTick() {
-  const ctx=getAudioCtx();
-  const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.value=880;
-  const g=ctx.createGain(); const t=ctx.currentTime;
-  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.04,t+0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001,t+0.12);
-  osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t+0.15);
-}
-function playConfirm() {
-  const ctx=getAudioCtx();
-  [392,523.25,659.25].forEach((f,i)=>{
-    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=f;
-    const g=ctx.createGain(); const t=ctx.currentTime+i*0.09;
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.06,t+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
-    osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t+0.55);
-  });
-}
-
-// ── VIEWER SOUND TOGGLES ────────────────────────────────────────
-function toggleViewerSound() {
-  viewerSoundOn = !viewerSoundOn;
-  const btn = document.getElementById('v-sound-btn');
-  btn.classList.toggle('on', viewerSoundOn);
-  if(viewerSoundOn) { getAudioCtx(); startAmbient(); }
-  else { stopAmbient(); }
-}
-
-function toggleViewerFx() {
-  viewerFxOn = !viewerFxOn;
-  const btn = document.getElementById('v-fx-btn');
-  btn.classList.toggle('on', viewerFxOn);
-  if(viewerFxOn) getAudioCtx();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════════
-switchTab('layers');
-renderLayerList();
-redraw();
-// Efectos de sonido activos por defecto
-document.getElementById('v-fx-btn').classList.add('on');
-
-// Botón "☁️ Guardar en Supabase" (barra superior del editor)
-document.getElementById('btn-save-sb').addEventListener('click', guardarEnSB);
-
-// Cargar datos desde Supabase al iniciar
-// (si las credenciales no están configuradas, simplemente no carga nada)
-if (SUPABASE_URL !== 'https://XXXX.supabase.co') {
-  cargarDesdeSB();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  SVG / JSON UNIFIED LOADER
-// ═══════════════════════════════════════════════════════════════
-let svgRawText = null;
-
+// ══ SVG / JSON unified loader ──────────────────────────────────
 document.getElementById('svg-json-file').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   e.target.value = '';
   const name = f.name.toLowerCase();
-
   if (name.endsWith('.json')) {
     const reader = new FileReader();
     reader.onload = async ev => {
       try {
         const data = JSON.parse(ev.target.result);
-        items = data.items || []; nextId = data.nextId || (items.length + 1);
-        selectedId = null; vertexSelectedId = null;
-        document.getElementById('edit-hint').style.display = 'block';
-        document.getElementById('edit-form').style.display = 'none';
-        if (data.image) { await loadImageFromBase64(data.image); }
-        if (data.svgText) { svgRawText = data.svgText; }
+        items = data.items || []; nextId = data.nextId || (items.length+1);
+        selectedId=null; vertexSelectedId=null;
+        document.getElementById('edit-hint').style.display='block';
+        document.getElementById('edit-form').style.display='none';
+        if (data.image && !imgEl) await loadImageFromBase64(data.image);
         redraw(); renderLayerList(); syncViewer();
-        alert('✅ Proyecto cargado' + (data.image ? ' (imagen incluida)' : ''));
+        sbToast('✅ Proyecto cargado', 'ok');
       } catch(err) { alert('JSON inválido: ' + err.message); }
     };
     reader.readAsText(f);
     return;
   }
-
   if (name.endsWith('.svg')) {
     const reader = new FileReader();
-    reader.onload = async ev => {
-      svgRawText = ev.target.result;
-      await importSVG(svgRawText);
-    };
+    reader.onload = async ev => { svgRawText = ev.target.result; await importSVG(svgRawText); };
     reader.readAsText(f);
-    return;
   }
 });
 
 async function importSVG(svgText) {
-  // Step 1: rasterize SVG → use as background image
   const blob = new Blob([svgText], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
   await new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      imgEl = img;
-      imgW  = img.naturalWidth  || 1200;
-      imgH  = img.naturalHeight || 800;
-      // Try viewBox if natural size is 0
-      if (imgW <= 1 || imgH <= 1) {
-        const parser2 = new DOMParser();
-        const doc2    = parser2.parseFromString(svgText, 'image/svg+xml');
-        const svgEl2  = doc2.querySelector('svg');
-        const vb      = svgEl2 && svgEl2.getAttribute('viewBox');
-        if (vb) {
-          const p = vb.split(/[\s,]+/).map(Number);
-          if (p.length===4 && p[2]>1) { imgW=p[2]; imgH=p[3]; }
-        }
+      imgEl=img; imgW=img.naturalWidth||1200; imgH=img.naturalHeight||800;
+      if (imgW<=1||imgH<=1) {
+        const parser2=new DOMParser();
+        const doc2=parser2.parseFromString(svgText,'image/svg+xml');
+        const svgEl2=doc2.querySelector('svg');
+        const vb=svgEl2&&svgEl2.getAttribute('viewBox');
+        if(vb){const p=vb.split(/[\s,]+/).map(Number);if(p.length===4&&p[2]>1){imgW=p[2];imgH=p[3];}}
       }
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
-      URL.revokeObjectURL(url);
-      resolve();
+      URL.revokeObjectURL(url); resolve();
     };
-    img.onerror = reject;
-    img.src = url;
+    img.onerror=reject; img.src=url;
   });
-
-  // Step 2: parse SVG IDs → create items[]
-  const parser = new DOMParser();
-  const doc    = parser.parseFromString(svgText, 'image/svg+xml');
-  const svgEl  = doc.querySelector('svg');
-  if (!svgEl) { alert('SVG inválido'); return; }
-
-  let svgW = imgW, svgH = imgH;
-  const vb = svgEl.getAttribute('viewBox');
-  if (vb) {
-    const p = vb.split(/[\s,]+/).map(Number);
-    if (p.length===4 && p[2]>1) { svgW=p[2]; svgH=p[3]; }
-  }
-
-  const newItems = [];
-  let autoId = nextId;
-  const sc = (x,y) => ({ x: x/svgW*imgW, y: y/svgH*imgH });
-
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(svgText,'image/svg+xml');
+  const svgEl=doc.querySelector('svg');
+  if(!svgEl){alert('SVG inválido');return;}
+  let svgW=imgW,svgH=imgH;
+  const vb=svgEl.getAttribute('viewBox');
+  if(vb){const p=vb.split(/[\s,]+/).map(Number);if(p.length===4&&p[2]>1){svgW=p[2];svgH=p[3];}}
+  const newItems=[];let autoId=nextId;
+  const sc=(x,y)=>({x:x/svgW*imgW,y:y/svgH*imgH});
   function extractPts(el) {
-    const tag = el.tagName.toLowerCase();
-    const pts = [];
-    if (tag === 'rect') {
-      const x=parseFloat(el.getAttribute('x')||0), y=parseFloat(el.getAttribute('y')||0);
-      const w=parseFloat(el.getAttribute('width')||0), h=parseFloat(el.getAttribute('height')||0);
-      if (!w||!h) return [];
-      return [sc(x,y),sc(x+w,y),sc(x+w,y+h),sc(x,y+h)];
-    }
-    if (tag==='polygon'||tag==='polyline') {
-      const nums=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);
-      for(let i=0;i<nums.length-1;i+=2) pts.push(sc(nums[i],nums[i+1]));
-      return pts;
-    }
-    if (tag==='path') {
-      const d=el.getAttribute('d')||'';
-      const re=/([MLHVCSQTAZmlhvcsqtaz])\s*([\d.\-e+,\s]*)/g;
-      let m,cx=0,cy=0;
-      while((m=re.exec(d))!==null){
-        const cmd=m[1];
-        const args=m[2].trim().split(/[\s,]+/).map(Number).filter(n=>!isNaN(n));
-        if(cmd==='M'||cmd==='L'){for(let i=0;i<args.length-1;i+=2){cx=args[i];cy=args[i+1];pts.push(sc(cx,cy));}}
-        else if(cmd==='m'||cmd==='l'){for(let i=0;i<args.length-1;i+=2){cx+=args[i];cy+=args[i+1];pts.push(sc(cx,cy));}}
-        else if(cmd==='H'){args.forEach(v=>{cx=v;pts.push(sc(cx,cy));});}
-        else if(cmd==='h'){args.forEach(v=>{cx+=v;pts.push(sc(cx,cy));});}
-        else if(cmd==='V'){args.forEach(v=>{cy=v;pts.push(sc(cx,cy));});}
-        else if(cmd==='v'){args.forEach(v=>{cy+=v;pts.push(sc(cx,cy));});}
-        else if(cmd==='C'){for(let i=0;i<args.length-5;i+=6){cx=args[i+4];cy=args[i+5];pts.push(sc(cx,cy));}}
-        else if(cmd==='c'){for(let i=0;i<args.length-5;i+=6){cx+=args[i+4];cy+=args[i+5];pts.push(sc(cx,cy));}}
-      }
-      return pts.filter((p,i)=>i===0||Math.hypot(p.x-pts[i-1].x,p.y-pts[i-1].y)>0.5);
-    }
+    const tag=el.tagName.toLowerCase();const pts=[];
+    if(tag==='rect'){const x=parseFloat(el.getAttribute('x')||0),y=parseFloat(el.getAttribute('y')||0),w=parseFloat(el.getAttribute('width')||0),h=parseFloat(el.getAttribute('height')||0);if(!w||!h)return[];return[sc(x,y),sc(x+w,y),sc(x+w,y+h),sc(x,y+h)];}
+    if(tag==='polygon'||tag==='polyline'){const nums=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number);for(let i=0;i<nums.length-1;i+=2)pts.push(sc(nums[i],nums[i+1]));return pts;}
+    if(tag==='path'){const d=el.getAttribute('d')||'';const re=/([MLHVCSQTAZmlhvcsqtaz])\s*([\d.\-e+,\s]*)/g;let m,cx=0,cy=0;while((m=re.exec(d))!==null){const cmd=m[1];const args=m[2].trim().split(/[\s,]+/).map(Number).filter(n=>!isNaN(n));if(cmd==='M'||cmd==='L'){for(let i=0;i<args.length-1;i+=2){cx=args[i];cy=args[i+1];pts.push(sc(cx,cy));}}else if(cmd==='m'||cmd==='l'){for(let i=0;i<args.length-1;i+=2){cx+=args[i];cy+=args[i+1];pts.push(sc(cx,cy));}}else if(cmd==='H'){args.forEach(v=>{cx=v;pts.push(sc(cx,cy));});}else if(cmd==='h'){args.forEach(v=>{cx+=v;pts.push(sc(cx,cy));});}else if(cmd==='V'){args.forEach(v=>{cy=v;pts.push(sc(cx,cy));});}else if(cmd==='v'){args.forEach(v=>{cy+=v;pts.push(sc(cx,cy));});}else if(cmd==='C'){for(let i=0;i<args.length-5;i+=6){cx=args[i+4];cy=args[i+5];pts.push(sc(cx,cy));}}else if(cmd==='c'){for(let i=0;i<args.length-5;i+=6){cx+=args[i+4];cy+=args[i+5];pts.push(sc(cx,cy));}}}return pts.filter((p,i)=>i===0||Math.hypot(p.x-pts[i-1].x,p.y-pts[i-1].y)>0.5);}
     return pts;
   }
-
-  function groupBBox(g) {
-    let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
-    g.querySelectorAll('path,polygon,rect,polyline').forEach(child=>{
-      extractPts(child).forEach(p=>{
-        const sx=p.x/imgW*svgW,sy=p.y/imgH*svgH;
-        if(sx<x0)x0=sx;if(sy<y0)y0=sy;if(sx>x1)x1=sx;if(sy>y1)y1=sy;
-      });
-    });
-    if(!isFinite(x0)) return [];
-    return [sc(x0,y0),sc(x1,y0),sc(x1,y1),sc(x0,y1)];
-  }
-
-  function fmtId(id) {
-    return id.replace(/_/g,' ').replace(/-/g,' ')
-      .replace(/([a-z])([A-Z])/g,'$1 $2')
-      .replace(/\b(mnz|manzana|mz)\b/gi,'Manzana')
-      .replace(/\b(lote|lot)\b/gi,'Lote').trim();
-  }
-
-  const existingSvgIds = new Set(items.map(i=>i._svgId).filter(Boolean));
-
-  svgEl.querySelectorAll('[id]').forEach(el => {
-    const rawId = el.id;
-    if (!rawId || rawId==='Layer_1' || rawId.startsWith('XMLID')) return;
-    if (existingSvgIds.has(rawId)) return; // already in items
-
-    const tag = el.tagName.toLowerCase();
-    const lc  = rawId.toLowerCase().replace(/[_\-\s]/g,'');
-    const isMz = lc.startsWith('mnz')||lc.startsWith('manzana')||lc.startsWith('mz');
-    const isGroup = tag==='g';
-    const isLeaf  = ['path','polygon','rect','polyline','ellipse','circle'].includes(tag);
-
-    if (!isLeaf && !isGroup) return;
-    if (isGroup && !isMz) return;
-
-    const points = isGroup ? groupBBox(el) : extractPts(el);
-    if (points.length < 3) return;
-
-    const displayName = fmtId(rawId);
-    newItems.push({
-      id: autoId++, type: isMz?'manzana':'lote', points,
-      mzName: isMz ? displayName.replace(/^Manzana\s*/i,'') : '',
-      num: !isMz ? (displayName.match(/\d+/)||[''])[0] : '',
-      mzRef:'', area:'', price:'', status:'available',
-      frente:'', fondo:'', orientacion:'', desc:'', notas:'',
-      _svgId: rawId
-    });
+  function groupBBox(g){let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;g.querySelectorAll('path,polygon,rect,polyline').forEach(child=>{extractPts(child).forEach(p=>{const sx=p.x/imgW*svgW,sy=p.y/imgH*svgH;if(sx<x0)x0=sx;if(sy<y0)y0=sy;if(sx>x1)x1=sx;if(sy>y1)y1=sy;});});if(!isFinite(x0))return[];return[sc(x0,y0),sc(x1,y0),sc(x1,y1),sc(x0,y1)];}
+  const existingSvgIds=new Set(items.map(i=>i._svgId).filter(Boolean));
+  svgEl.querySelectorAll('[id]').forEach(el=>{
+    const rawId=el.id;
+    if(!rawId||rawId==='Layer_1'||rawId.startsWith('XMLID'))return;
+    if(existingSvgIds.has(rawId))return;
+    const tag=el.tagName.toLowerCase();
+    const lc=rawId.toLowerCase().replace(/[_\-\s]/g,'');
+    const isMz=lc.startsWith('mnz')||lc.startsWith('manzana')||lc.startsWith('mz');
+    const isGroup=tag==='g';
+    const isLeaf=['path','polygon','rect','polyline','ellipse','circle'].includes(tag);
+    if(!isLeaf&&!isGroup)return;if(isGroup&&!isMz)return;
+    const points=isGroup?groupBBox(el):extractPts(el);
+    if(points.length<3)return;
+    const displayName=rawId.replace(/_/g,' ').replace(/-/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\b(mnz|manzana|mz)\b/gi,'Manzana').replace(/\b(lote|lot)\b/gi,'Lote').trim();
+    newItems.push({id:autoId++,type:isMz?'manzana':'lote',points,mzName:isMz?displayName.replace(/^Manzana\s*/i,''):'',num:!isMz?(displayName.match(/\d+/)||[''])[0]:'',mzRef:'',area:'',price:'',status:'available',frente:'',fondo:'',orientacion:'',desc:'',notas:'',_svgId:rawId});
   });
+  items.push(...newItems);nextId=autoId;
+  selectedId=null;vertexSelectedId=null;
+  document.getElementById('edit-hint').style.display='block';
+  document.getElementById('edit-form').style.display='none';
+  redraw();renderLayerList();syncViewer();
+  alert('✅ SVG importado — '+newItems.length+' elementos detectados');
+}
 
-  items.push(...newItems);
-  nextId = autoId;
-  selectedId = null; vertexSelectedId = null;
-  document.getElementById('edit-hint').style.display = 'block';
-  document.getElementById('edit-form').style.display = 'none';
-  redraw(); renderLayerList(); syncViewer();
-  alert('✅ SVG importado — ' + newItems.length + ' elementos detectados\n\nEdita nombre, área, precio y estado en el panel lateral.\nCuando termines, usa 💾 Exportar para guardar todo en un solo .json');
+// ═══════════════════════════════════════════════════════════════
+//  AUDIO SYSTEM
+// ═══════════════════════════════════════════════════════════════
+function getAudioCtx() {
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function createReverb(ctx,duration,decay) {
+  const sr=ctx.sampleRate,len=sr*duration,impulse=ctx.createBuffer(2,len,sr);
+  for(let c=0;c<2;c++){const ch=impulse.getChannelData(c);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}
+  const conv=ctx.createConvolver();conv.buffer=impulse;return conv;
+}
+let masterReverb=null,masterGain=null;
+function getMasterChain() {
+  const ctx=getAudioCtx();
+  if(!masterReverb){masterReverb=createReverb(ctx,2.2,3.5);masterGain=ctx.createGain();masterGain.gain.value=0.55;masterReverb.connect(masterGain);masterGain.connect(ctx.destination);}
+  return{reverb:masterReverb,gain:masterGain};
+}
+function startAmbient() {
+  if(!viewerSoundOn)return;
+  const ctx=getAudioCtx();const{reverb}=getMasterChain();
+  const windBuf=ctx.createBuffer(1,ctx.sampleRate*8,ctx.sampleRate);
+  const windData=windBuf.getChannelData(0);
+  let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+  for(let i=0;i<windData.length;i++){const w=Math.random()*2-1;b0=0.99886*b0+w*0.0555179;b1=0.99332*b1+w*0.0750759;b2=0.96900*b2+w*0.1538520;b3=0.86650*b3+w*0.3104856;b4=0.55000*b4+w*0.5329522;b5=-0.7616*b5-w*0.0168980;windData[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;b6=w*0.115926;}
+  const windSrc=ctx.createBufferSource();windSrc.buffer=windBuf;windSrc.loop=true;
+  const lpf=ctx.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=320;lpf.Q.value=0.5;
+  const windGain=ctx.createGain();windGain.gain.setValueAtTime(0,ctx.currentTime);windGain.gain.linearRampToValueAtTime(0.28,ctx.currentTime+4);
+  const windLFO=ctx.createOscillator();windLFO.type='sine';windLFO.frequency.value=0.07;
+  const windLFOG=ctx.createGain();windLFOG.gain.value=0.08;
+  windLFO.connect(windLFOG);windLFOG.connect(windGain.gain);windLFO.start();
+  windSrc.connect(lpf);lpf.connect(windGain);windGain.connect(reverb);windSrc.start();
+  ambNodes.push(windSrc,lpf,windGain,windLFO,windLFOG);
+  function scheduleBird(){
+    if(!viewerSoundOn)return;
+    const ctx2=getAudioCtx();const{reverb:rev}=getMasterChain();
+    const patterns=[[{f:1800,dur:.06},{f:2200,dur:.09}],[{f:2100,dur:.05},{f:1900,dur:.05},{f:2300,dur:.07}],[{f:1600,dur:.12}],[{f:2400,dur:.04},{f:2600,dur:.08},{f:2400,dur:.04}],[{f:1400,dur:.08},{f:1700,dur:.10},{f:1500,dur:.06}]];
+    const pattern=patterns[Math.floor(Math.random()*patterns.length)];let offset=0;
+    pattern.forEach(({f,dur})=>{
+      const osc=ctx2.createOscillator();osc.type='sine';
+      const t0=ctx2.currentTime+offset;osc.frequency.setValueAtTime(f*.92,t0);osc.frequency.exponentialRampToValueAtTime(f,t0+dur*.3);osc.frequency.exponentialRampToValueAtTime(f*.97,t0+dur);
+      const g=ctx2.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.055,t0+dur*.2);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+      osc.connect(g);g.connect(rev);osc.start(t0);osc.stop(t0+dur+.05);offset+=dur+.04+Math.random()*.05;
+    });
+    const nextIn=2000+Math.random()*5000;
+    const bt=setTimeout(scheduleBird,nextIn);
+    ambNodes.push({_timer:bt,disconnect:()=>{},stop:()=>clearTimeout(bt)});
+  }
+  const it=setTimeout(scheduleBird,1500);ambNodes.push({_timer:it,disconnect:()=>{},stop:()=>clearTimeout(it)});
+}
+function stopAmbient(){
+  const ctx=audioCtx;if(!ctx)return;const t=ctx.currentTime;
+  ambNodes.forEach(n=>{try{if(n._timer!==undefined){clearTimeout(n._timer);return;}if(n.gain&&n.gain.linearRampToValueAtTime)n.gain.linearRampToValueAtTime(0,t+1.0);setTimeout(()=>{try{n.stop&&n.stop();n.disconnect&&n.disconnect();}catch(e){}},1500);}catch(e){}});
+  ambNodes=[];
+}
+let hoverCooldown=0;
+function playEtherealHover(item){
+  if(!viewerFxOn||!item)return;const now=Date.now();if(now-hoverCooldown<220)return;hoverCooldown=now;
+  const ctx=getAudioCtx();const{reverb}=getMasterChain();
+  const baseMap={available:523.25,sold:440,reserved:392,manzana:587.33};
+  const base=item.type==='manzana'?baseMap.manzana:(baseMap[item.status]||523.25);
+  [[base,0.055],[base*3.011,0.018]].forEach(([f,amp],i)=>{
+    const osc=ctx.createOscillator();osc.type='triangle';osc.frequency.value=f;
+    const g=ctx.createGain();const t0=ctx.currentTime+i*.01;
+    g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(amp,t0+.008);g.gain.exponentialRampToValueAtTime(0.0001,t0+.35+i*.1);
+    osc.connect(g);g.connect(reverb);osc.start(t0);osc.stop(t0+.45);
+  });
+}
+function playEtherealSelect(item){
+  if(!viewerFxOn||!item)return;const ctx=getAudioCtx();const{reverb}=getMasterChain();
+  const isMz=item.type==='manzana';const root=isMz?349.23:523.25;
+  const notes=isMz?[root,root*1.333,root*1.5]:[root,root*1.25,root*1.5];
+  notes.forEach((f,i)=>{
+    const osc=ctx.createOscillator();osc.type='sine';osc.frequency.value=f;
+    const g=ctx.createGain();const t0=ctx.currentTime+i*.10;
+    g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.07,t0+.01);g.gain.exponentialRampToValueAtTime(0.0001,t0+.8);
+    osc.connect(g);g.connect(reverb);osc.start(t0);osc.stop(t0+.9);
+  });
+}
+function playTick(){const ctx=getAudioCtx();const osc=ctx.createOscillator();osc.type='sine';osc.frequency.value=880;const g=ctx.createGain();const t=ctx.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.04,t+.008);g.gain.exponentialRampToValueAtTime(0.0001,t+.12);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.15);}
+function playConfirm(){const ctx=getAudioCtx();[392,523.25,659.25].forEach((f,i)=>{const osc=ctx.createOscillator();osc.type='triangle';osc.frequency.value=f;const g=ctx.createGain();const t=ctx.currentTime+i*.09;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.06,t+.02);g.gain.exponentialRampToValueAtTime(0.0001,t+.5);osc.connect(g);g.connect(ctx.destination);osc.start(t);osc.stop(t+.55);});}
+function toggleViewerSound(){viewerSoundOn=!viewerSoundOn;document.getElementById('v-sound-btn').classList.toggle('on',viewerSoundOn);if(viewerSoundOn){getAudioCtx();startAmbient();}else stopAmbient();}
+function toggleViewerFx(){viewerFxOn=!viewerFxOn;document.getElementById('v-fx-btn').classList.toggle('on',viewerFxOn);if(viewerFxOn)getAudioCtx();}
+
+// ═══════════════════════════════════════════════════════════════
+//  BOTÓN GUARDAR SUPABASE
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('btn-save-sb').addEventListener('click', guardarEnSB);
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT — Arranque de la app
+// ═══════════════════════════════════════════════════════════════
+switchTab('layers');
+renderLayerList();
+redraw();
+document.getElementById('v-fx-btn').classList.add('on');
+
+// 1. Cargar imagen del plano desde GitHub (alta calidad, sin base64)
+if (PLANO_URL && PLANO_URL !== 'PON_AQUI_LA_URL_RAW_DE_GITHUB') {
+  cargarImagenDesdeURL(PLANO_URL).then(() => {
+    redraw();
+    redrawViewer();
+  });
+}
+
+// 2. Cargar lotes y polígonos desde Supabase
+cargarDesdeSB();
+
+// 3. Verificar si ya estaba autenticado en esta sesión
+if (isEditorUnlocked()) {
+  // No hace nada especial — simplemente permite el acceso si el usuario hace clic en Editor
 }
 
 </script>
