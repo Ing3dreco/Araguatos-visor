@@ -631,7 +631,13 @@ function switchWindow(win) {
   document.querySelectorAll('.win-tab').forEach(t=>t.classList.toggle('active',t.dataset.win===win));
   document.getElementById('editor-window').classList.toggle('active',win==='editor');
   document.getElementById('viewer-window').classList.toggle('active',win==='viewer');
-  if(win==='viewer') setTimeout(()=>{resizeViewerCanvas();redrawViewer();},50);
+  if(win==='viewer'){
+  setTimeout(()=>{
+    vCanvas.width=vWrap.clientWidth||window.innerWidth;
+    vCanvas.height=vWrap.clientHeight||(window.innerHeight-80);
+    redrawViewer();
+  },60);
+}
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -644,6 +650,7 @@ const wrap=document.getElementById('canvas-wrap');
 function resizeCanvas(){canvas.width=wrap.clientWidth;canvas.height=wrap.clientHeight;redraw();}
 window.addEventListener('resize',()=>{resizeCanvas();resizeViewerCanvas();});
 resizeCanvas();
+resizeViewerCanvas();
 
 function getImgRect(c,mode_cover) {
   const cw=c.width,ch=c.height;
@@ -800,7 +807,12 @@ const vCanvas=document.getElementById('viewer-canvas');
 const vCtx=vCanvas.getContext('2d');
 const vWrap=document.getElementById('viewer-wrap');
 
-function resizeViewerCanvas(){vCanvas.width=vWrap.clientWidth;vCanvas.height=vWrap.clientHeight;redrawViewer();}
+function resizeViewerCanvas(){
+  const w=vWrap.clientWidth||window.innerWidth;
+  const h=vWrap.clientHeight||(window.innerHeight-80);
+  if(w>0&&h>0){vCanvas.width=w;vCanvas.height=h;}
+  redrawViewer();
+}
 resizeViewerCanvas();
 
 // ── FIX PRINCIPAL: redrawViewer correcto ─────────────────────────
@@ -1078,7 +1090,10 @@ document.getElementById('v-fx-btn').classList.add('on');
   //    Con imgEl e imgW/imgH ya disponibles, redrawViewer dibujará correctamente
   await cargarDesdeSB();
 
-  // 3. Redibujar ambas ventanas con todo listo
+  // 3. Forzar resize del viewer (puede estar oculto al inicio) y redibujar
+  const vw = vWrap.clientWidth || window.innerWidth;
+  const vh = vWrap.clientHeight || (window.innerHeight - 80);
+  if(vw > 0 && vh > 0){ vCanvas.width = vw; vCanvas.height = vh; }
   redraw();
   redrawViewer();
   renderLayerList();
