@@ -453,8 +453,7 @@ let eZoomLevel=1,ePanX=0,ePanY=0,eIsPanning=false,ePanStart={x:0,y:0};
 let audioCtx=null,ambNodes=[];
 
 // ═══════════════════════════════════════════════════════════════
-//  CANVAS REFERENCES — declaradas aquí para que todas las
-//  funciones las encuentren independientemente del orden de llamada
+//  CANVAS REFERENCES
 // ═══════════════════════════════════════════════════════════════
 const canvas  = document.getElementById('main-canvas');
 const ctx     = canvas.getContext('2d');
@@ -569,8 +568,8 @@ async function cargarImagenDesdeURL(url){
     img.crossOrigin='anonymous';
     img.onload=()=>{
       imgEl=img;
-      imgW=1920;   // ← forzado, coincide con el artboard de Illustrator
-      imgH=1080;   // ← forzado
+      imgW=1920;
+      imgH=1080;
       console.log('[Imagen] Cargada OK — usando 1920×1080 fijo');
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
@@ -581,8 +580,8 @@ async function cargarImagenDesdeURL(url){
       const img2=new Image();
       img2.onload=()=>{
         imgEl=img2;
-        imgW=1920;   // ← forzado
-        imgH=1080;   // ← forzado
+        imgW=1920;
+        imgH=1080;
         document.getElementById('placeholder').classList.add('hidden');
         document.getElementById('v-placeholder').classList.add('hidden');
         console.warn('[Imagen] Cargada sin CORS — usando 1920×1080 fijo');
@@ -665,6 +664,31 @@ function imgToCanvas(ix,iy,c,cover){
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  HIT TEST — findItemAt prioriza lotes sobre manzanas
+// ═══════════════════════════════════════════════════════════════
+function pointInPoly(pt,poly){
+  if(!poly||poly.length<3)return false;
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+
+function findItemAt(ip){
+  // Primero lotes (tienen prioridad visual y de clic)
+  for(var i=items.length-1;i>=0;i--){
+    if(items[i].type==='lote'&&pointInPoly(ip,items[i].points))return items[i];
+  }
+  // Luego manzanas (solo si no hay lote encima)
+  for(var i=items.length-1;i>=0;i--){
+    if(items[i].type==='manzana'&&pointInPoly(ip,items[i].points))return items[i];
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  EDITOR EVENTS
 // ═══════════════════════════════════════════════════════════════
 function evPos(e,c){const r=(c||canvas).getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:src.clientX-r.left,y:src.clientY-r.top};}
@@ -679,7 +703,13 @@ function onMouseMove(e){
   if(mode==='draw'){redraw();return;}
   if(mode==='select'&&dragging){const ip=canvasToImg(pos.x,pos.y);const item=items.find(i=>i.id===selectedId);if(item){item.points=dragOffsets.map(o=>({x:ip.x+o.x,y:ip.y+o.y}));redraw();renderLayerList();syncViewer();}return;}
   if(mode==='vertex'&&vtxDragging&&vertexSelectedId!==null){const item=items.find(i=>i.id===vertexSelectedId);if(!item)return;const ip=canvasToImg(pos.x,pos.y);if(vtxDragIdx===-1){item.points=item.points.map(p=>({x:p.x+(ip.x-vtxDragOffset.lastX),y:p.y+(ip.y-vtxDragOffset.lastY)}));vtxDragOffset.lastX=ip.x;vtxDragOffset.lastY=ip.y;}else{item.points[vtxDragIdx]={x:ip.x,y:ip.y};}redraw();syncViewer();return;}
-  if(mode==='select'||mode==='vertex'){const ip=canvasToImg(pos.x,pos.y);let found=findItemAt(ip);const newHov=found?found.id:null;if(newHov!==hoveredId){hoveredId=newHov;redraw();}canvas.style.cursor=found?'pointer':'default';}
+  if(mode==='select'||mode==='vertex'){
+    const ip=canvasToImg(pos.x,pos.y);
+    var found=findItemAt(ip);
+    const newHov=found?found.id:null;
+    if(newHov!==hoveredId){hoveredId=newHov;redraw();}
+    canvas.style.cursor=found?'pointer':'default';
+  }
 }
 
 function onMouseDown(e){
@@ -692,9 +722,30 @@ function onMouseUp(){if(dragging){dragging=false;canvas.style.cursor='pointer';}
 function onCanvasClick(e){
   const pos=evPos(e);const ip=canvasToImg(pos.x,pos.y);const now=Date.now();
   if(now-lastClickTime<280){lastClickTime=0;return;}lastClickTime=now;
-  if(mode==='draw'){if(!imgEl)return;if(!drawing){drawing=true;drawPts=[ip];document.getElementById('draw-hint').classList.add('on');document.getElementById('btn-finish').style.display='inline-block';document.getElementById('btn-cancel-draw').style.display='inline-block';playTick();}else{if(drawPts.length>=3){const fp=imgToCanvas(drawPts[0].x,drawPts[0].y);if(Math.hypot(pos.x-fp.x,pos.y-fp.y)<14){finishDraw();return;}}drawPts.push(ip);playTick();redraw();}return;}
-  if(mode==='select'&&!dragging){let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}if(found){selectItem(found.id);switchTab('edit');}else{selectedId=null;redraw();}}
-  if(mode==='vertex')let found=findItemAt(ip);if(found){vertexSelectedId=found.id;origPoints=JSON.parse(JSON.stringify(found.points));currentRot=0;currentScl=100;document.getElementById('rot-slider').value=0;document.getElementById('rot-val').value=0;document.getElementById('scl-slider').value=100;document.getElementById('scl-val').value=100;selectItem(found.id);switchTab('edit');redraw();}}
+  if(mode==='draw'){
+    if(!imgEl)return;
+    if(!drawing){drawing=true;drawPts=[ip];document.getElementById('draw-hint').classList.add('on');document.getElementById('btn-finish').style.display='inline-block';document.getElementById('btn-cancel-draw').style.display='inline-block';playTick();}
+    else{if(drawPts.length>=3){const fp=imgToCanvas(drawPts[0].x,drawPts[0].y);if(Math.hypot(pos.x-fp.x,pos.y-fp.y)<14){finishDraw();return;}}drawPts.push(ip);playTick();redraw();}
+    return;
+  }
+  if(mode==='select'&&!dragging){
+    var found=findItemAt(ip);
+    if(found){selectItem(found.id);switchTab('edit');}
+    else{selectedId=null;redraw();}
+  }
+  if(mode==='vertex'){
+    var found=findItemAt(ip);
+    if(found){
+      vertexSelectedId=found.id;
+      origPoints=JSON.parse(JSON.stringify(found.points));
+      currentRot=0;currentScl=100;
+      document.getElementById('rot-slider').value=0;
+      document.getElementById('rot-val').value=0;
+      document.getElementById('scl-slider').value=100;
+      document.getElementById('scl-val').value=100;
+      selectItem(found.id);switchTab('edit');redraw();
+    }
+  }
 }
 function onDblClick(){if(mode==='draw'&&drawing)finishDraw();lastClickTime=0;}
 
@@ -846,7 +897,7 @@ function onViewerMouseMove(e){
   const pos=evPos(e,vCanvas);const now=Date.now();
   if(now-vHoverThrottle<30)return;vHoverThrottle=now;
   const ip=vImgCoord(pos);
-  let found=findItemAt(ip);
+  var found=findItemAt(ip);
   const newHov=found?found.id:null;
   if(newHov!==vHoveredId){vHoveredId=newHov;if(found&&found.id!==vSelectedId){showVPopup(found,pos);playEtherealHover(found);}else{hideVPopup();}redrawViewer();}
   else if(found&&found.id!==vSelectedId){moveVPopup(pos);}
@@ -856,7 +907,7 @@ function onViewerMouseMove(e){
 function onViewerClick(e){
   if(vIsPanning)return;
   const pos=evPos(e,vCanvas);const ip=vImgCoord(pos);
-  let found=findItemAt(ip);
+  var found=findItemAt(ip);
   if(found){if(vSelectedId===found.id){clearViewerSelection();}else{vSelectedId=found.id;hideVPopup();showSelPanel(found);playEtherealSelect(found);redrawViewer();}}
   else{clearViewerSelection();}
 }
@@ -888,34 +939,6 @@ function showVPopup(item,pos){
 function moveVPopup(pos){const popup=document.getElementById('v-popup');const cw=vCanvas.width,ch=vCanvas.height;let left=pos.x-97,top=pos.y-160;left=Math.max(6,Math.min(left,cw-230));top=Math.max(6,Math.min(top,ch-210));popup.style.left=left+'px';popup.style.top=top+'px';}
 function hideVPopup(){const popup=document.getElementById('v-popup');popup.classList.remove('on');setTimeout(()=>{if(!popup.classList.contains('on'))popup.style.display='none';},200);}
 
-// ═══════════════════════════════════════════════════════════════
-//  HIT TEST
-// ═══════════════════════════════════════════════════════════════
-function pointInPoly(pt,poly){
-  if(!poly||poly.length<3)return false;
-  let inside=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
-    if(((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi))inside=!inside;
-  }
-  return inside;
-}
-// Hit test que prioriza lotes sobre manzanas
-function findItemAt(ip) {
-  // Primero buscar entre lotes (tienen prioridad de clic)
-  for (let i = items.length - 1; i >= 0; i--) {
-    if (items[i].type === 'lote' && pointInPoly(ip, items[i].points)) {
-      return items[i];
-    }
-  }
-  // Si no hay lote, buscar manzana
-  for (let i = items.length - 1; i >= 0; i--) {
-    if (items[i].type === 'manzana' && pointInPoly(ip, items[i].points)) {
-      return items[i];
-    }
-  }
-  return null;
-}
 // ═══════════════════════════════════════════════════════════════
 //  COUNTERS
 // ═══════════════════════════════════════════════════════════════
@@ -1056,23 +1079,18 @@ function toggleViewerFx(){viewerFxOn=!viewerFxOn;document.getElementById('v-fx-b
 document.getElementById('btn-save-sb').addEventListener('click',guardarEnSB);
 
 // ═══════════════════════════════════════════════════════════════
-//  INIT — orden correcto: canvas → imagen → datos → dibujar
+//  INIT
 // ═══════════════════════════════════════════════════════════════
 switchTab('layers');
 renderLayerList();
 resizeCanvas();
-resizeViewerCanvas();  // vCanvas y vWrap ya están declarados arriba
+resizeViewerCanvas();
 document.getElementById('v-fx-btn').classList.add('on');
 
 (async function init(){
-  // 1. Imagen primero — los puntos se mapean contra imgW/imgH
   sbToast('Cargando imagen del plano…','saving',0);
   await cargarImagenDesdeURL(PLANO_URL);
-
-  // 2. Datos de Supabase — imgEl ya existe, redrawViewer funciona
   await cargarDesdeSB();
-
-  // 3. Redibujo final con todo listo
   resizeViewerCanvas();
   redraw();
   redrawViewer();
