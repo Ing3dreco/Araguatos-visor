@@ -865,14 +865,11 @@ function hidePopup(){
 function buildSelContent(item, container){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
-  container.querySelector('.sel-name').textContent=
-    isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
+  const nameEl=container.querySelector('.sel-name');
+  if(nameEl) nameEl.textContent=isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
   const badge=container.querySelector('.sel-badge');
-  badge.textContent=isMz?'Manzana':(labels[item.status]||'');
-  badge.className='sel-badge '+(isMz?'manzana':item.status);
-  container.querySelector('.sel-val[id$="area"], [id="vs-area"]') && (container.querySelector('[id="vs-area"]')||container.querySelectorAll('.sel-val')[0]).textContent=item.area?item.area+' m²':'—';
+  if(badge){ badge.textContent=isMz?'Manzana':(labels[item.status]||''); badge.className='sel-badge '+(isMz?'manzana':item.status); }
 
-  // Usamos IDs directamente en el template desktop; para el clon del overlay usamos querySelectorAll
   function setRow(row, val, show){
     if(!row) return;
     row.style.display=show?'flex':'none';
@@ -880,24 +877,24 @@ function buildSelContent(item, container){
   }
 
   // Área
-  const areaVal=container.querySelector('[id="vs-area"]')||container.querySelectorAll('.sel-row .sel-val')[0];
+  const areaVal=container.querySelector('#vs-area')||container.querySelectorAll('.sel-row .sel-val')[0];
   if(areaVal) areaVal.textContent=item.area?item.area+' m²':'—';
 
   // Medidas
-  const dimsRow=container.querySelector('[id="vs-dims-row"]'); const dimsVal=dimsRow&&dimsRow.querySelector('.sel-val');
+  const dimsRow=container.querySelector('#vs-dims-row');
   if(!isMz&&(item.frente||item.fondo)){ setRow(dimsRow,(item.frente||'?')+'m × '+(item.fondo||'?')+'m',true); }
   else setRow(dimsRow,'',false);
 
   // Orientación
-  const orRow=container.querySelector('[id="vs-orient-row"]');
+  const orRow=container.querySelector('#vs-orient-row');
   setRow(orRow,item.orientacion,!isMz&&!!item.orientacion);
 
   // Descripción
-  const descRow=container.querySelector('[id="vs-desc-row"]');
+  const descRow=container.querySelector('#vs-desc-row');
   setRow(descRow,item.desc||item.description,!isMz&&!!(item.desc||item.description));
 
   // Precio
-  const prRow=container.querySelector('[id="vs-price-row"]');
+  const prRow=container.querySelector('#vs-price-row');
   if(!isMz&&showPriceViewer&&item.price){
     setRow(prRow,'$'+Number(item.price).toLocaleString('es-CO'),true);
     const pv=prRow&&prRow.querySelector('.sel-val');
@@ -905,7 +902,7 @@ function buildSelContent(item, container){
   } else setRow(prRow,'',false);
 
   // Manzana
-  const mzRow=container.querySelector('[id="vs-mz-row"]');
+  const mzRow=container.querySelector('#vs-mz-row');
   setRow(mzRow,item.mzRef,!isMz&&!!item.mzRef);
 }
 
