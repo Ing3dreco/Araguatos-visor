@@ -770,7 +770,7 @@ vCanvas.addEventListener('touchmove',e=>{
   if(touches.length===1 && !isPinching){ // ← solo pan si no venimos de pinch
     const dx=touches[0].clientX - touchStartX;
     const dy=touches[0].clientY - touchStartY;
-    if(Math.hypot(dx,dy)>6) touchMoved=true;
+    if(Math.hypot(dx,dy)>12) touchMoved=true;
     vPanX = touches[0].clientX - vPanStart.x;
     vPanY = touches[0].clientY - vPanStart.y;
     redrawViewer();
@@ -795,8 +795,12 @@ vCanvas.addEventListener('touchend',e=>{
   touches=[...e.touches];
 
   if(touches.length===0){
-    // Todos los dedos levantados
-    if(!isPinching && !touchMoved && e.changedTouches.length===1){
+    // ← Guardar isPinching antes de resetearlo
+    const wasPinching = isPinching;
+    isPinching=false;
+
+    // ← Solo registrar tap si NO venimos de un pinch y el movimiento fue mínimo
+    if(!wasPinching && !touchMoved && e.changedTouches.length===1){
       const t=e.changedTouches[0];
       const r=cachedCanvasRect||vCanvas.getBoundingClientRect();
       const pos={x:t.clientX-r.left, y:t.clientY-r.top};
@@ -807,15 +811,12 @@ vCanvas.addEventListener('touchend',e=>{
         else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
       } else { clearSelection(); }
     }
-    isPinching=false; // ← reset SOLO cuando no queda ningún dedo
   }
-  // Si queda 1 dedo tras soltar el segundo, reanclamos el pan desde la posición actual
   else if(touches.length===1 && isPinching){
     touchStartX=touches[0].clientX;
     touchStartY=touches[0].clientY;
     touchMoved=false;
     vPanStart={x:touches[0].clientX - vPanX, y:touches[0].clientY - vPanY};
-    // isPinching sigue true hasta que se suelten todos los dedos
   }
 },{passive:false});
 
