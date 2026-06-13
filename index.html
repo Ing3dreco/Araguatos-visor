@@ -656,12 +656,35 @@ function getImgRect(c,mode_cover){
 function canvasToImg(cx,cy){
   const lx=(cx-ePanX)/eZoomLevel,ly=(cy-ePanY)/eZoomLevel;
   const r=getImgRect(canvas,false);
-  return{x:(lx-r.x)/r.w*imgW,y:(ly-r.y)/r.h*imgH};
+
+  const SRC_X_MIN = 44.00883125;
+  const SRC_X_MAX = 206.1452765625;
+  const SRC_Y_MIN = 28.867083333333333;
+  const SRC_Y_MAX = 84.63444444444444;
+
+  const nx=(lx-r.x)/r.w*imgW;
+  const ny=(ly-r.y)/r.h*imgH;
+
+  return{
+    x: nx/imgW*(SRC_X_MAX-SRC_X_MIN)+SRC_X_MIN,
+    y: ny/imgH*(SRC_Y_MAX-SRC_Y_MIN)+SRC_Y_MIN
+  };
 }
 
 function imgToCanvas(ix,iy,c,cover){
   const r=getImgRect(c||canvas,cover||false);
-  return{x:r.x+ix/imgW*r.w,y:r.y+iy/imgH*r.h};
+  
+  // Bounding box real de las coordenadas de Supabase
+  const SRC_X_MIN = 44.00883125;
+  const SRC_X_MAX = 206.1452765625;
+  const SRC_Y_MIN = 28.867083333333333;
+  const SRC_Y_MAX = 84.63444444444444;
+
+  // Normalizar al espacio de imagen (0..imgW, 0..imgH)
+  const nx = (ix - SRC_X_MIN) / (SRC_X_MAX - SRC_X_MIN) * imgW;
+  const ny = (iy - SRC_Y_MIN) / (SRC_Y_MAX - SRC_Y_MIN) * imgH;
+
+  return{x:r.x+nx/imgW*r.w, y:r.y+ny/imgH*r.h};
 }
 
 // ═══════════════════════════════════════════════════════════════
