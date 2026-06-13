@@ -102,10 +102,35 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
 .pop-price{color:var(--gold);font-weight:700}
 
-/* ── SELECTION PANEL ── */
+/* ── SELECTION PANEL — desktop: flotante junto al lote ── */
 #v-sel-panel{position:absolute;display:none;z-index:100}
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* ── SELECTION OVERLAY — móvil: centrado, igual que video modal ── */
+#v-sel-overlay{
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(0,0,0,0);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  transition:background .28s ease;
+}
+#v-sel-overlay.open{
+  background:rgba(0,0,0,.65);
+  pointer-events:all;
+}
+#v-sel-overlay-inner{
+  position:relative;
+  width:88vw;max-width:340px;
+  transform:scale(0.04);
+  opacity:0;
+  transform-origin:center center;
+  transition:transform .38s cubic-bezier(.34,1.35,.64,1), opacity .24s ease;
+}
+#v-sel-overlay.open #v-sel-overlay-inner{
+  transform:scale(1);
+  opacity:1;
+}
 .sel-card{background:rgba(6,8,13,.97);border:1px solid var(--gold);border-radius:14px;padding:16px 20px;min-width:220px;max-width:280px;box-shadow:0 24px 64px rgba(0,0,0,.9),0 0 40px rgba(201,168,76,.06);backdrop-filter:blur(20px)}
 .sel-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .sel-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold3);line-height:1.2}
@@ -231,23 +256,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .cnt-l{font-size:7px}
   .cnt-div{height:20px}
 
-  /* Panel de selección: bottom sheet centrado */
-  #v-sel-panel{
-    left:50% !important;
-    top:auto !important;
-    bottom:8px !important;
-    transform:translateX(-50%) !important;
-    width:calc(100vw - 16px);
-    max-width:360px;
-  }
-  #v-sel-panel.on{animation:panelin-mb .24s cubic-bezier(.34,1.46,.64,1)}
-  @keyframes panelin-mb{
-    from{opacity:0;transform:translateX(-50%) translateY(24px)}
-    to{opacity:1;transform:translateX(-50%) translateY(0)}
-  }
-  .sel-card{min-width:unset;max-width:unset;width:100%;padding:12px 14px;border-radius:12px}
-  .sel-name{font-size:16px}
-  .sel-val{font-size:11px}
+  /* Panel desktop oculto en móvil — se usa el overlay centrado */
+  #v-sel-panel{display:none !important}
+  /* Overlay sel-card en móvil */
+  #v-sel-overlay .sel-card{min-width:unset;max-width:unset;width:100%;padding:14px 16px;border-radius:14px}
+  #v-sel-overlay .sel-name{font-size:17px}
+  #v-sel-overlay .sel-val{font-size:11px}
 
   /* Popup hover: oculto en móvil (usamos el panel de selección) */
   #v-popup{display:none !important}
@@ -379,6 +393,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
   </div><!-- /viewer-wrap -->
 </div><!-- /app -->
+
+<!-- SELECTION OVERLAY (móvil) -->
+<div id="v-sel-overlay" onclick="handleSelOverlayClick(event)">
+  <div id="v-sel-overlay-inner">
+    <!-- mismo sel-card, clonado dinámicamente por JS -->
+  </div>
+</div>
 
 <!-- VIDEO MODAL -->
 <div id="video-overlay" onclick="handleOverlayClick(event)">
@@ -629,7 +650,7 @@ function drawItem(item){
   vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
   vCtx.shadowBlur=0;
 
-  // Label — tamaño adaptado al zoom Y al dispositivo
+  // Label — tamaño proporcional al polígono y al dispositivo
   const isMobile = vCanvas.width < 600;
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
@@ -637,13 +658,24 @@ function drawItem(item){
     ? (item.mzName||'?')
     : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
 
-  // Tamaño base más pequeño en móvil
-  const baseMz = isMobile ? 11 : 16;
-  const baseAt = isMobile ? 8  : 11;
+  // Dimensiones del polígono en canvas (ya con zoom aplicado)
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const polyW = Math.max(...xs) - Math.min(...xs);
+  const polyH = Math.max(...ys) - Math.min(...ys);
+  const polyShort = Math.min(polyW, polyH);
+
+  // En móvil sin zoom suficiente, si el polígono es muy pequeño no dibujamos etiqueta
+  if(isMobile && polyShort < 16) return;
+
+  // Tamaño base fuertemente reducido en móvil, acotado por el lado corto del polígono
+  const baseMz = isMobile ? 6  : 14;
+  const baseAt = isMobile ? 5  : 10;
+  const maxMz  = isMobile ? 9  : 20;
+  const maxAt  = isMobile ? 7  : 14;
   const fs = isMz
-    ? Math.max(baseMz, Math.min(baseMz+4, pts.length*1.8))
-    : Math.max(baseAt, Math.min(baseAt+3, pts.length*1.2));
-  const fsActual = fs/vZoomLevel;
+    ? Math.min(maxMz, Math.max(baseMz, polyShort * (isMobile ? 0.055 : 0.085)))
+    : Math.min(maxAt, Math.max(baseAt, polyShort * (isMobile ? 0.040 : 0.065)));
+  const fsActual = fs / vZoomLevel;
 
   vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
   vCtx.textAlign='center'; vCtx.textBaseline='middle';
@@ -811,6 +843,7 @@ function onViewerClick(e){
 function clearSelection(){
   vSelectedId=null;
   document.getElementById('v-sel-panel').classList.remove('on');
+  closeSelOverlay();
   redrawViewer();
 }
 
@@ -845,7 +878,7 @@ function hidePopup(){
 // ═══════════════════════════════════════════════════════════════
 //  SELECTION PANEL
 // ═══════════════════════════════════════════════════════════════
-function showSelPanel(item, pos){
+function buildSelContent(item){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
   document.getElementById('vs-name').textContent=isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
@@ -861,19 +894,47 @@ function showSelPanel(item, pos){
   if(!isMz&&showPriceViewer&&item.price){ pr.style.display='flex'; document.getElementById('vs-price').textContent='$'+Number(item.price).toLocaleString('es-CO'); } else pr.style.display='none';
   const mzr=document.getElementById('vs-mz-row');
   if(!isMz&&item.mzRef){ mzr.style.display='flex'; document.getElementById('vs-mz').textContent=item.mzRef; } else mzr.style.display='none';
+}
 
-  // Posición dinámica (desktop)
-  const panel=document.getElementById('v-sel-panel');
-  const isMobile=vCanvas.width<600;
-  if(!isMobile && pos){
-    const cw=vCanvas.width, ch=vCanvas.height;
-    let left=pos.x+20, top=pos.y-80;
-    if(left+300>cw) left=pos.x-310;
-    top=Math.max(10,Math.min(top,ch-320));
-    panel.style.left=left+'px'; panel.style.top=top+'px';
-    panel.style.bottom=''; panel.style.transform='';
+function showSelPanel(item, pos){
+  buildSelContent(item);
+  const isMobile = vCanvas.width < 600;
+
+  if(isMobile){
+    // ── Móvil: overlay centrado con animación Mac ──
+    const overlay = document.getElementById('v-sel-overlay');
+    const inner   = document.getElementById('v-sel-overlay-inner');
+    // Mover el sel-card al overlay
+    const card = document.getElementById('v-sel-panel');
+    inner.innerHTML = '';
+    inner.appendChild(card.querySelector('.sel-card').cloneNode(true));
+    // Re-bind close button en el clon
+    inner.querySelector('.sel-close').onclick = clearSelection;
+    overlay.style.display = 'flex';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
+  } else {
+    // ── Desktop: flotante junto al lote ──
+    const panel = document.getElementById('v-sel-panel');
+    if(pos){
+      const cw=vCanvas.width, ch=vCanvas.height;
+      let left=pos.x+20, top=pos.y-80;
+      if(left+300>cw) left=pos.x-310;
+      top=Math.max(10,Math.min(top,ch-320));
+      panel.style.left=left+'px'; panel.style.top=top+'px';
+      panel.style.bottom=''; panel.style.transform='';
+    }
+    panel.classList.add('on');
   }
-  panel.classList.add('on');
+}
+
+function closeSelOverlay(){
+  const overlay=document.getElementById('v-sel-overlay');
+  overlay.classList.remove('open');
+  setTimeout(()=>{ overlay.style.display='none'; },380);
+}
+
+function handleSelOverlayClick(e){
+  if(e.target===document.getElementById('v-sel-overlay')) clearSelection();
 }
 
 // ═══════════════════════════════════════════════════════════════
