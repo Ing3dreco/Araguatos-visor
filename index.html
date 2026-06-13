@@ -108,8 +108,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-price{color:var(--gold);font-weight:700}
 
 /* Panel de selección desktop */
-#v-sel-panel{position:absolute;display:none;z-index:100}
+#v-sel-panel{position:absolute;display:none;z-index:100;pointer-events:none}
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
+#v-sel-panel.visible{display:block;opacity:1;pointer-events:all}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
 /* ══════════════════════════════════════════════════════════════
@@ -822,17 +823,31 @@ function onViewerClick(e){
 }
 
 function clearSelection(){
-  if(vSelectedId===null) return;
+  // No hacemos return si vSelectedId===null porque puede llamarse desde el botón ✕
+  // cuando ya se limpió el estado pero el panel sigue visible
   vSelectedId=null;
-  const panel=document.getElementById('v-sel-panel');
-  const overlay=document.getElementById('v-sel-overlay');
   const isMobile=vCanvas.width<700;
   if(isMobile){
     closeSelOverlay();
   } else {
-    panel.classList.remove('on');
+    closeSelDesktop();
   }
   redrawViewer();
+}
+
+function closeSelDesktop(){
+  const panel=document.getElementById("v-sel-panel");
+  // El panel está visible si tiene display distinto de none/vacío o tiene clase visible
+  const isVisible = panel && (
+    panel.classList.contains("visible") ||
+    (panel.style.display && panel.style.display !== "none")
+  );
+  if(!isVisible) return;
+  genieClose(panel, genieOriginX, genieOriginY, ()=>{
+    panel.style.display="none";
+    panel.style.pointerEvents="";
+    panel.classList.remove("on","visible");
+  });
 }
 
 // ── POPUP ──
@@ -932,27 +947,31 @@ function showSelPanel(item, screenPos){
     genieOpen(inner, genieOriginX, genieOriginY);
 
   } else {
-    // Desktop / tablet grande: panel flotante sin efecto genio (se usa la animación CSS)
+    // Desktop — panel flotante con efecto genio
     const panel = document.getElementById('v-sel-panel');
     buildSelContent(item, panel);
 
-    // Guardar origen
-    genieOriginX = screenPos ? screenPos.x : vCanvas.width/2;
-    genieOriginY = screenPos ? screenPos.y : vCanvas.height/2;
+    // Guardar origen (posición del click en pantalla)
+    genieOriginX = screenPos ? screenPos.x : window.innerWidth/2;
+    genieOriginY = screenPos ? screenPos.y : window.innerHeight/2;
 
-    // Posición del panel
-    const cw=vCanvas.clientWidth, ch=vCanvas.clientHeight;
-    let left=(screenPos?screenPos.x:cw/2)+20;
-    let top =(screenPos?screenPos.y:ch/2)-80;
-    const r = vCanvas.getBoundingClientRect();
-    left = (screenPos?screenPos.x:cw/2+r.left) - r.left + 20;
-    top  = (screenPos?screenPos.y:ch/2+r.top)  - r.top  - 80;
-    if(left+300>cw) left=((screenPos?screenPos.x:cw/2+r.left)-r.left)-310;
-    top=Math.max(10,Math.min(top,ch-340));
-    panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.bottom=''; panel.style.transform='';
+    // Calcular posición del panel relativa al canvas
+    const r   = vCanvas.getBoundingClientRect();
+    const cw  = r.width, ch = r.height;
+    const cx  = screenPos ? screenPos.x - r.left : cw/2;
+    const cy  = screenPos ? screenPos.y - r.top  : ch/2;
+    let left  = cx + 20;
+    let top   = cy - 80;
+    if(left + 300 > cw) left = cx - 310;
+    top = Math.max(10, Math.min(top, ch - 340));
+    panel.style.left=left+'px'; panel.style.top=top+'px';
+    panel.style.bottom=''; panel.style.transform='';
 
-    // Efecto genio en desktop también
+    // Mostrar panel (invisible aún para que genieOpen lo mida)
     panel.style.display='block';
+    panel.classList.remove('on','visible');
+
+    // Efecto genio de apertura
     genieOpen(panel, genieOriginX, genieOriginY);
   }
 }
@@ -1258,6 +1277,7 @@ function genieOpen(el, ox, oy, snapFn){
         } else {
           genieC.style.display='none';
           el.style.opacity='';
+          el.style.pointerEvents='';
           el.classList.add('visible');
         }
       }
