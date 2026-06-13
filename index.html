@@ -1248,6 +1248,16 @@ function toggleMusic(){
   if(musicOn){ musicAudio.play().catch(()=>{}); } else { musicAudio.pause(); }
 }
 
+// ── Pausa al cambiar de pestaña / minimizar; reanuda al volver ──
+document.addEventListener('visibilitychange', ()=>{
+  if(!musicAudio || !musicOn) return;
+  if(document.hidden){
+    musicAudio.pause();
+  } else {
+    musicAudio.play().catch(()=>{});
+  }
+});
+
 let audioCtx=null;
 function getAudioCtx(){
   if(!audioCtx){
@@ -1371,6 +1381,21 @@ document.addEventListener('keydown',e=>{
   activarRealtime();
   resizeCanvas();
   redrawViewer();
+
+  // Autoplay: arrancar música en el primer gesto del usuario
+  function startMusicOnce(){
+    if(musicOn) return;          // ya arrancó
+    initMusic();
+    musicOn = true;
+    document.getElementById('music-btn').classList.add('on');
+    musicAudio.play().catch(()=>{ musicOn=false; document.getElementById('music-btn').classList.remove('on'); });
+    document.removeEventListener('click',    startMusicOnce, {capture:true});
+    document.removeEventListener('touchend', startMusicOnce, {capture:true});
+    document.removeEventListener('keydown',  startMusicOnce, {capture:true});
+  }
+  document.addEventListener('click',    startMusicOnce, {capture:true});
+  document.addEventListener('touchend', startMusicOnce, {capture:true});
+  document.addEventListener('keydown',  startMusicOnce, {capture:true});
 })();
 </script>
 </body>
