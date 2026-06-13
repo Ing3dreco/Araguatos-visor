@@ -107,14 +107,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
 .pop-price{color:var(--gold);font-weight:700}
 
+/* Panel de selección desktop */
 #v-sel-panel{position:absolute;display:none;z-index:100}
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
 /* ══════════════════════════════════════════════════════════════
-   EFECTO GENIO MAC — Overlay para selection (móvil)
-   El fondo aparece con fade simple; la animación genio real
-   se hace en canvas (ver GenieEffect más abajo).
+   OVERLAY MÓVIL — fondo oscuro + inner centrado
 ══════════════════════════════════════════════════════════════ */
 #v-sel-overlay{
   position:fixed;inset:0;z-index:8000;
@@ -127,21 +126,24 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   background:rgba(0,0,0,.65);
   pointer-events:all;
 }
-/* El inner es el destino final visible del panel */
 #v-sel-overlay-inner{
   position:relative;
   width:88vw;max-width:340px;
-  /* Oculto mientras el canvas genio anima; se muestra al terminar */
   opacity:0;
-  transition:opacity .05s ease;
+  pointer-events:none;
+  transition:opacity .06s ease;
 }
 #v-sel-overlay-inner.visible{
   opacity:1;
+  pointer-events:all;
 }
 
-/* Canvas Genio — overlay encima de todo, mismo tamaño pantalla */
+/* ══════════════════════════════════════════════════════════════
+   CANVAS GENIO — cubre toda la pantalla, z-index máximo
+══════════════════════════════════════════════════════════════ */
 #genie-canvas{
-  position:fixed;inset:0;z-index:8500;
+  position:fixed;inset:0;
+  z-index:9800;
   pointer-events:none;
   display:none;
 }
@@ -176,7 +178,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
 /* ══════════════════════════════════════════════════════════════
-   VIDEO MODAL — mismo efecto genio real vía canvas
+   VIDEO MODAL
 ══════════════════════════════════════════════════════════════ */
 #video-overlay{
   position:fixed;inset:0;z-index:9000;
@@ -198,19 +200,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   overflow:hidden;
   box-shadow:0 40px 120px rgba(0,0,0,.9);
   opacity:0;
-  transition:opacity .05s ease;
+  pointer-events:none;
+  transition:opacity .06s ease;
 }
-#video-modal.visible{opacity:1;}
-
+#video-modal.visible{
+  opacity:1;
+  pointer-events:all;
+}
 #video-modal video{display:block;width:100%;max-height:75vh;object-fit:contain;background:#000;}
 #video-modal-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(6,8,13,.95);border-top:1px solid var(--bdr);}
 #video-modal-title{font-family:'DM Serif Display',serif;font-size:14px;color:var(--gold2);letter-spacing:.3px;}
 #video-close-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid var(--bdr2);background:var(--surf2);color:var(--txt2);font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:var(--tr);letter-spacing:.3px;}
 #video-close-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* Canvas Genio de vídeo — mismo canvas #genie-canvas, z-index 9500 cuando activo */
-#genie-canvas.video-mode{z-index:9500;}
-
+/* ── RESPONSIVE ── */
 @media(max-width:600px){
   #topbar{padding:0 8px;gap:5px;height:42px}
   .brand{font-size:13px}
@@ -236,6 +239,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .cnt-n{font-size:14px}
   .cnt-l{font-size:7px}
   .cnt-div{height:20px}
+  /* En móvil el panel de selección SOLO va en el overlay, no como panel fijo */
   #v-sel-panel{display:none !important}
   #v-popup{display:none !important}
   #video-modal{width:98vw;border-radius:10px}
@@ -255,7 +259,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </head>
 <body>
 
-<!-- CANVAS GENIO — usado para ambos efectos (selection + video) -->
+<!-- CANVAS GENIO — único canvas para todos los efectos -->
 <canvas id="genie-canvas"></canvas>
 
 <div id="sb-toast"><span class="sb-dot"></span><span id="sb-msg">Conectando…</span></div>
@@ -301,16 +305,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     </div>
 
     <div id="video-btns">
-      <button class="vid-btn" onclick="openVideo(0)">
+      <button class="vid-btn" id="vid-btn-0" onclick="openVideo(0)">
         <span class="vid-icon">🚁</span>
         <span class="vid-label">Sobrevuelo 1</span>
       </button>
-      <button class="vid-btn" onclick="openVideo(1)">
+      <button class="vid-btn" id="vid-btn-1" onclick="openVideo(1)">
         <span class="vid-icon">🎬</span>
         <span class="vid-label">Sobrevuelo 2</span>
       </button>
     </div>
 
+    <!-- Popup hover (desktop) -->
     <div id="v-popup">
       <div class="pop-card">
         <div class="pop-badge" id="vp-badge"></div>
@@ -321,8 +326,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </div>
     </div>
 
+    <!-- Panel selección (desktop) -->
     <div id="v-sel-panel">
-      <div class="sel-card">
+      <div class="sel-card" id="sel-card-template">
         <div class="sel-header">
           <div>
             <div class="sel-name" id="vs-name">—</div>
@@ -356,7 +362,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   </div>
 </div>
 
-<!-- SELECTION OVERLAY (móvil) -->
+<!-- SELECTION OVERLAY (móvil y tablet) -->
 <div id="v-sel-overlay" onclick="handleSelOverlayClick(event)">
   <div id="v-sel-overlay-inner"></div>
 </div>
@@ -401,7 +407,8 @@ const C = {
 //  STATE
 // ═══════════════════════════════════════════════════════════════
 let items = [];
-let imgEl = null, imgW = 1920, imgH = 1080;
+let imgEl = null;
+let imgNatW = 1920, imgNatH = 1080; // ← se actualiza con las dimensiones reales de la imagen
 let showPriceViewer = false;
 let vZoomLevel = 1, vPanX = 0, vPanY = 0;
 let vIsPanning = false, vPanStart = {x:0,y:0};
@@ -409,6 +416,11 @@ let vHoveredId = null, vSelectedId = null;
 let musicOn = false, fxOn = true;
 let musicAudio = null;
 let touches = [], lastPinchDist = 0;
+
+// Guardamos el origen del genio para el cierre (posición donde nació el panel)
+let genieOriginX = 0, genieOriginY = 0;
+// Índice del video abierto (para el cierre)
+let openVideoIdx = -1;
 
 const vCanvas = document.getElementById('viewer-canvas');
 const vCtx    = vCanvas.getContext('2d');
@@ -454,7 +466,7 @@ async function cargarDatos(){
 }
 
 function activarRealtime(){
-  sb.channel('lotes-realtime')
+  sb.channel('lotes-realtime-v2') // nombre único para evitar conflictos con suscripciones previas
     .on('postgres_changes',
       {event:'*', schema:'public', table:'lotes'},
       payload=>{
@@ -464,6 +476,7 @@ function activarRealtime(){
         } else if(eventType==='UPDATE'){
           const idx=items.findIndex(i=>i.id===newRow.id);
           if(idx>=0) items[idx]={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
+          else items.push({...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])});
         } else if(eventType==='DELETE'){
           items=items.filter(i=>i.id!==oldRow.id);
         }
@@ -471,52 +484,79 @@ function activarRealtime(){
         sbToast('🔄 Mapa actualizado','ok',2000);
       }
     )
-    .subscribe();
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED') console.log('[Realtime] Conectado — cambios en tiempo real activos');
+      if(status==='CHANNEL_ERROR') sbToast('⚠ Error realtime','err',4000);
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  IMAGEN
+//  IMAGEN — usa dimensiones naturales reales
 // ═══════════════════════════════════════════════════════════════
 async function cargarImagen(url){
   return new Promise(resolve=>{
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = ()=>{ imgEl=img; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
-    img.onerror = ()=>{ const img2=new Image(); img2.onload=()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); }; img2.onerror=()=>resolve(); img2.src=url; };
-    img.src=url;
+    img.onload = ()=>{
+      imgEl  = img;
+      imgNatW = img.naturalWidth  || 1920;
+      imgNatH = img.naturalHeight || 1080;
+      document.getElementById('v-placeholder').classList.add('hidden');
+      resolve();
+    };
+    img.onerror = ()=>{
+      // Intento sin crossOrigin
+      const img2 = new Image();
+      img2.onload = ()=>{
+        imgEl  = img2;
+        imgNatW = img2.naturalWidth  || 1920;
+        imgNatH = img2.naturalHeight || 1080;
+        document.getElementById('v-placeholder').classList.add('hidden');
+        resolve();
+      };
+      img2.onerror = ()=>resolve();
+      img2.src = url;
+    };
+    img.src = url;
   });
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  COORDINATE HELPERS
+//  *** FIX PRINCIPAL: usa imgNatW/imgNatH reales ***
 // ═══════════════════════════════════════════════════════════════
 function getImgRect(c){
-  const cw=c.width, ch=c.height;
+  const cw = c.width, ch = c.height;
   if(!imgEl) return{x:0,y:0,w:cw,h:ch};
-  const ir=imgW/imgH, wr=cw/ch;
-  let dw,dh,dx,dy;
-  if(ir>wr){ dw=cw; dh=cw/ir; dx=0; dy=(ch-dh)/2; }
-  else{ dh=ch; dw=ch*ir; dy=0; dx=(cw-dw)/2; }
-  return{x:dx,y:dy,w:dw,h:dh};
+  const ir = imgNatW / imgNatH;
+  const wr = cw / ch;
+  let dw, dh, dx, dy;
+  if(ir > wr){ dw=cw; dh=cw/ir; dx=0; dy=(ch-dh)/2; }
+  else       { dh=ch; dw=ch*ir; dy=0; dx=(cw-dw)/2; }
+  return{x:dx, y:dy, w:dw, h:dh};
 }
-function imgToCanvas(ix,iy){
-  const r=getImgRect(vCanvas);
-  return{x:r.x+ix/imgW*r.w, y:r.y+iy/imgH*r.h};
+
+function imgToCanvas(ix, iy){
+  const r = getImgRect(vCanvas);
+  return{ x: r.x + ix/imgNatW * r.w,
+          y: r.y + iy/imgNatH * r.h };
 }
+
 function vImgCoord(pos){
-  const cx=(pos.x-vPanX)/vZoomLevel;
-  const cy=(pos.y-vPanY)/vZoomLevel;
-  const r=getImgRect(vCanvas);
-  return{x:(cx-r.x)/r.w*imgW, y:(cy-r.y)/r.h*imgH};
+  const cx = (pos.x - vPanX) / vZoomLevel;
+  const cy = (pos.y - vPanY) / vZoomLevel;
+  const r  = getImgRect(vCanvas);
+  return{ x: (cx-r.x)/r.w * imgNatW,
+          y: (cy-r.y)/r.h * imgNatH };
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  HIT TEST
 // ═══════════════════════════════════════════════════════════════
-function pointInPoly(pt,poly){
+function pointInPoly(pt, poly){
   if(!poly||poly.length<3) return false;
   let inside=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+  for(let i=0,j=poly.length-1; i<poly.length; j=i++){
     const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
     if(((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi)) inside=!inside;
   }
@@ -533,7 +573,7 @@ function findItemAt(ip){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  DRAW
+//  DRAW — etiquetas mejoradas para móvil
 // ═══════════════════════════════════════════════════════════════
 function redrawViewer(){
   const cw=vCanvas.width, ch=vCanvas.height;
@@ -560,17 +600,22 @@ function drawItem(item){
 
   let fill, stroke, shadowColor, lw;
   if(isMz){
-    fill=isSelected?C.mz.fillS:C.mz.fill; stroke=isSelected?C.mz.strokeS:isHovered?C.mz.strokeH:C.mz.stroke; shadowColor=C.mz.strokeS; lw=isSelected?3:isHovered?2.5:2;
+    fill       = isSelected?C.mz.fillS:C.mz.fill;
+    stroke     = isSelected?C.mz.strokeS:isHovered?C.mz.strokeH:C.mz.stroke;
+    shadowColor= C.mz.strokeS; lw=isSelected?3:isHovered?2.5:2;
   } else if(item.status==='sold'){
-    fill=(isHovered||isSelected)?C.sold.fillH:C.sold.fill; stroke=C.sold.stroke; shadowColor=C.sold.shadow; lw=isSelected?3:1.8;
+    fill=(isHovered||isSelected)?C.sold.fillH:C.sold.fill;
+    stroke=C.sold.stroke; shadowColor=C.sold.shadow; lw=isSelected?3:1.8;
   } else if(item.status==='reserved'){
-    fill=(isHovered||isSelected)?C.res.fillH:C.res.fill; stroke=C.res.stroke; shadowColor=C.res.shadow; lw=isSelected?3:1.8;
+    fill=(isHovered||isSelected)?C.res.fillH:C.res.fill;
+    stroke=C.res.stroke; shadowColor=C.res.shadow; lw=isSelected?3:1.8;
   } else {
-    fill=isSelected?C.avail.fillS:isHovered?C.avail.fillH:C.avail.fill;
+    fill  =isSelected?C.avail.fillS:isHovered?C.avail.fillH:C.avail.fill;
     stroke=isSelected?C.avail.strokeS:isHovered?C.avail.strokeH:C.avail.stroke;
     shadowColor=C.avail.strokeS; lw=isSelected?3:1.5;
   }
-  const lwActual=lw/vZoomLevel;
+
+  const lwActual = lw / vZoomLevel;
   vCtx.beginPath(); vCtx.moveTo(pts[0].x,pts[0].y);
   pts.slice(1).forEach(p=>vCtx.lineTo(p.x,p.y));
   vCtx.closePath();
@@ -579,52 +624,59 @@ function drawItem(item){
   vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
   vCtx.shadowBlur=0;
 
-  // ── ETIQUETAS — versión corregida ──────────────────────────
-  // Centroide del polígono en coordenadas de canvas (espacio-imagen)
+  // ── ETIQUETAS ADAPTATIVAS ──────────────────────────────────
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+
+  // Etiqueta: solo número del lote (sin prefijo de manzana) para ahorrar espacio en móvil
+  const isMobile = vCanvas.width < 700;
   const label = isMz
     ? (item.mzName||'?')
-    : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
+    : isMobile
+      ? String(item.num||item.id)                              // solo el número en móvil
+      : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id)); // con manzana en desktop
 
-  // Dimensiones del polígono en el espacio de imagen (sin zoom)
-  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
-  const polyW=Math.max(...xs)-Math.min(...xs);
-  const polyH=Math.max(...ys)-Math.min(...ys);
-  const polyShort=Math.min(polyW,polyH);
-  const polyLong =Math.max(polyW,polyH);
+  // Bounding box del polígono en espacio-imagen (sin zoom)
+  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+  const polyW  = Math.max(...xs)-Math.min(...xs);
+  const polyH  = Math.max(...ys)-Math.min(...ys);
+  const polyShort = Math.min(polyW,polyH);
+  const polyLong  = Math.max(polyW,polyH);
 
-  // Tamaño efectivo en PÍXELES DE PANTALLA reales
-  // (pts ya están en espacio-imagen, y vZoomLevel se aplica encima)
+  // Tamaño en pantalla (px de dispositivo)
   const screenShort = polyShort * vZoomLevel;
   const screenLong  = polyLong  * vZoomLevel;
 
-  // Umbral mínimo: el lado corto debe ser al menos este número de px en pantalla
-  const minPx = isMz ? 18 : 10;
-  if(screenShort < minPx) return;
-  // Además el lado largo también debe ser visible
-  if(screenLong < (isMz?24:14)) return;
+  // Umbrales de visibilidad más exigentes en móvil
+  const minShort = isMz ? 22 : (isMobile ? 18 : 12);
+  const minLong  = isMz ? 30 : (isMobile ? 22 : 16);
+  if(screenShort < minShort || screenLong < minLong) return;
 
-  // Tamaño de fuente objetivo en píxeles de pantalla
-  // Crece con el zoom y el tamaño del polígono, pero con límites razonables
-  const targetPxMz  = Math.min(20, Math.max(11, screenShort * 0.22));
-  const targetPxLot = Math.min(15, Math.max( 9, screenShort * 0.18));
-  const targetPx    = isMz ? targetPxMz : targetPxLot;
+  // Tamaño de fuente objetivo en píxeles de pantalla — más conservador en móvil
+  // Fórmula: proporcional al lado corto del polígono, con techo más bajo en móvil
+  const maxFsPx  = isMz ? (isMobile?14:20) : (isMobile?11:15);
+  const minFsPx  = isMz ? 9 : 8;
+  const factor   = isMz ? 0.18 : (isMobile ? 0.13 : 0.16);
+  const targetPx = Math.min(maxFsPx, Math.max(minFsPx, screenShort * factor));
 
-  // Convertimos a espacio-imagen (dividimos por vZoomLevel porque
-  // ctx está dentro de save/scale con vZoomLevel aplicado)
+  // Convertir a espacio de imagen (el ctx está bajo vZoomLevel)
   const fsCanvas = targetPx / vZoomLevel;
 
   vCtx.font=`${isMz?'400':'600'} ${fsCanvas}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
   vCtx.textAlign='center'; vCtx.textBaseline='middle';
 
-  // Recorte: si el texto es más ancho que el polígono, saltamos
+  // Si el texto medido es más ancho que el 85% del polígono → no dibujar
   const measured = vCtx.measureText(label).width;
-  if(measured > polyLong * 0.90) return;
+  if(measured > polyLong * 0.85) return;
 
-  vCtx.strokeStyle='rgba(0,0,0,0.82)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
+  // Contorno negro para legibilidad
+  vCtx.strokeStyle='rgba(0,0,0,0.88)';
+  vCtx.lineWidth=3.2/vZoomLevel;
+  vCtx.lineJoin='round';
   vCtx.strokeText(label,cx,cy);
-  vCtx.fillStyle=isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
+
+  // Texto
+  vCtx.fillStyle = isMz ? '#E8CC82' : isSelected ? '#fff' : 'rgba(255,255,255,0.93)';
   vCtx.fillText(label,cx,cy);
 }
 
@@ -686,8 +738,12 @@ vCanvas.addEventListener('click',onViewerClick);
 let touchStartX=0, touchStartY=0, touchMoved=false;
 vCanvas.addEventListener('touchstart',e=>{
   e.preventDefault(); touches=[...e.touches];
-  if(touches.length===1){ touchStartX=touches[0].clientX; touchStartY=touches[0].clientY; touchMoved=false; vPanStart={x:touches[0].clientX-vPanX,y:touches[0].clientY-vPanY}; }
-  else if(touches.length===2){ lastPinchDist=Math.hypot(touches[0].clientX-touches[1].clientX,touches[0].clientY-touches[1].clientY); }
+  if(touches.length===1){
+    touchStartX=touches[0].clientX; touchStartY=touches[0].clientY; touchMoved=false;
+    vPanStart={x:touches[0].clientX-vPanX, y:touches[0].clientY-vPanY};
+  } else if(touches.length===2){
+    lastPinchDist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
+  }
 },{passive:false});
 
 vCanvas.addEventListener('touchmove',e=>{
@@ -698,13 +754,15 @@ vCanvas.addEventListener('touchmove',e=>{
     vPanX=touches[0].clientX-vPanStart.x; vPanY=touches[0].clientY-vPanStart.y;
     redrawViewer();
   } else if(touches.length===2){
-    const dist=Math.hypot(touches[0].clientX-touches[1].clientX,touches[0].clientY-touches[1].clientY);
+    const dist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
     const factor=dist/lastPinchDist;
-    const midX=(touches[0].clientX+touches[1].clientX)/2, midY=(touches[0].clientY+touches[1].clientY)/2;
+    const midX=(touches[0].clientX+touches[1].clientX)/2;
+    const midY=(touches[0].clientY+touches[1].clientY)/2;
     const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
     const r=vCanvas.getBoundingClientRect();
     const px=midX-r.left, py=midY-r.top;
-    vPanX=px-(px-vPanX)*(newZ/vZoomLevel); vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
+    vPanX=px-(px-vPanX)*(newZ/vZoomLevel);
+    vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
     vZoomLevel=newZ; lastPinchDist=dist;
     document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
     redrawViewer();
@@ -714,21 +772,24 @@ vCanvas.addEventListener('touchmove',e=>{
 vCanvas.addEventListener('touchend',e=>{
   e.preventDefault();
   if(!touchMoved&&e.changedTouches.length===1){
-    const t=e.changedTouches[0], r=vCanvas.getBoundingClientRect();
-    const pos={x:t.clientX-r.left,y:t.clientY-r.top};
+    const t=e.changedTouches[0];
+    const r=vCanvas.getBoundingClientRect();
+    const pos={x:t.clientX-r.left, y:t.clientY-r.top};
+    // Posición en pantalla (para el genio)
+    const screenPos={x:t.clientX, y:t.clientY};
     const ip=vImgCoord(pos), found=findItemAt(ip);
     if(found){
       if(vSelectedId===found.id){ clearSelection(); }
-      else{ vSelectedId=found.id; hidePopup(); showSelPanel(found,pos); playSelect(found); redrawViewer(); }
+      else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
     } else { clearSelection(); }
   }
 },{passive:false});
 
 // ── DESKTOP HOVER / CLICK ──
-function evPos(e,c){
+function evPos(e, c){
   const r=(c||vCanvas).getBoundingClientRect();
   const src=e.touches?e.touches[0]:e;
-  return{x:src.clientX-r.left,y:src.clientY-r.top};
+  return{x:src.clientX-r.left, y:src.clientY-r.top};
 }
 let hoverThrottle=0;
 function onViewerHover(e){
@@ -750,13 +811,27 @@ function onViewerClick(e){
   const found=findItemAt(ip);
   if(found){
     if(vSelectedId===found.id){ clearSelection(); }
-    else{ vSelectedId=found.id; hidePopup(); showSelPanel(found,pos); playSelect(found); redrawViewer(); }
+    else{
+      vSelectedId=found.id; hidePopup();
+      // Posición absoluta en pantalla para el genio
+      const r=vCanvas.getBoundingClientRect();
+      const screenPos={x:e.clientX, y:e.clientY};
+      showSelPanel(found, screenPos); playSelect(found); redrawViewer();
+    }
   } else { clearSelection(); }
 }
+
 function clearSelection(){
+  if(vSelectedId===null) return;
   vSelectedId=null;
-  document.getElementById('v-sel-panel').classList.remove('on');
-  closeSelOverlay();
+  const panel=document.getElementById('v-sel-panel');
+  const overlay=document.getElementById('v-sel-overlay');
+  const isMobile=vCanvas.width<700;
+  if(isMobile){
+    closeSelOverlay();
+  } else {
+    panel.classList.remove('on');
+  }
   redrawViewer();
 }
 
@@ -787,73 +862,113 @@ function hidePopup(){
 }
 
 // ── SELECTION PANEL ──
-function buildSelContent(item){
+function buildSelContent(item, container){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
-  document.getElementById('vs-name').textContent=isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
-  const badge=document.getElementById('vs-badge'); badge.textContent=isMz?'Manzana':(labels[item.status]||''); badge.className='sel-badge '+(isMz?'manzana':item.status);
-  document.getElementById('vs-area').textContent=item.area?item.area+' m²':'—';
-  const dr=document.getElementById('vs-dims-row');
-  if(!isMz&&(item.frente||item.fondo)){ dr.style.display='flex'; document.getElementById('vs-dims').textContent=(item.frente||'?')+'m × '+(item.fondo||'?')+'m'; } else dr.style.display='none';
-  const or=document.getElementById('vs-orient-row');
-  if(!isMz&&item.orientacion){ or.style.display='flex'; document.getElementById('vs-orient').textContent=item.orientacion; } else or.style.display='none';
-  const descr=document.getElementById('vs-desc-row');
-  if(!isMz&&(item.desc||item.description)){ descr.style.display='flex'; document.getElementById('vs-desc').textContent=item.desc||item.description; } else descr.style.display='none';
-  const pr=document.getElementById('vs-price-row');
-  if(!isMz&&showPriceViewer&&item.price){ pr.style.display='flex'; document.getElementById('vs-price').textContent='$'+Number(item.price).toLocaleString('es-CO'); } else pr.style.display='none';
-  const mzr=document.getElementById('vs-mz-row');
-  if(!isMz&&item.mzRef){ mzr.style.display='flex'; document.getElementById('vs-mz').textContent=item.mzRef; } else mzr.style.display='none';
+  container.querySelector('.sel-name').textContent=
+    isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
+  const badge=container.querySelector('.sel-badge');
+  badge.textContent=isMz?'Manzana':(labels[item.status]||'');
+  badge.className='sel-badge '+(isMz?'manzana':item.status);
+  container.querySelector('.sel-val[id$="area"], [id="vs-area"]') && (container.querySelector('[id="vs-area"]')||container.querySelectorAll('.sel-val')[0]).textContent=item.area?item.area+' m²':'—';
+
+  // Usamos IDs directamente en el template desktop; para el clon del overlay usamos querySelectorAll
+  function setRow(row, val, show){
+    if(!row) return;
+    row.style.display=show?'flex':'none';
+    if(show&&val){ const v=row.querySelector('.sel-val'); if(v) v.textContent=val; }
+  }
+
+  // Área
+  const areaVal=container.querySelector('[id="vs-area"]')||container.querySelectorAll('.sel-row .sel-val')[0];
+  if(areaVal) areaVal.textContent=item.area?item.area+' m²':'—';
+
+  // Medidas
+  const dimsRow=container.querySelector('[id="vs-dims-row"]'); const dimsVal=dimsRow&&dimsRow.querySelector('.sel-val');
+  if(!isMz&&(item.frente||item.fondo)){ setRow(dimsRow,(item.frente||'?')+'m × '+(item.fondo||'?')+'m',true); }
+  else setRow(dimsRow,'',false);
+
+  // Orientación
+  const orRow=container.querySelector('[id="vs-orient-row"]');
+  setRow(orRow,item.orientacion,!isMz&&!!item.orientacion);
+
+  // Descripción
+  const descRow=container.querySelector('[id="vs-desc-row"]');
+  setRow(descRow,item.desc||item.description,!isMz&&!!(item.desc||item.description));
+
+  // Precio
+  const prRow=container.querySelector('[id="vs-price-row"]');
+  if(!isMz&&showPriceViewer&&item.price){
+    setRow(prRow,'$'+Number(item.price).toLocaleString('es-CO'),true);
+    const pv=prRow&&prRow.querySelector('.sel-val');
+    if(pv) pv.textContent='$'+Number(item.price).toLocaleString('es-CO');
+  } else setRow(prRow,'',false);
+
+  // Manzana
+  const mzRow=container.querySelector('[id="vs-mz-row"]');
+  setRow(mzRow,item.mzRef,!isMz&&!!item.mzRef);
 }
 
-function showSelPanel(item, pos){
-  buildSelContent(item);
+function showSelPanel(item, screenPos){
   const isMobile = vCanvas.width < 700;
+
   if(isMobile){
     const overlay = document.getElementById('v-sel-overlay');
     const inner   = document.getElementById('v-sel-overlay-inner');
-    const template= document.getElementById('v-sel-panel').querySelector('.sel-card');
+    // Clonar la card template
+    const template = document.getElementById('sel-card-template');
     inner.innerHTML='';
     const clone = template.cloneNode(true);
+    clone.removeAttribute('id');
     clone.querySelector('.sel-close').onclick = clearSelection;
     inner.appendChild(clone);
+    buildSelContent(item, inner);
 
-    // Botón tap en el lote → origen del genio = posición del tap en pantalla
-    const r = vCanvas.getBoundingClientRect();
-    const originX = (pos ? pos.x : vCanvas.width/2) + r.left;
-    const originY = (pos ? pos.y : vCanvas.height/2) + r.top;
+    // Guardar origen para el cierre
+    genieOriginX = screenPos ? screenPos.x : window.innerWidth/2;
+    genieOriginY = screenPos ? screenPos.y : window.innerHeight/2;
 
     overlay.style.display='flex';
-    // Fade background
     requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
 
-    // Efecto genio: el panel sube desde el punto de tap
-    genieOpen(inner, originX, originY, 'panel');
+    // Efecto genio de apertura
+    genieOpen(inner, genieOriginX, genieOriginY);
 
   } else {
+    // Desktop / tablet grande: panel flotante sin efecto genio (se usa la animación CSS)
     const panel = document.getElementById('v-sel-panel');
-    if(pos){
-      const cw=vCanvas.width, ch=vCanvas.height;
-      let left=pos.x+20, top=pos.y-80;
-      if(left+300>cw) left=pos.x-310;
-      top=Math.max(10,Math.min(top,ch-320));
-      panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.bottom=''; panel.style.transform='';
-    }
-    panel.classList.add('on');
+    buildSelContent(item, panel);
+
+    // Guardar origen
+    genieOriginX = screenPos ? screenPos.x : vCanvas.width/2;
+    genieOriginY = screenPos ? screenPos.y : vCanvas.height/2;
+
+    // Posición del panel
+    const cw=vCanvas.clientWidth, ch=vCanvas.clientHeight;
+    let left=(screenPos?screenPos.x:cw/2)+20;
+    let top =(screenPos?screenPos.y:ch/2)-80;
+    const r = vCanvas.getBoundingClientRect();
+    left = (screenPos?screenPos.x:cw/2+r.left) - r.left + 20;
+    top  = (screenPos?screenPos.y:ch/2+r.top)  - r.top  - 80;
+    if(left+300>cw) left=((screenPos?screenPos.x:cw/2+r.left)-r.left)-310;
+    top=Math.max(10,Math.min(top,ch-340));
+    panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.bottom=''; panel.style.transform='';
+
+    // Efecto genio en desktop también
+    panel.style.display='block';
+    genieOpen(panel, genieOriginX, genieOriginY);
   }
 }
 
 function closeSelOverlay(){
   const overlay = document.getElementById('v-sel-overlay');
   const inner   = document.getElementById('v-sel-overlay-inner');
-  if(!overlay.classList.contains('open')) return;
+  if(!overlay.classList.contains('open')&&overlay.style.display==='none') return;
 
-  // Obtener posición destino del genio: borde inferior central de pantalla
-  const originX = window.innerWidth/2;
-  const originY = window.innerHeight - 20;
-
-  genieClose(inner, originX, originY, 'panel', ()=>{
+  // Cierre hacia el origen (donde nació)
+  genieClose(inner, genieOriginX, genieOriginY, ()=>{
     overlay.classList.remove('open');
-    overlay.style.display='none';
+    setTimeout(()=>{ overlay.style.display='none'; },50);
   });
 }
 
@@ -862,19 +977,28 @@ function handleSelOverlayClick(e){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  EFECTO GENIO MAC — implementación real con canvas 2D
+//  ╔══════════════════════════════════════════════════════════╗
+//  ║          EFECTO GENIO MAC  —  Versión Definitiva        ║
+//  ╚══════════════════════════════════════════════════════════╝
 //
-//  El efecto genio auténtico de macOS funciona así:
-//  - La ventana/panel se "succiona" hacia un punto (esquina del dock)
-//  - Cada columna vertical del contenido se desplaza a velocidades distintas:
-//    la parte superior llega al destino DESPUÉS que la inferior
-//  - Esto produce la curva de onda sigmoidal característica
-//  - Se implementa renderizando slices verticales del snapshot
-//    con offsets verticales progresivos y escalas decrecientes
+//  El genio real de macOS funciona así:
+//  APERTURA:  El panel nace en un punto (origen) y se expande
+//             hacia su posición final. Las columnas superiores
+//             llegan TARDE → produce la curva sigmoidal.
+//  CIERRE:    El panel se succiona hacia el mismo punto origen.
+//             Las columnas inferiores se van PRIMERO.
+//
+//  Implementación:
+//  1. Render del panel en offscreen canvas (snapshot fiel)
+//  2. División en N slices verticales
+//  3. Cada slice se divide en M filas (distorsión vertical)
+//  4. Cada celda (slice×fila) tiene su propio progreso temporal
+//     con un retraso que depende de la posición Y → curva sigmoidal
 // ═══════════════════════════════════════════════════════════════
-const genieC = document.getElementById('genie-canvas');
+const genieC   = document.getElementById('genie-canvas');
 const genieCtx = genieC.getContext('2d');
-let genieRAF = null;
+let genieRAF   = null;
+let genieActiveEl = null; // elemento actualmente animado
 
 function resizeGenieCanvas(){
   genieC.width  = window.innerWidth;
@@ -883,285 +1007,301 @@ function resizeGenieCanvas(){
 resizeGenieCanvas();
 window.addEventListener('resize', resizeGenieCanvas);
 
-/**
- * Captura un snapshot del elemento target (usando html2canvas-lite vía
- * getBoundingClientRect + offscreen canvas).
- * Como el panel es HTML, lo capturamos con getComputedStyle y dibujamos
- * un rectángulo sólido de color con el texto — suficiente para el efecto.
- * Para mayor fidelidad renderizamos el panel temporalmente visible,
- * hacemos snapshot con drawWindow si disponible, o usamos un fill sólido.
- */
+// ── Snapshot fiel del elemento ──────────────────────────────
+// Renderiza el panel como canvas usando sus estilos computados
 function snapshotElement(el){
-  const r = el.getBoundingClientRect();
-  const w = Math.ceil(r.width) || 280;
-  const h = Math.ceil(r.height) || 300;
+  // Forzar layout para obtener dimensiones correctas
+  const r   = el.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w   = Math.max(Math.ceil(r.width),  200);
+  const h   = Math.max(Math.ceil(r.height), 150);
 
-  const offscreen = document.createElement('canvas');
-  offscreen.width  = w;
-  offscreen.height = h;
-  const octx = offscreen.getContext('2d');
+  const off = document.createElement('canvas');
+  off.width  = w * dpr;
+  off.height = h * dpr;
+  const oc = off.getContext('2d');
+  oc.scale(dpr, dpr);
 
-  // Fondo del panel (oscuro semitransparente → lo pintamos sólido para el efecto)
-  octx.fillStyle = 'rgba(6,8,13,0.97)';
-  octx.beginPath();
-  const radius = 14;
-  octx.moveTo(radius,0); octx.lineTo(w-radius,0);
-  octx.quadraticCurveTo(w,0,w,radius);
-  octx.lineTo(w,h-radius); octx.quadraticCurveTo(w,h,w-radius,h);
-  octx.lineTo(radius,h); octx.quadraticCurveTo(0,h,0,h-radius);
-  octx.lineTo(0,radius); octx.quadraticCurveTo(0,0,radius,0);
-  octx.closePath(); octx.fill();
+  // ── Fondo del panel ──
+  const rad = 14;
+  oc.beginPath();
+  oc.moveTo(rad,0); oc.lineTo(w-rad,0);
+  oc.quadraticCurveTo(w,0,w,rad); oc.lineTo(w,h-rad);
+  oc.quadraticCurveTo(w,h,w-rad,h); oc.lineTo(rad,h);
+  oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
+  oc.quadraticCurveTo(0,0,rad,0); oc.closePath();
+  oc.fillStyle='rgba(6,8,13,0.97)'; oc.fill();
 
-  // Borde dorado
-  octx.strokeStyle='rgba(201,168,76,0.9)'; octx.lineWidth=1.5;
-  octx.beginPath();
-  octx.moveTo(radius,0); octx.lineTo(w-radius,0);
-  octx.quadraticCurveTo(w,0,w,radius);
-  octx.lineTo(w,h-radius); octx.quadraticCurveTo(w,h,w-radius,h);
-  octx.lineTo(radius,h); octx.quadraticCurveTo(0,h,0,h-radius);
-  octx.lineTo(0,radius); octx.quadraticCurveTo(0,0,radius,0);
-  octx.closePath(); octx.stroke();
+  // ── Borde dorado ──
+  oc.strokeStyle='#C9A84C'; oc.lineWidth=1.5;
+  oc.beginPath();
+  oc.moveTo(rad,0); oc.lineTo(w-rad,0);
+  oc.quadraticCurveTo(w,0,w,rad); oc.lineTo(w,h-rad);
+  oc.quadraticCurveTo(w,h,w-rad,h); oc.lineTo(rad,h);
+  oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
+  oc.quadraticCurveTo(0,0,rad,0); oc.closePath();
+  oc.stroke();
 
-  // Título del lote
-  const nameEl = el.querySelector('.sel-name');
-  const name = nameEl ? nameEl.textContent : '';
-  octx.fillStyle='#F5E4A8'; octx.font="400 20px 'DM Serif Display',serif";
-  octx.textBaseline='top'; octx.fillText(name,16,16);
+  // ── Contenido textual ──
+  const nameEl  = el.querySelector('.sel-name');
+  const badgeEl = el.querySelector('.sel-badge');
+  const name    = nameEl  ? nameEl.textContent  : '';
+  const badge   = badgeEl ? badgeEl.textContent  : '';
+
+  // Nombre
+  oc.fillStyle='#F5E4A8';
+  oc.font="400 19px 'DM Serif Display',Georgia,serif";
+  oc.textBaseline='top'; oc.fillText(name, 18, 16);
 
   // Badge
-  const badgeEl = el.querySelector('.sel-badge');
-  const badge = badgeEl ? badgeEl.textContent : '';
-  octx.fillStyle='rgba(201,168,76,0.8)'; octx.font="600 9px 'Plus Jakarta Sans',sans-serif";
-  octx.fillText(badge.toUpperCase(),16,44);
+  oc.fillStyle='rgba(201,168,76,0.85)';
+  oc.font="700 9px 'Plus Jakarta Sans',system-ui,sans-serif";
+  oc.fillText(badge.toUpperCase(), 18, 42);
 
-  // Línea divisora
-  octx.strokeStyle='rgba(36,45,69,0.8)'; octx.lineWidth=1;
-  octx.beginPath(); octx.moveTo(16,60); octx.lineTo(w-16,60); octx.stroke();
+  // Divisor
+  oc.strokeStyle='rgba(36,45,69,0.9)'; oc.lineWidth=1;
+  oc.beginPath(); oc.moveTo(16,58); oc.lineTo(w-16,58); oc.stroke();
 
   // Filas de datos
   const rows = el.querySelectorAll('.sel-row');
-  let yRow = 72;
+  let yRow=68;
   rows.forEach(row=>{
     if(row.style.display==='none') return;
-    const lbl = row.querySelector('.sel-lbl');
-    const val = row.querySelector('.sel-val');
+    const lbl=row.querySelector('.sel-lbl');
+    const val=row.querySelector('.sel-val');
     if(!lbl||!val) return;
-    octx.fillStyle='rgba(74,82,112,0.9)'; octx.font="500 10px 'Plus Jakarta Sans',sans-serif";
-    octx.textBaseline='top'; octx.fillText(lbl.textContent.toUpperCase(),16,yRow);
-    octx.fillStyle='#DCE3F5'; octx.font="500 12px 'JetBrains Mono',monospace";
-    const valText = val.textContent;
-    const valW = octx.measureText(valText).width;
-    octx.fillText(valText, w-16-valW, yRow);
-    yRow += 22;
+    oc.fillStyle='rgba(74,82,112,0.9)';
+    oc.font="600 9px 'Plus Jakarta Sans',system-ui,sans-serif";
+    oc.textBaseline='top';
+    oc.fillText(lbl.textContent.toUpperCase(), 18, yRow);
+    const isPrice=val.classList.contains('sel-price');
+    oc.fillStyle=isPrice?'#E8CC82':'#DCE3F5';
+    oc.font=`${isPrice?'600':'500'} ${isPrice?'13':'11'}px 'JetBrains Mono',monospace`;
+    const vw=oc.measureText(val.textContent).width;
+    oc.fillText(val.textContent, w-18-vw, yRow);
+    yRow+=22;
   });
 
-  return { canvas: offscreen, w, h, rect: r };
+  return{ canvas:off, w, h, dpr, rect:r };
 }
 
-/**
- * Efecto Genio de apertura:
- * El panel aparece CRECIENDO desde el punto (ox,oy) hacia su posición final.
- * Se dibuja con slices verticales que tienen offsets distintos (warp sigmoidal).
- */
-function genieOpen(el, ox, oy, mode){
-  cancelAnimationFrame(genieRAF);
-  genieC.style.display = 'block';
-  if(mode==='video') genieC.classList.add('video-mode');
-  else genieC.classList.remove('video-mode');
+// ── Snapshot del video-modal (solo fondo sólido + título) ──
+function snapshotVideoModal(el){
+  const r   = el.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w   = Math.max(Math.ceil(r.width),  200);
+  const h   = Math.max(Math.ceil(r.height), 100);
 
-  // Snapshot temporal: primero hacemos el elemento visible a opacity 0
-  // para poder medir su posición final
-  el.style.opacity='0';
-  el.style.transition='none';
-  if(el.id==='v-sel-overlay-inner'){
-    // forzar visible para medir
+  const off = document.createElement('canvas');
+  off.width  = w * dpr;
+  off.height = h * dpr;
+  const oc  = off.getContext('2d');
+  oc.scale(dpr, dpr);
+
+  // Fondo negro del modal
+  oc.fillStyle='#000'; oc.beginPath();
+  const rad=16;
+  oc.moveTo(rad,0); oc.lineTo(w-rad,0);
+  oc.quadraticCurveTo(w,0,w,rad); oc.lineTo(w,h-rad);
+  oc.quadraticCurveTo(w,h,w-rad,h); oc.lineTo(rad,h);
+  oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
+  oc.quadraticCurveTo(0,0,rad,0); oc.closePath(); oc.fill();
+
+  // Borde
+  oc.strokeStyle='rgba(201,168,76,0.3)'; oc.lineWidth=1.5;
+  oc.beginPath();
+  oc.moveTo(rad,0); oc.lineTo(w-rad,0);
+  oc.quadraticCurveTo(w,0,w,rad); oc.lineTo(w,h-rad);
+  oc.quadraticCurveTo(w,h,w-rad,h); oc.lineTo(rad,h);
+  oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
+  oc.quadraticCurveTo(0,0,rad,0); oc.closePath(); oc.stroke();
+
+  // Icono video centrado
+  oc.fillStyle='rgba(201,168,76,0.5)';
+  oc.font=`${Math.min(w,h)*0.25}px serif`;
+  oc.textAlign='center'; oc.textBaseline='middle';
+  oc.fillText('▶', w/2, h/2-10);
+
+  // Título
+  const titleEl=el.querySelector('#video-modal-title');
+  const title=titleEl?titleEl.textContent:'Sobrevuelo';
+  oc.fillStyle='#E8CC82';
+  oc.font="13px 'DM Serif Display',Georgia,serif";
+  oc.textAlign='center'; oc.textBaseline='bottom';
+  oc.fillText(title, w/2, h-14);
+
+  return{ canvas:off, w, h, dpr, rect:r };
+}
+
+// ── Core: render de un frame del efecto genio ──────────────
+// Parámetros:
+//   snap      — resultado de snapshotElement
+//   ox, oy    — punto origen en pantalla (coordenadas del click/botón)
+//   dstX,dstY — centro del destino en pantalla
+//   dstW,dstH — tamaño del destino
+//   t         — progreso 0→1
+//   opening   — true=apertura, false=cierre
+function genieFrame(snap, ox, oy, dstX, dstY, dstW, dstH, t, opening){
+  genieCtx.clearRect(0,0,genieC.width,genieC.height);
+
+  const SLICES = 48; // columnas
+  const ROWS   = 36; // filas por columna
+
+  // El warp sigmoidal del genio:
+  // En apertura: las filas superiores llegan TARDE (retraso máximo arriba)
+  // En cierre:   las filas inferiores se van PRIMERO (retraso máximo abajo)
+  // El retraso máximo es ~50% del tiempo total
+
+  const MAX_DELAY = 0.50;
+
+  for(let i=0; i<SLICES; i++){
+    const u  = i/SLICES;
+    const u1 = (i+1)/SLICES;
+
+    for(let j=0; j<ROWS; j++){
+      const v  = j/ROWS;
+      const v1 = (j+1)/ROWS;
+
+      // Retraso según posición Y
+      // Apertura: top (v=0) → retraso MAX_DELAY, bottom (v=1) → retraso 0
+      // Cierre:   bottom (v=1) → retraso MAX_DELAY, top (v=0) → retraso 0
+      const delay = opening
+        ? (1-v) * MAX_DELAY        // arriba llega tarde
+        : v     * MAX_DELAY;       // abajo se va primero (en cierre)
+
+      // Progreso local de esta celda
+      const tLocal = Math.max(0, Math.min(1, (t - delay) / (1 - delay)));
+
+      // Easing: ease-out-cubic para apertura, ease-in para cierre
+      const ease = opening
+        ? 1 - Math.pow(1-tLocal, 3)
+        : Math.pow(tLocal, 2.2);
+
+      // Posición X de la columna en destino final (centro del panel expandido)
+      const xDst  = dstX - dstW/2 + u  * dstW;
+      const xDst1 = dstX - dstW/2 + u1 * dstW;
+
+      // Posición Y de la fila en destino final
+      const yDst  = dstY - dstH/2 + v  * dstH;
+      const yDst1 = dstY - dstH/2 + v1 * dstH;
+
+      // Interpolación apertura vs cierre
+      let xCur, xCur1, yCur, yCur1;
+      if(opening){
+        // De ox,oy → hacia destino
+        xCur  = ox + (xDst  - ox) * ease;
+        xCur1 = ox + (xDst1 - ox) * ease;
+        yCur  = oy + (yDst  - oy) * ease;
+        yCur1 = oy + (yDst1 - oy) * ease;
+      } else {
+        // De destino → hacia ox,oy
+        xCur  = xDst  + (ox - xDst)  * ease;
+        xCur1 = xDst1 + (ox - xDst1) * ease;
+        yCur  = yDst  + (oy - yDst)  * ease;
+        yCur1 = yDst1 + (oy - yDst1) * ease;
+      }
+
+      // Opacidad
+      const alpha = opening
+        ? Math.min(1, t * 2.2)           // fade in rápido al abrir
+        : Math.max(0, 1 - t * 1.6);      // fade out al cerrar
+
+      if(alpha <= 0.01) continue;
+      genieCtx.globalAlpha = alpha;
+
+      // Source rect en el snapshot (coordenadas escaladas por dpr)
+      const sx  = u  * snap.canvas.width;
+      const sx1 = u1 * snap.canvas.width;
+      const sy  = v  * snap.canvas.height;
+      const sy1 = v1 * snap.canvas.height;
+      const sw  = sx1-sx;
+      const sh  = sy1-sy;
+      const dw  = xCur1-xCur;
+      const dh  = yCur1-yCur;
+
+      if(sw<=0||sh<=0||Math.abs(dw)<0.2||Math.abs(dh)<0.2) continue;
+
+      genieCtx.drawImage(snap.canvas, sx, sy, sw, sh, xCur, yCur, dw, dh);
+    }
   }
+  genieCtx.globalAlpha=1;
+}
 
-  // Necesitamos un frame para que el layout ocurra
+// ── Apertura ────────────────────────────────────────────────
+function genieOpen(el, ox, oy, snapFn){
+  cancelAnimationFrame(genieRAF);
+  genieActiveEl = el;
+  genieC.style.display='block';
+
+  // Ocultar el elemento real durante la animación
+  el.style.opacity='0';
+  el.classList.remove('visible');
+
+  // Necesitamos un frame para que el DOM aplique el display:flex del overlay
+  // y podamos medir el elemento
   requestAnimationFrame(()=>{
-    const snap = snapshotElement(el);
+    requestAnimationFrame(()=>{
+      const snap = snapFn ? snapFn(el) : snapshotElement(el);
+      const rect = el.getBoundingClientRect();
 
-    // Posición final del elemento en pantalla
-    const rect = el.getBoundingClientRect();
-    const dstX = rect.left + rect.width/2;
-    const dstY = rect.top  + rect.height/2;
-    const dstW = rect.width  || snap.w;
-    const dstH = rect.height || snap.h;
+      const dstX = rect.left + rect.width/2;
+      const dstY = rect.top  + rect.height/2;
+      const dstW = Math.max(rect.width,  snap.w);
+      const dstH = Math.max(rect.height, snap.h);
 
-    const DURATION = 420; // ms — duración del efecto
-    const SLICES   = 40;  // columnas de distorsión
-    let start = null;
+      const DURATION = 440;
+      let start = null;
 
-    function frame(ts){
-      if(!start) start = ts;
-      const t = Math.min((ts-start)/DURATION, 1);
-
-      // Easing: ease-out-cubic para apertura
-      const ease = 1 - Math.pow(1-t,3);
-
-      genieCtx.clearRect(0, 0, genieC.width, genieC.height);
-
-      for(let i=0; i<SLICES; i++){
-        const u = i/SLICES;       // 0 (izquierda) → 1 (derecha)
-        const u1= (i+1)/SLICES;
-
-        // Posición X de la columna en destino final
-        const xDst  = dstX - dstW/2 + u  * dstW;
-        const xDst1 = dstX - dstW/2 + u1 * dstW;
-
-        // Posición X en origen (punto de tap = ox)
-        // Interpolamos: al inicio todas las columnas parten de ox
-        const xSrc  = ox + (xDst  - ox) * ease;
-        const xSrc1 = ox + (xDst1 - ox) * ease;
-
-        // Offset vertical sigmoidal — la magia del genio:
-        // Las columnas de arriba llegan tarde, las de abajo llegan antes.
-        // El "retraso" es mayor para las columnas superiores del panel.
-        // Usamos una función sigmoidal que varía por fila (v) y tiempo (t).
-        // Cada slice tiene su propio progreso de altura.
-        const sliceH_dst = dstH;
-
-        // Descomponemos la columna en filas para el warp vertical
-        const ROWS = 30;
-        for(let j=0; j<ROWS; j++){
-          const v  = j/ROWS;    // 0 (top) → 1 (bottom)
-          const v1 = (j+1)/ROWS;
-
-          // El warp: las filas inferiores van más rápido que las superiores
-          // Función de retraso: la fila superior tiene retraso máximo de 0.45 del tiempo,
-          // la inferior no tiene retraso → produce la curva sigmoidal
-          const delay    = (1-v) * 0.45;          // retraso según posición vertical
-          const tLocal   = Math.max(0, Math.min(1, (t - delay) / (1-delay)));
-          const easeLocal= 1 - Math.pow(1-tLocal, 3);
-
-          // Origen Y de esta fila (todas parten de oy)
-          const ySrc  = oy;
-          // Destino Y de esta fila
-          const yDst  = dstY - dstH/2 + v  * sliceH_dst;
-          const yDst1 = dstY - dstH/2 + v1 * sliceH_dst;
-
-          // Posición actual interpolada
-          const yCur  = ySrc + (yDst  - ySrc) * easeLocal;
-          const yCur1 = ySrc + (yDst1 - ySrc) * easeLocal;
-
-          // Escala de opacidad: fade in
-          const alpha = Math.min(1, t * 2);
-          genieCtx.globalAlpha = alpha;
-
-          // Source rect en el snapshot
-          const sx  = u  * snap.w;
-          const sx1 = u1 * snap.w;
-          const sy  = v  * snap.h;
-          const sy1 = v1 * snap.h;
-
-          // Dibujamos el trozo del snapshot distorsionado
-          genieCtx.drawImage(
-            snap.canvas,
-            sx, sy, (sx1-sx), (sy1-sy),
-            xSrc, yCur, (xSrc1-xSrc), (yCur1-yCur)
-          );
+      function frame(ts){
+        if(!start) start=ts;
+        const t = Math.min((ts-start)/DURATION, 1);
+        genieFrame(snap, ox, oy, dstX, dstY, dstW, dstH, t, true);
+        if(t<1){
+          genieRAF=requestAnimationFrame(frame);
+        } else {
+          genieC.style.display='none';
+          el.style.opacity='';
+          el.classList.add('visible');
         }
       }
-      genieCtx.globalAlpha=1;
-
-      if(t<1){
-        genieRAF = requestAnimationFrame(frame);
-      } else {
-        genieC.style.display='none';
-        // Mostrar el elemento real
-        el.style.opacity='';
-        el.style.transition='';
-        el.classList.add('visible');
-      }
-    }
-    genieRAF = requestAnimationFrame(frame);
+      genieRAF=requestAnimationFrame(frame);
+    });
   });
 }
 
-/**
- * Efecto Genio de cierre:
- * El panel se SUCCIONA hacia el punto (ox,oy).
- */
-function genieClose(el, ox, oy, mode, onDone){
+// ── Cierre ──────────────────────────────────────────────────
+function genieClose(el, ox, oy, onDone, snapFn){
   cancelAnimationFrame(genieRAF);
+  genieActiveEl = el;
   genieC.style.display='block';
-  if(mode==='video') genieC.classList.add('video-mode');
-  else genieC.classList.remove('video-mode');
 
-  const snap = snapshotElement(el);
-  const rect  = el.getBoundingClientRect();
-  const srcX  = rect.left + rect.width/2;
-  const srcY  = rect.top  + rect.height/2;
-  const srcW  = rect.width  || snap.w;
-  const srcH  = rect.height || snap.h;
+  const snap = snapFn ? snapFn(el) : snapshotElement(el);
+  const rect = el.getBoundingClientRect();
+  const srcX = rect.left + rect.width/2;
+  const srcY = rect.top  + rect.height/2;
+  const srcW = Math.max(rect.width,  snap.w);
+  const srcH = Math.max(rect.height, snap.h);
 
-  // Ocultar el elemento HTML inmediatamente
+  // Ocultar el HTML inmediatamente (el canvas toma el relevo)
   el.classList.remove('visible');
   el.style.opacity='0';
 
-  const DURATION = 360;
-  const SLICES   = 40;
+  const DURATION = 380;
   let start = null;
 
   function frame(ts){
     if(!start) start=ts;
     const t = Math.min((ts-start)/DURATION, 1);
-
-    // Easing: ease-in-cubic para cierre
-    const ease = Math.pow(t, 2.5);
-
-    genieCtx.clearRect(0,0,genieC.width,genieC.height);
-
-    for(let i=0; i<SLICES; i++){
-      const u  = i/SLICES;
-      const u1 = (i+1)/SLICES;
-
-      const xSrc  = srcX - srcW/2 + u  * srcW;
-      const xSrc1 = srcX - srcW/2 + u1 * srcW;
-      const xDst  = ox + (xSrc  - ox) * (1-ease);
-      const xDst1 = ox + (xSrc1 - ox) * (1-ease);
-
-      const ROWS = 30;
-      for(let j=0; j<ROWS; j++){
-        const v  = j/ROWS;
-        const v1 = (j+1)/ROWS;
-
-        // En el cierre las filas inferiores "se van" primero
-        const delay    = v * 0.45;
-        const tLocal   = Math.max(0, Math.min(1, (t - delay)/(1-delay)));
-        const easeLocal= Math.pow(tLocal, 2.5);
-
-        const ySrc  = srcY - srcH/2 + v  * srcH;
-        const ySrc1 = srcY - srcH/2 + v1 * srcH;
-        const yCur  = ySrc  + (oy - ySrc)  * easeLocal;
-        const yCur1 = ySrc1 + (oy - ySrc1) * easeLocal;
-
-        const alpha = Math.max(0, 1 - t * 1.8);
-        genieCtx.globalAlpha = alpha;
-
-        const sx  = u  * snap.w;
-        const sx1 = u1 * snap.w;
-        const sy  = v  * snap.h;
-        const sy1 = v1 * snap.h;
-
-        genieCtx.drawImage(
-          snap.canvas,
-          sx, sy, (sx1-sx), (sy1-sy),
-          xDst, yCur, (xDst1-xDst), (yCur1-yCur)
-        );
-      }
-    }
-    genieCtx.globalAlpha=1;
-
+    genieFrame(snap, ox, oy, srcX, srcY, srcW, srcH, t, false);
     if(t<1){
-      genieRAF = requestAnimationFrame(frame);
+      genieRAF=requestAnimationFrame(frame);
     } else {
       genieC.style.display='none';
       el.style.opacity='';
       if(onDone) onDone();
     }
   }
-  genieRAF = requestAnimationFrame(frame);
+  genieRAF=requestAnimationFrame(frame);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1184,8 +1324,8 @@ document.getElementById('tog-price-v').addEventListener('change',e=>{
 // ═══════════════════════════════════════════════════════════════
 function initMusic(){
   if(musicAudio) return;
-  musicAudio = new Audio(MUSIC_URL);
-  musicAudio.loop = true; musicAudio.volume = 0.55;
+  musicAudio=new Audio(MUSIC_URL);
+  musicAudio.loop=true; musicAudio.volume=0.55;
 }
 function toggleMusic(){
   initMusic(); musicOn=!musicOn;
@@ -1239,64 +1379,67 @@ function playSelect(item){
 function toggleFx(){ fxOn=!fxOn; document.getElementById('fx-btn').classList.toggle('on',fxOn); if(fxOn) getAudioCtx(); }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL — con efecto genio real
+//  VIDEO MODAL — con efecto genio desde/hacia el botón
 // ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
 
 function openVideo(idx){
   const v=VIDEO_SOURCES[idx]; if(!v) return;
+  openVideoIdx=idx;
   document.getElementById('video-modal-title').textContent=v.title;
-  const modal  =document.getElementById('video-modal');
-  const overlay=document.getElementById('video-overlay');
 
+  const modal   = document.getElementById('video-modal');
+  const overlay = document.getElementById('video-overlay');
+
+  // Limpiar iframe previo
   const oldIframe=modal.querySelector('iframe');
   if(oldIframe) oldIframe.remove();
-
   document.getElementById('video-player').style.display='none';
 
+  // Crear iframe
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
-  iframe.allow='autoplay; fullscreen; picture-in-picture'; iframe.setAttribute('allowfullscreen','');
-  modal.insertBefore(iframe,document.getElementById('video-modal-bar'));
+  iframe.allow='autoplay; fullscreen; picture-in-picture';
+  iframe.setAttribute('allowfullscreen','');
+  modal.insertBefore(iframe, document.getElementById('video-modal-bar'));
 
+  // Origen: botón que se pulsó
+  const btnEl = document.getElementById('vid-btn-'+idx);
+  const btnR  = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-80,top:window.innerHeight-100,width:60,height:40};
+  genieOriginX = btnR.left + btnR.width/2;
+  genieOriginY = btnR.top  + btnR.height/2;
+
+  // Mostrar overlay (fade del fondo)
   overlay.style.display='flex';
   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   videoModalOpen=true;
 
-  // Origen del genio = botón de video que se pulsó (esquina inferior derecha)
-  const btnEl = document.querySelectorAll('.vid-btn')[idx];
-  const btnR  = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-40,top:window.innerHeight-80,width:0,height:0};
-  const ox = btnR.left + btnR.width/2;
-  const oy = btnR.top  + btnR.height/2;
-
-  // El modal aún no tiene dimensiones hasta el próximo frame
-  requestAnimationFrame(()=>{
-    genieOpen(modal, ox, oy, 'video');
-  });
-
   if(musicAudio&&musicOn) musicAudio.volume=0.15;
+
+  // Efecto genio de apertura del modal (necesita un frame para el layout)
+  requestAnimationFrame(()=>{
+    genieOpen(modal, genieOriginX, genieOriginY, snapshotVideoModal);
+  });
 }
 
 function closeVideo(){
-  const modal  = document.getElementById('video-modal');
-  const overlay= document.getElementById('video-overlay');
+  const modal   = document.getElementById('video-modal');
+  const overlay = document.getElementById('video-overlay');
 
-  const btnEl  = document.querySelectorAll('.vid-btn')[0];
-  const btnR   = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-40,top:window.innerHeight-80,width:0,height:0};
-  const ox = btnR.left + btnR.width/2;
-  const oy = btnR.top  + btnR.height/2;
-
-  genieClose(modal, ox, oy, 'video', ()=>{
+  // Cierre hacia el botón origen
+  genieClose(modal, genieOriginX, genieOriginY, ()=>{
     overlay.classList.remove('open');
-    overlay.style.display='none';
-    const iframe=modal.querySelector('iframe');
-    if(iframe) iframe.remove();
-    document.getElementById('video-player').style.display='none';
-    if(musicAudio&&musicOn) musicAudio.volume=0.55;
-    videoModalOpen=false;
-    modal.classList.remove('visible');
-  });
+    setTimeout(()=>{
+      overlay.style.display='none';
+      const iframe=modal.querySelector('iframe');
+      if(iframe) iframe.remove();
+      document.getElementById('video-player').style.display='none';
+      if(musicAudio&&musicOn) musicAudio.volume=0.55;
+      videoModalOpen=false;
+      modal.classList.remove('visible');
+    },40);
+  }, snapshotVideoModal);
 }
 
 function handleOverlayClick(e){
