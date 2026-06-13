@@ -735,20 +735,22 @@ let touchStartX=0, touchStartY=0, touchMoved=false;
 let pinchStartDist=0, pinchStartZoom=1, pinchStartPanX=0, pinchStartPanY=0;
 let pinchMidX=0, pinchMidY=0;
 let cachedCanvasRect=null;
+let isPinching=false; // ← flag nuevo
 
 vCanvas.addEventListener('touchstart',e=>{
   e.preventDefault();
   touches=[...e.touches];
-  cachedCanvasRect = vCanvas.getBoundingClientRect(); // ← se calcula UNA sola vez
+  cachedCanvasRect = vCanvas.getBoundingClientRect();
 
   if(touches.length===1){
+    isPinching=false; // ← reset solo si es un dedo desde el inicio
     touchStartX=touches[0].clientX;
     touchStartY=touches[0].clientY;
     touchMoved=false;
     vPanStart={x:touches[0].clientX - vPanX, y:touches[0].clientY - vPanY};
 
   } else if(touches.length===2){
-    // Guardar estado inicial del pinch completo
+    isPinching=true; // ← activar flag de pinch
     pinchStartDist = Math.hypot(
       touches[0].clientX - touches[1].clientX,
       touches[0].clientY - touches[1].clientY
@@ -756,8 +758,6 @@ vCanvas.addEventListener('touchstart',e=>{
     pinchStartZoom = vZoomLevel;
     pinchStartPanX = vPanX;
     pinchStartPanY = vPanY;
-
-    // Punto central fijo del pinch relativo al canvas
     pinchMidX = (touches[0].clientX + touches[1].clientX) / 2 - cachedCanvasRect.left;
     pinchMidY = (touches[0].clientY + touches[1].clientY) / 2 - cachedCanvasRect.top;
   }
@@ -767,7 +767,7 @@ vCanvas.addEventListener('touchmove',e=>{
   e.preventDefault();
   touches=[...e.touches];
 
-  if(touches.length===1){
+  if(touches.length===1 && !isPinching){ // ← solo pan si no venimos de pinch
     const dx=touches[0].clientX - touchStartX;
     const dy=touches[0].clientY - touchStartY;
     if(Math.hypot(dx,dy)>6) touchMoved=true;
@@ -776,19 +776,15 @@ vCanvas.addEventListener('touchmove',e=>{
     redrawViewer();
 
   } else if(touches.length===2){
+    isPinching=true;
     const dist = Math.hypot(
       touches[0].clientX - touches[1].clientX,
       touches[0].clientY - touches[1].clientY
     );
-
-    // Zoom relativo al estado inicial del pinch, no acumulativo
     const newZ = Math.min(8, Math.max(0.2, pinchStartZoom * (dist / pinchStartDist)));
-
-    // El punto pinchMid debe quedar fijo en pantalla
     vPanX = pinchMidX - (pinchMidX - pinchStartPanX) * (newZ / pinchStartZoom);
     vPanY = pinchMidY - (pinchMidY - pinchStartPanY) * (newZ / pinchStartZoom);
     vZoomLevel = newZ;
-
     document.getElementById('v-zoom-lbl').textContent = Math.round(vZoomLevel*100)+'%';
     redrawViewer();
   }
@@ -796,16 +792,30 @@ vCanvas.addEventListener('touchmove',e=>{
 
 vCanvas.addEventListener('touchend',e=>{
   e.preventDefault();
-  if(!touchMoved && e.changedTouches.length===1){
-    const t=e.changedTouches[0];
-    const r=vCanvas.getBoundingClientRect();
-    const pos={x:t.clientX-r.left, y:t.clientY-r.top};
-    const screenPos={x:t.clientX, y:t.clientY};
-    const ip=vImgCoord(pos), found=findItemAt(ip);
-    if(found){
-      if(vSelectedId===found.id){ clearSelection(); }
-      else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
-    } else { clearSelection(); }
+  touches=[...e.touches];
+
+  if(touches.length===0){
+    // Todos los dedos levantados
+    if(!isPinching && !touchMoved && e.changedTouches.length===1){
+      const t=e.changedTouches[0];
+      const r=cachedCanvasRect||vCanvas.getBoundingClientRect();
+      const pos={x:t.clientX-r.left, y:t.clientY-r.top};
+      const screenPos={x:t.clientX, y:t.clientY};
+      const ip=vImgCoord(pos), found=findItemAt(ip);
+      if(found){
+        if(vSelectedId===found.id){ clearSelection(); }
+        else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
+      } else { clearSelection(); }
+    }
+    isPinching=false; // ← reset SOLO cuando no queda ningún dedo
+  }
+  // Si queda 1 dedo tras soltar el segundo, reanclamos el pan desde la posición actual
+  else if(touches.length===1 && isPinching){
+    touchStartX=touches[0].clientX;
+    touchStartY=touches[0].clientY;
+    touchMoved=false;
+    vPanStart={x:touches[0].clientX - vPanX, y:touches[0].clientY - vPanY};
+    // isPinching sigue true hasta que se suelten todos los dedos
   }
 },{passive:false});
 
