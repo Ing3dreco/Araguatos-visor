@@ -679,7 +679,7 @@ function onMouseMove(e){
   if(mode==='draw'){redraw();return;}
   if(mode==='select'&&dragging){const ip=canvasToImg(pos.x,pos.y);const item=items.find(i=>i.id===selectedId);if(item){item.points=dragOffsets.map(o=>({x:ip.x+o.x,y:ip.y+o.y}));redraw();renderLayerList();syncViewer();}return;}
   if(mode==='vertex'&&vtxDragging&&vertexSelectedId!==null){const item=items.find(i=>i.id===vertexSelectedId);if(!item)return;const ip=canvasToImg(pos.x,pos.y);if(vtxDragIdx===-1){item.points=item.points.map(p=>({x:p.x+(ip.x-vtxDragOffset.lastX),y:p.y+(ip.y-vtxDragOffset.lastY)}));vtxDragOffset.lastX=ip.x;vtxDragOffset.lastY=ip.y;}else{item.points[vtxDragIdx]={x:ip.x,y:ip.y};}redraw();syncViewer();return;}
-  if(mode==='select'||mode==='vertex'){const ip=canvasToImg(pos.x,pos.y);let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}const newHov=found?found.id:null;if(newHov!==hoveredId){hoveredId=newHov;redraw();}canvas.style.cursor=found?'pointer':'default';}
+  if(mode==='select'||mode==='vertex'){const ip=canvasToImg(pos.x,pos.y);let found=findItemAt(ip);const newHov=found?found.id:null;if(newHov!==hoveredId){hoveredId=newHov;redraw();}canvas.style.cursor=found?'pointer':'default';}
 }
 
 function onMouseDown(e){
@@ -694,7 +694,7 @@ function onCanvasClick(e){
   if(now-lastClickTime<280){lastClickTime=0;return;}lastClickTime=now;
   if(mode==='draw'){if(!imgEl)return;if(!drawing){drawing=true;drawPts=[ip];document.getElementById('draw-hint').classList.add('on');document.getElementById('btn-finish').style.display='inline-block';document.getElementById('btn-cancel-draw').style.display='inline-block';playTick();}else{if(drawPts.length>=3){const fp=imgToCanvas(drawPts[0].x,drawPts[0].y);if(Math.hypot(pos.x-fp.x,pos.y-fp.y)<14){finishDraw();return;}}drawPts.push(ip);playTick();redraw();}return;}
   if(mode==='select'&&!dragging){let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}if(found){selectItem(found.id);switchTab('edit');}else{selectedId=null;redraw();}}
-  if(mode==='vertex'){let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}if(found){vertexSelectedId=found.id;origPoints=JSON.parse(JSON.stringify(found.points));currentRot=0;currentScl=100;document.getElementById('rot-slider').value=0;document.getElementById('rot-val').value=0;document.getElementById('scl-slider').value=100;document.getElementById('scl-val').value=100;selectItem(found.id);switchTab('edit');redraw();}}
+  if(mode==='vertex')let found=findItemAt(ip);if(found){vertexSelectedId=found.id;origPoints=JSON.parse(JSON.stringify(found.points));currentRot=0;currentScl=100;document.getElementById('rot-slider').value=0;document.getElementById('rot-val').value=0;document.getElementById('scl-slider').value=100;document.getElementById('scl-val').value=100;selectItem(found.id);switchTab('edit');redraw();}}
 }
 function onDblClick(){if(mode==='draw'&&drawing)finishDraw();lastClickTime=0;}
 
@@ -846,7 +846,7 @@ function onViewerMouseMove(e){
   const pos=evPos(e,vCanvas);const now=Date.now();
   if(now-vHoverThrottle<30)return;vHoverThrottle=now;
   const ip=vImgCoord(pos);
-  let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}
+  let found=findItemAt(ip);
   const newHov=found?found.id:null;
   if(newHov!==vHoveredId){vHoveredId=newHov;if(found&&found.id!==vSelectedId){showVPopup(found,pos);playEtherealHover(found);}else{hideVPopup();}redrawViewer();}
   else if(found&&found.id!==vSelectedId){moveVPopup(pos);}
@@ -856,7 +856,7 @@ function onViewerMouseMove(e){
 function onViewerClick(e){
   if(vIsPanning)return;
   const pos=evPos(e,vCanvas);const ip=vImgCoord(pos);
-  let found=null;for(let i=items.length-1;i>=0;i--){if(pointInPoly(ip,items[i].points)){found=items[i];break;}}
+  let found=findItemAt(ip);
   if(found){if(vSelectedId===found.id){clearViewerSelection();}else{vSelectedId=found.id;hideVPopup();showSelPanel(found);playEtherealSelect(found);redrawViewer();}}
   else{clearViewerSelection();}
 }
@@ -900,7 +900,22 @@ function pointInPoly(pt,poly){
   }
   return inside;
 }
-
+// Hit test que prioriza lotes sobre manzanas
+function findItemAt(ip) {
+  // Primero buscar entre lotes (tienen prioridad de clic)
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].type === 'lote' && pointInPoly(ip, items[i].points)) {
+      return items[i];
+    }
+  }
+  // Si no hay lote, buscar manzana
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].type === 'manzana' && pointInPoly(ip, items[i].points)) {
+      return items[i];
+    }
+  }
+  return null;
+}
 // ═══════════════════════════════════════════════════════════════
 //  COUNTERS
 // ═══════════════════════════════════════════════════════════════
