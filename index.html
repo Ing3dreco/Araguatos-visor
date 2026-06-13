@@ -728,7 +728,12 @@ vCanvas.addEventListener('mousemove',e=>{
 });
 vCanvas.addEventListener('mouseup',()=>{ if(vIsPanning){ vIsPanning=false; vCanvas.style.cursor='default'; } });
 vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
-vCanvas.addEventListener('click',onViewerClick);
+let lastTouchEnd = 0;
+vCanvas.addEventListener('click', e => {
+  // Si el click viene justo después de un touch, ignorarlo
+  if(Date.now() - lastTouchEnd < 500) return;
+  onViewerClick(e);
+});
 
 // ── TOUCH ──
 let touchStartX=0, touchStartY=0, touchMoved=false;
@@ -791,6 +796,7 @@ vCanvas.addEventListener('touchmove',e=>{
 },{passive:false});
 
 vCanvas.addEventListener('touchend',e=>{
+  lastTouchEnd = Date.now();
   e.preventDefault();
   touches=[...e.touches];
 
