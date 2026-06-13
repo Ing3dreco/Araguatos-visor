@@ -197,37 +197,76 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 
 /* ── MOBILE ADAPTATIONS ── */
 @media(max-width:600px){
-  #topbar{padding:0 10px;gap:7px;height:44px}
-  .brand{font-size:14px}
+  #topbar{padding:0 8px;gap:5px;height:42px}
+  .brand{font-size:13px}
   .brand span{display:none}
-  .top-stat{font-size:10px}
+  .top-stat{font-size:9px}
   .top-stat b{font-size:11px}
-  .togwrap{font-size:10px}
+  .togwrap{font-size:9px;gap:4px}
+  /* En móvil ocultamos stats individuales del topbar — los counters del canvas ya los muestran */
   .top-sep{display:none}
-  #sound-controls{top:8px;right:8px;gap:4px}
-  .sound-btn{padding:5px 10px;font-size:10px}
-  #zoom-controls{top:52px;right:8px}
-  .zoom-btn{width:30px;height:30px;font-size:17px}
-  #video-btns{bottom:90px;right:8px;gap:6px}
-  .vid-btn{padding:8px 11px;font-size:11px;border-radius:12px}
-  .vid-icon{width:26px;height:26px;font-size:12px}
-  #v-legend{padding:8px 11px;bottom:14px;left:8px}
-  .leg-row{font-size:10px;gap:6px}
-  #v-counters{padding:8px 12px;bottom:14px;right:8px}
-  .cnt-n{font-size:15px}
-  .cnt-l{font-size:8px}
-  .cnt-div{height:22px}
-  #v-sel-panel{left:50% !important;top:auto !important;bottom:14px !important;transform:translateX(-50%) !important;width:calc(100vw - 28px);max-width:340px}
-  #v-sel-panel.on{animation:panelin-mb .22s cubic-bezier(.34,1.56,.64,1)}
-  @keyframes panelin-mb{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-  .sel-card{min-width:unset;max-width:unset;width:100%;padding:14px 16px}
-  .sel-name{font-size:17px}
-  #video-modal{width:97vw;border-radius:12px}
+  .top-stat:not(:last-child){display:none}
+
+  #sound-controls{top:6px;right:6px;gap:4px}
+  .sound-btn{padding:5px 9px;font-size:10px;border-radius:16px}
+  .snd-label{font-size:9px}
+
+  #zoom-controls{top:50px;right:6px}
+  .zoom-btn{width:30px;height:30px;font-size:17px;border-radius:7px}
+  .zoom-level{width:30px;font-size:8px}
+
+  /* Botones de video: apilados a la derecha, más compactos */
+  #video-btns{bottom:88px;right:6px;gap:5px}
+  .vid-btn{padding:8px 10px;font-size:10px;border-radius:11px;gap:7px}
+  .vid-icon{width:24px;height:24px;font-size:11px}
+
+  /* Leyenda más pequeña */
+  #v-legend{padding:7px 10px;bottom:12px;left:6px;gap:5px}
+  .leg-row{font-size:9px;gap:6px}
+  .leg-box{width:9px;height:9px}
+
+  /* Contadores más compactos */
+  #v-counters{padding:7px 10px;bottom:12px;right:6px;gap:8px}
+  .cnt-n{font-size:14px}
+  .cnt-l{font-size:7px}
+  .cnt-div{height:20px}
+
+  /* Panel de selección: bottom sheet centrado */
+  #v-sel-panel{
+    left:50% !important;
+    top:auto !important;
+    bottom:8px !important;
+    transform:translateX(-50%) !important;
+    width:calc(100vw - 16px);
+    max-width:360px;
+  }
+  #v-sel-panel.on{animation:panelin-mb .24s cubic-bezier(.34,1.46,.64,1)}
+  @keyframes panelin-mb{
+    from{opacity:0;transform:translateX(-50%) translateY(24px)}
+    to{opacity:1;transform:translateX(-50%) translateY(0)}
+  }
+  .sel-card{min-width:unset;max-width:unset;width:100%;padding:12px 14px;border-radius:12px}
+  .sel-name{font-size:16px}
+  .sel-val{font-size:11px}
+
+  /* Popup hover: oculto en móvil (usamos el panel de selección) */
   #v-popup{display:none !important}
+
+  /* Video modal más alto en móvil */
+  #video-modal{width:98vw;border-radius:10px}
+  #video-modal iframe{height:52vw !important;min-height:200px !important}
+  #video-modal-bar{padding:8px 12px}
+  #video-modal-title{font-size:12px}
+  #video-close-btn{padding:5px 11px;font-size:10px}
 }
-@media(max-width:400px){
+
+/* Pantallas muy pequeñas */
+@media(max-width:380px){
   .vid-btn .vid-label{display:none}
-  .vid-btn{padding:8px 10px}
+  .vid-btn{padding:8px}
+  .vid-icon{margin:0}
+  #v-counters{gap:5px;padding:6px 8px}
+  .cnt-n{font-size:12px}
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -366,18 +405,15 @@ const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 // Ejemplo: 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3'
 const MUSIC_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3';
 
-// IDs de Google Drive para los dos videos de sobrevuelo
+// Videos de sobrevuelo — YouTube (sin sonido, sin controles de YT visibles)
 const VIDEO_SOURCES = [
   {
     title: 'Sobrevuelo 1 — Vista Aérea',
-    // Google Drive embed (streaming directo)
-    src: 'https://drive.google.com/uc?export=download&id=1tpnNx-3T9PXLUUdR5DLyxPe03s-MPI4O',
-    embed: 'https://drive.google.com/file/d/1tpnNx-3T9PXLUUdR5DLyxPe03s-MPI4O/preview'
+    ytId: '4YAm9b35Fm8'
   },
   {
     title: 'Sobrevuelo 2 — Vista Aérea',
-    src: 'https://drive.google.com/uc?export=download&id=1mq5mRJH_OxD8n07mCmMZaDhzA6L4Vq6l',
-    embed: 'https://drive.google.com/file/d/1mq5mRJH_OxD8n07mCmMZaDhzA6L4Vq6l/preview'
+    ytId: 'OUJycxmSaJk'
   }
 ];
 
@@ -437,6 +473,32 @@ async function cargarDatos(){
     sbToast('Error: '+err.message,'err',8000);
     console.error('[Supabase]',err);
   }
+}
+
+// ── SUPABASE REALTIME — actualización automática al instante ──
+function activarRealtime(){
+  sb.channel('lotes-realtime')
+    .on('postgres_changes',
+      {event:'*', schema:'public', table:'lotes'},
+      payload=>{
+        const {eventType, new:newRow, old:oldRow} = payload;
+        if(eventType==='INSERT'){
+          const item={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
+          items.push(item);
+        } else if(eventType==='UPDATE'){
+          const idx=items.findIndex(i=>i.id===newRow.id);
+          if(idx>=0){
+            items[idx]={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
+          }
+        } else if(eventType==='DELETE'){
+          items=items.filter(i=>i.id!==oldRow.id);
+        }
+        redrawViewer();
+        updateCounters();
+        sbToast('🔄 Mapa actualizado','ok',2000);
+      }
+    )
+    .subscribe();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -881,7 +943,7 @@ function getChain(){
   const ctx=getAudioCtx();
   if(!_reverb){
     _reverb=createReverb(ctx,1.8,3.2);
-    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.45;
+    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.75; // subido de 0.45
     _reverb.connect(_reverbGain); _reverbGain.connect(ctx.destination);
   }
   return{reverb:_reverb,gain:_reverbGain};
@@ -894,17 +956,17 @@ function playHover(item){
   const ctx=getAudioCtx(); const{reverb}=getChain();
   const baseMap={available:659.25, sold:523.25, reserved:493.88, manzana:698.46};
   const base=item.type==='manzana'?baseMap.manzana:(baseMap[item.status]||659.25);
-  // Dos partiales suaves con envolvente rápida
-  [[base,0.04],[base*2.01,0.015]].forEach(([f,amp],i)=>{
+  // Volumen aumentado x5 para que se escuche claramente
+  [[base,0.22],[base*2.01,0.10]].forEach(([f,amp],i)=>{
     const osc=ctx.createOscillator(); osc.type='sine';
     osc.frequency.value=f;
     const g=ctx.createGain();
     const t0=ctx.currentTime+i*.008;
     g.gain.setValueAtTime(0,t0);
-    g.gain.linearRampToValueAtTime(amp,t0+.01);
-    g.gain.exponentialRampToValueAtTime(0.0001,t0+.28+i*.05);
+    g.gain.linearRampToValueAtTime(amp,t0+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+.32+i*.06);
     osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+.35);
+    osc.start(t0); osc.stop(t0+.40);
   });
 }
 
@@ -912,20 +974,18 @@ function playSelect(item){
   if(!fxOn||!item) return;
   const ctx=getAudioCtx(); const{reverb}=getChain();
   const isMz=item.type==='manzana';
-  // Acorde de 3 notas con ataque suave — feel de piano
   const root=isMz?349.23:523.25;
   const chord=isMz?[root,root*1.25,root*1.5,root*2]:[root,root*1.2,root*1.5];
   chord.forEach((f,i)=>{
     const osc=ctx.createOscillator(); osc.type='triangle';
-    // Slight detune para warmth
     osc.frequency.value=f*(1+( (Math.random()-.5)*.004 ));
     const g=ctx.createGain();
     const t0=ctx.currentTime+i*.08;
     g.gain.setValueAtTime(0,t0);
-    g.gain.linearRampToValueAtTime(0.065,t0+.018);
-    g.gain.exponentialRampToValueAtTime(0.0001,t0+.9+i*.1);
+    g.gain.linearRampToValueAtTime(0.28,t0+.022); // volumen x4
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+1.0+i*.1);
     osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+1.1);
+    osc.start(t0); osc.stop(t0+1.2);
   });
 }
 
@@ -936,7 +996,7 @@ function toggleFx(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL
+//  VIDEO MODAL — YouTube embed (muted, autoplay)
 // ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
 
@@ -944,38 +1004,35 @@ function openVideo(idx){
   const v=VIDEO_SOURCES[idx];
   if(!v) return;
 
-  // Actualiza título
   document.getElementById('video-modal-title').textContent=v.title;
-
-  // Usamos iframe embed de Google Drive (mejor compatibilidad que <video src>)
   const modal=document.getElementById('video-modal');
 
-  // Elimina iframe anterior si existe
+  // Elimina iframe anterior
   const oldIframe=modal.querySelector('iframe');
   if(oldIframe) oldIframe.remove();
 
-  // Oculta el <video> nativo y usa iframe
+  // Oculta el <video> nativo
   const videoEl=document.getElementById('video-player');
   videoEl.style.display='none';
 
+  // YouTube embed: mute=1, autoplay=1, rel=0 (sin videos relacionados), modestbranding=1
   const iframe=document.createElement('iframe');
-  iframe.src=v.embed+'&autoplay=1';
-  iframe.style.cssText='width:100%;height:75vmin;min-height:260px;max-height:75vh;border:none;display:block;background:#000';
-  iframe.allow='autoplay; fullscreen';
+  iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
+  iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
+  iframe.allow='autoplay; fullscreen; picture-in-picture';
   iframe.setAttribute('allowfullscreen','');
-  // Insertar antes de la barra inferior
   modal.insertBefore(iframe,document.getElementById('video-modal-bar'));
 
-  // Abre overlay con animación
+  // Abre overlay con animación Mac
   const overlay=document.getElementById('video-overlay');
   overlay.style.display='flex';
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>overlay.classList.add('open'));
-  });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   videoModalOpen=true;
 
-  // Baja volumen de música mientras el video está abierto
-  if(musicAudio&&musicOn) musicAudio.volume=0.18;
+  // Baja volumen música mientras el video está abierto
+  if(musicAudio&&musicOn){
+    musicAudio.volume=0.15;
+  }
 }
 
 function closeVideo(){
@@ -983,19 +1040,17 @@ function closeVideo(){
   overlay.classList.remove('open');
   setTimeout(()=>{
     overlay.style.display='none';
-    // Elimina iframe para detener reproducción
     const modal=document.getElementById('video-modal');
     const iframe=modal.querySelector('iframe');
     if(iframe) iframe.remove();
-    document.getElementById('video-player').style.display='block';
-    // Restaura volumen de música
+    document.getElementById('video-player').style.display='none';
+    // Restaura volumen música
     if(musicAudio&&musicOn) musicAudio.volume=0.55;
     videoModalOpen=false;
   },420);
 }
 
 function handleOverlayClick(e){
-  // Cierra al tocar fuera del modal
   if(e.target===document.getElementById('video-overlay')) closeVideo();
 }
 
@@ -1018,6 +1073,7 @@ document.addEventListener('keydown',e=>{
   sbToast('Cargando plano…','saving',0);
   await cargarImagen(PLANO_URL);
   await cargarDatos();
+  activarRealtime();
   resizeCanvas();
   redrawViewer();
 })();
