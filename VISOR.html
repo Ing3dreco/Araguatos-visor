@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Araguatos · Visor de Lotes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#06080D;--surf:#0C0F18;--surf2:#121726;--surf3:#181E2E;
+  --bdr:#1A2035;--bdr2:#242D45;
+  --gold:#C9A84C;--gold2:#E8CC82;--gold3:#F5E4A8;--golda:rgba(201,168,76,.15);--goldb:rgba(201,168,76,.08);
+  --green:#2ECC71;--greena:rgba(46,204,113,.18);
+  --amber:#F39C12;--ambera:rgba(243,156,18,.18);
+  --red:#E74C3C;--reda:rgba(231,76,60,.18);
+  --blue:#5DADE2;--bluea:rgba(93,173,226,.18);
+  --txt:#DCE3F5;--txt2:#8A94AD;--txt3:#4A5270;
+  --tr:.2s cubic-bezier(.4,0,.2,1);--rad:7px;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* ── TOPBAR ── */
+#topbar{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0;height:48px}
+.brand{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold);letter-spacing:.4px;flex-shrink:0}
+.brand span{font-size:10px;color:var(--txt3);font-family:'Plus Jakarta Sans',sans-serif;margin-left:6px;letter-spacing:.8px;text-transform:uppercase;font-weight:500}
+.top-spacer{flex:1}
+.top-stat{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt3);white-space:nowrap}
+.top-stat b{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--txt);font-weight:500}
+.top-sep{width:1px;height:18px;background:var(--bdr2);flex-shrink:0}
+.togwrap{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);white-space:nowrap}
+.tog{position:relative;width:28px;height:15px}
+.tog input{opacity:0;width:0;height:0}
+.tog .sl{position:absolute;inset:0;background:var(--bdr2);border-radius:20px;cursor:pointer;transition:.2s}
+.tog .sl:before{content:'';position:absolute;width:9px;height:9px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.tog input:checked+.sl{background:var(--gold)}
+.tog input:checked+.sl:before{transform:translateX(13px)}
+
+/* ── VIEWER MAIN ── */
+#viewer-wrap{flex:1;position:relative;overflow:hidden}
+#viewer-canvas{display:block;position:absolute;top:0;left:0;cursor:default;touch-action:none}
+
+/* ── FLOATING CONTROLS ── */
+#sound-controls{position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:50;flex-wrap:wrap;justify-content:flex-end}
+.sound-btn{padding:7px 13px;border-radius:20px;border:1px solid var(--bdr2);background:rgba(6,8,13,.82);color:var(--txt2);font-size:11px;cursor:pointer;backdrop-filter:blur(8px);transition:var(--tr);font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap;user-select:none}
+.sound-btn:hover{border-color:var(--gold);color:var(--gold)}
+.sound-btn.on{border-color:var(--gold);color:var(--gold2);background:var(--golda)}
+.snd-label{font-size:10px;font-weight:600;letter-spacing:.3px}
+.sound-wave{display:flex;align-items:center;gap:2px;height:12px}
+.sw-bar{width:2px;background:currentColor;border-radius:2px;animation:waveani 1s ease-in-out infinite}
+.sw-bar:nth-child(1){height:4px;animation-delay:0s}
+.sw-bar:nth-child(2){height:8px;animation-delay:.15s}
+.sw-bar:nth-child(3){height:12px;animation-delay:.3s}
+.sw-bar:nth-child(4){height:8px;animation-delay:.45s}
+.sw-bar:nth-child(5){height:4px;animation-delay:.6s}
+@keyframes waveani{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.4)}}
+#music-btn:not(.on) .sound-wave{display:none}
+#music-btn:not(.on)::before{content:'♪';margin-right:2px}
+
+/* ── VIDEO BUTTONS ── */
+#video-btns{position:absolute;bottom:100px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:50}
+.vid-btn{display:flex;align-items:center;gap:9px;padding:10px 15px;border-radius:14px;border:1px solid rgba(201,168,76,.4);background:rgba(6,8,13,.88);color:var(--gold2);font-size:12px;font-weight:600;cursor:pointer;backdrop-filter:blur(12px);transition:var(--tr);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.2px;white-space:nowrap;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.vid-btn:hover{border-color:var(--gold);background:var(--golda);transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.6)}
+.vid-btn:active{transform:scale(.97)}
+.vid-icon{width:30px;height:30px;border-radius:50%;background:var(--golda);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* ── ZOOM CONTROLS ── */
+#zoom-controls{position:absolute;top:60px;right:12px;display:flex;flex-direction:column;gap:5px;z-index:50}
+.zoom-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--bdr2);background:rgba(6,8,13,.85);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:var(--tr);line-height:1;font-weight:300;user-select:none}
+.zoom-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--golda)}
+.zoom-btn:active{transform:scale(.93)}
+.zoom-level{width:34px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--txt3);font-family:'JetBrains Mono',monospace}
+
+/* ── LEGEND & COUNTERS ── */
+#v-legend{position:absolute;bottom:18px;left:12px;background:rgba(6,8,13,.85);border:1px solid var(--bdr2);border-radius:10px;padding:10px 14px;backdrop-filter:blur(14px);display:flex;gap:7px;flex-direction:column;z-index:40}
+.leg-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)}
+.leg-box{width:11px;height:11px;border-radius:2px;border:1.5px solid;flex-shrink:0}
+.leg-box.available{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.4)}
+.leg-box.sold{background:var(--greena);border-color:var(--green)}
+.leg-box.reserved{background:var(--ambera);border-color:var(--amber)}
+#v-counters{position:absolute;bottom:18px;right:12px;background:rgba(6,8,13,.85);border:1px solid var(--bdr2);border-radius:10px;padding:10px 16px;backdrop-filter:blur(14px);display:flex;gap:12px;align-items:center;z-index:40}
+.cnt-n{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--gold)}
+.cnt-l{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+.cnt-div{width:1px;height:28px;background:var(--bdr2)}
+
+/* ── HOVER POPUP ── */
+#v-popup{position:absolute;pointer-events:none;display:none;z-index:200;opacity:0;transition:opacity .16s ease,transform .16s ease;transform:translateY(8px)}
+#v-popup.on{display:block;opacity:1;transform:translateY(0)}
+.pop-card{background:rgba(6,8,13,.97);border:1px solid var(--bdr2);border-radius:12px;padding:13px 16px;min-width:180px;box-shadow:0 16px 48px rgba(0,0,0,.85);backdrop-filter:blur(18px)}
+.pop-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 7px;border-radius:20px;margin-bottom:7px}
+.pop-badge.available{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
+.pop-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(46,204,113,.25)}
+.pop-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(243,156,18,.25)}
+.pop-badge.manzana{background:var(--golda);color:var(--gold2);border:1px solid rgba(201,168,76,.25)}
+.pop-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--txt);margin-bottom:9px;line-height:1.3}
+.pop-div{height:1px;background:var(--bdr);margin-bottom:9px}
+.pop-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.pop-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.4px}
+.pop-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
+.pop-price{color:var(--gold);font-weight:700}
+
+/* ── SELECTION PANEL ── */
+#v-sel-panel{position:absolute;display:none;z-index:100}
+#v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.sel-card{background:rgba(6,8,13,.97);border:1px solid var(--gold);border-radius:14px;padding:16px 20px;min-width:220px;max-width:280px;box-shadow:0 24px 64px rgba(0,0,0,.9),0 0 40px rgba(201,168,76,.06);backdrop-filter:blur(20px)}
+.sel-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.sel-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold3);line-height:1.2}
+.sel-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:20px;margin-top:4px;display:inline-block}
+.sel-badge.available{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.sel-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(46,204,113,.3)}
+.sel-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(243,156,18,.3)}
+.sel-badge.manzana{background:var(--golda);color:var(--gold2);border:1px solid rgba(201,168,76,.3)}
+.sel-div{height:1px;background:var(--bdr2);margin:10px 0}
+.sel-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sel-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
+.sel-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
+.sel-price{color:var(--gold2);font-size:14px}
+.sel-close{font-size:16px;color:var(--txt3);cursor:pointer;line-height:1;transition:var(--tr);padding:2px;flex-shrink:0}
+.sel-close:hover{color:var(--txt)}
+
+/* ── PLACEHOLDER ── */
+#v-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;z-index:5}
+#v-placeholder.hidden{display:none}
+.ph-ico{font-size:48px;opacity:.12}
+.ph-ttl{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);opacity:.25}
+.ph-sub{color:var(--txt3);font-size:12px;text-align:center;max-width:260px;line-height:1.8}
+
+/* ── TOAST ── */
+#sb-toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(6,8,13,.95);border:1px solid var(--bdr2);border-radius:20px;padding:7px 16px;font-size:11px;color:var(--txt2);z-index:9998;display:none;align-items:center;gap:7px;backdrop-filter:blur(12px);white-space:nowrap}
+#sb-toast.show{display:flex}
+#sb-toast.ok{border-color:rgba(46,204,113,.4);color:var(--green)}
+#sb-toast.err{border-color:rgba(231,76,60,.4);color:var(--red)}
+#sb-toast.saving{border-color:rgba(201,168,76,.4);color:var(--gold)}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ══════════════════════════════════════════════
+   VIDEO MODAL — apertura tipo Mac
+══════════════════════════════════════════════ */
+#video-overlay{
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,0);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  transition:background .35s ease;
+}
+#video-overlay.open{
+  background:rgba(0,0,0,.78);
+  pointer-events:all;
+}
+#video-modal{
+  position:relative;
+  width:90vw;max-width:900px;
+  background:#000;
+  border-radius:16px;
+  border:1px solid rgba(201,168,76,.3);
+  overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
+  transform:scale(0.04);
+  opacity:0;
+  transform-origin:center center;
+  transition:transform .42s cubic-bezier(.34,1.35,.64,1), opacity .28s ease;
+}
+#video-overlay.open #video-modal{
+  transform:scale(1);
+  opacity:1;
+}
+#video-modal video{
+  display:block;
+  width:100%;
+  max-height:75vh;
+  object-fit:contain;
+  background:#000;
+}
+#video-modal-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;
+  background:rgba(6,8,13,.95);
+  border-top:1px solid var(--bdr);
+}
+#video-modal-title{
+  font-family:'DM Serif Display',serif;
+  font-size:14px;color:var(--gold2);letter-spacing:.3px;
+}
+#video-close-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  border:1px solid var(--bdr2);background:var(--surf2);
+  color:var(--txt2);font-size:11px;font-weight:600;
+  cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+  transition:var(--tr);letter-spacing:.3px;
+}
+#video-close-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── MOBILE ADAPTATIONS ── */
+@media(max-width:600px){
+  #topbar{padding:0 10px;gap:7px;height:44px}
+  .brand{font-size:14px}
+  .brand span{display:none}
+  .top-stat{font-size:10px}
+  .top-stat b{font-size:11px}
+  .togwrap{font-size:10px}
+  .top-sep{display:none}
+  #sound-controls{top:8px;right:8px;gap:4px}
+  .sound-btn{padding:5px 10px;font-size:10px}
+  #zoom-controls{top:52px;right:8px}
+  .zoom-btn{width:30px;height:30px;font-size:17px}
+  #video-btns{bottom:90px;right:8px;gap:6px}
+  .vid-btn{padding:8px 11px;font-size:11px;border-radius:12px}
+  .vid-icon{width:26px;height:26px;font-size:12px}
+  #v-legend{padding:8px 11px;bottom:14px;left:8px}
+  .leg-row{font-size:10px;gap:6px}
+  #v-counters{padding:8px 12px;bottom:14px;right:8px}
+  .cnt-n{font-size:15px}
+  .cnt-l{font-size:8px}
+  .cnt-div{height:22px}
+  #v-sel-panel{left:50% !important;top:auto !important;bottom:14px !important;transform:translateX(-50%) !important;width:calc(100vw - 28px);max-width:340px}
+  #v-sel-panel.on{animation:panelin-mb .22s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes panelin-mb{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .sel-card{min-width:unset;max-width:unset;width:100%;padding:14px 16px}
+  .sel-name{font-size:17px}
+  #video-modal{width:97vw;border-radius:12px}
+  #v-popup{display:none !important}
+}
+@media(max-width:400px){
+  .vid-btn .vid-label{display:none}
+  .vid-btn{padding:8px 10px}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<div id="sb-toast"><span class="sb-dot"></span><span id="sb-msg">Conectando…</span></div>
+
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="brand">Araguatos <span>· Visor de Lotes</span></div>
+    <div class="top-spacer"></div>
+    <div class="top-stat"><b id="v-cnt-av">0</b> disponibles</div>
+    <div class="top-sep"></div>
+    <div class="top-stat"><b id="v-cnt-so" style="color:var(--green)">0</b> vendidos</div>
+    <div class="top-sep"></div>
+    <div class="top-stat"><b id="v-cnt-re" style="color:var(--amber)">0</b> reservados</div>
+    <div class="top-sep"></div>
+    <div class="togwrap"><label class="tog"><input type="checkbox" id="tog-price-v"><span class="sl"></span></label>Precios</div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="viewer-wrap">
+    <canvas id="viewer-canvas"></canvas>
+
+    <div id="v-placeholder">
+      <div class="ph-ico">⏳</div>
+      <div class="ph-ttl">Cargando mapa…</div>
+      <p class="ph-sub">Conectando con Supabase y cargando el plano del proyecto.</p>
+    </div>
+
+    <!-- SOUND CONTROLS -->
+    <div id="sound-controls">
+      <button id="music-btn" class="sound-btn" onclick="toggleMusic()">
+        <span class="sound-wave"><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span></span>
+        <span class="snd-label">Música</span>
+      </button>
+      <button id="fx-btn" class="sound-btn on" onclick="toggleFx()">
+        <span style="font-size:13px">&#9834;</span>
+        <span class="snd-label">Efectos</span>
+      </button>
+    </div>
+
+    <!-- ZOOM CONTROLS -->
+    <div id="zoom-controls">
+      <button class="zoom-btn" onclick="vZoom(1.25)">+</button>
+      <div class="zoom-level" id="v-zoom-lbl">100%</div>
+      <button class="zoom-btn" onclick="vZoom(0.8)">−</button>
+      <button class="zoom-btn" onclick="vZoomReset()" style="font-size:11px">⊙</button>
+    </div>
+
+    <!-- VIDEO BUTTONS -->
+    <div id="video-btns">
+      <button class="vid-btn" onclick="openVideo(0)">
+        <span class="vid-icon">🚁</span>
+        <span class="vid-label">Sobrevuelo 1</span>
+      </button>
+      <button class="vid-btn" onclick="openVideo(1)">
+        <span class="vid-icon">🎬</span>
+        <span class="vid-label">Sobrevuelo 2</span>
+      </button>
+    </div>
+
+    <!-- HOVER POPUP (desktop) -->
+    <div id="v-popup">
+      <div class="pop-card">
+        <div class="pop-badge" id="vp-badge"></div>
+        <div class="pop-name" id="vp-name"></div>
+        <div class="pop-div"></div>
+        <div class="pop-row"><span class="pop-lbl">Área</span><span class="pop-val" id="vp-area">—</span></div>
+        <div class="pop-row" id="vp-price-row" style="display:none"><span class="pop-lbl">Precio</span><span class="pop-val pop-price" id="vp-price">—</span></div>
+      </div>
+    </div>
+
+    <!-- SELECTION PANEL -->
+    <div id="v-sel-panel">
+      <div class="sel-card">
+        <div class="sel-header">
+          <div>
+            <div class="sel-name" id="vs-name">—</div>
+            <div class="sel-badge" id="vs-badge"></div>
+          </div>
+          <div class="sel-close" onclick="clearSelection()">✕</div>
+        </div>
+        <div class="sel-div"></div>
+        <div class="sel-row"><span class="sel-lbl">Área</span><span class="sel-val" id="vs-area">—</span></div>
+        <div class="sel-row" id="vs-dims-row" style="display:none"><span class="sel-lbl">Medidas</span><span class="sel-val" id="vs-dims">—</span></div>
+        <div class="sel-row" id="vs-orient-row" style="display:none"><span class="sel-lbl">Orientación</span><span class="sel-val" id="vs-orient">—</span></div>
+        <div class="sel-row" id="vs-desc-row" style="display:none"><span class="sel-lbl">Descripción</span><span class="sel-val" id="vs-desc" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;text-align:right;max-width:150px">—</span></div>
+        <div class="sel-row" id="vs-price-row" style="display:none"><span class="sel-lbl">Precio</span><span class="sel-val sel-price" id="vs-price">—</span></div>
+        <div class="sel-row" id="vs-mz-row" style="display:none"><span class="sel-lbl">Manzana</span><span class="sel-val" id="vs-mz">—</span></div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div id="v-legend">
+      <div class="leg-row"><div class="leg-box available"></div>Disponible</div>
+      <div class="leg-row"><div class="leg-box sold"></div>Vendido</div>
+      <div class="leg-row"><div class="leg-box reserved"></div>Reservado</div>
+    </div>
+
+    <!-- COUNTERS -->
+    <div id="v-counters">
+      <div style="text-align:center"><div class="cnt-n" id="cnt-av2">0</div><div class="cnt-l">Disponibles</div></div>
+      <div class="cnt-div"></div>
+      <div style="text-align:center"><div class="cnt-n" id="cnt-so2" style="color:var(--green)">0</div><div class="cnt-l">Vendidos</div></div>
+      <div class="cnt-div"></div>
+      <div style="text-align:center"><div class="cnt-n" id="cnt-re2" style="color:var(--amber)">0</div><div class="cnt-l">Reservados</div></div>
+    </div>
+  </div><!-- /viewer-wrap -->
+</div><!-- /app -->
+
+<!-- VIDEO MODAL -->
+<div id="video-overlay" onclick="handleOverlayClick(event)">
+  <div id="video-modal">
+    <video id="video-player" muted playsinline preload="none"></video>
+    <div id="video-modal-bar">
+      <div id="video-modal-title">Sobrevuelo del Terreno</div>
+      <button id="video-close-btn" onclick="closeVideo()">✕ &nbsp;Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════
+//  CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════════════
+const PLANO_URL      = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
+const SUPABASE_URL   = 'https://ninaxwddpqqgaflacdfm.supabase.co';
+const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
+
+// ⬇ Pon la URL del MP3 de música en tu repositorio GitHub (raw link)
+// Ejemplo: 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3'
+const MUSIC_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3';
+
+// IDs de Google Drive para los dos videos de sobrevuelo
+const VIDEO_SOURCES = [
+  {
+    title: 'Sobrevuelo 1 — Vista Aérea',
+    // Google Drive embed (streaming directo)
+    src: 'https://drive.google.com/uc?export=download&id=1tpnNx-3T9PXLUUdR5DLyxPe03s-MPI4O',
+    embed: 'https://drive.google.com/file/d/1tpnNx-3T9PXLUUdR5DLyxPe03s-MPI4O/preview'
+  },
+  {
+    title: 'Sobrevuelo 2 — Vista Aérea',
+    src: 'https://drive.google.com/uc?export=download&id=1mq5mRJH_OxD8n07mCmMZaDhzA6L4Vq6l',
+    embed: 'https://drive.google.com/file/d/1mq5mRJH_OxD8n07mCmMZaDhzA6L4Vq6l/preview'
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
+let items = [];
+let imgEl = null, imgW = 1920, imgH = 1080;
+let showPriceViewer = false;
+let vZoomLevel = 1, vPanX = 0, vPanY = 0;
+let vIsPanning = false, vPanStart = {x:0,y:0};
+let vHoveredId = null, vSelectedId = null;
+let musicOn = false, fxOn = true;
+let musicAudio = null;
+
+// Touch state
+let touches = [], lastPinchDist = 0;
+
+const vCanvas = document.getElementById('viewer-canvas');
+const vCtx    = vCanvas.getContext('2d');
+const vWrap   = document.getElementById('viewer-wrap');
+
+// ═══════════════════════════════════════════════════════════════
+//  SUPABASE
+// ═══════════════════════════════════════════════════════════════
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let _toastTimer = null;
+function sbToast(msg, type='ok', duration=3000){
+  const el=document.getElementById('sb-toast'), txt=document.getElementById('sb-msg');
+  txt.textContent=msg; el.className='show '+type;
+  clearTimeout(_toastTimer);
+  if(duration>0) _toastTimer=setTimeout(()=>{ el.className=''; }, duration);
+}
+
+function normalizePts(raw){
+  if(!Array.isArray(raw)) return [];
+  return raw.map(p=>{
+    if(p&&typeof p==='object'&&!Array.isArray(p)&&'x' in p) return{x:+p.x,y:+p.y};
+    if(Array.isArray(p)&&p.length>=2) return{x:+p[0],y:+p[1]};
+    return null;
+  }).filter(p=>p!==null&&isFinite(p.x)&&isFinite(p.y));
+}
+
+async function cargarDatos(){
+  sbToast('Cargando datos…','saving',0);
+  try{
+    const {data,error} = await sb.from('lotes').select('*').order('id');
+    if(error) throw error;
+    if(!data||data.length===0){ sbToast('Sin datos en la tabla','ok',4000); return; }
+    items = data.map(r=>({...r, desc:r.description||r.desc||'', points:normalizePts(r.points||[])}));
+    redrawViewer();
+    updateCounters();
+    document.getElementById('v-placeholder').classList.add('hidden');
+    sbToast('✓ '+items.length+' lotes cargados','ok');
+  }catch(err){
+    sbToast('Error: '+err.message,'err',8000);
+    console.error('[Supabase]',err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  IMAGEN
+// ═══════════════════════════════════════════════════════════════
+async function cargarImagen(url){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      imgEl = img; imgW = 1920; imgH = 1080;
+      document.getElementById('v-placeholder').classList.add('hidden');
+      resolve();
+    };
+    img.onerror = ()=>{
+      const img2 = new Image();
+      img2.onload = ()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
+      img2.onerror = ()=>resolve();
+      img2.src = url;
+    };
+    img.src = url;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COORDINATE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function getImgRect(c){
+  const cw=c.width, ch=c.height;
+  if(!imgEl) return{x:0,y:0,w:cw,h:ch};
+  const ir=imgW/imgH, wr=cw/ch;
+  let dw,dh,dx,dy;
+  if(ir>wr){ dw=cw; dh=cw/ir; dx=0; dy=(ch-dh)/2; }
+  else{ dh=ch; dw=ch*ir; dy=0; dx=(cw-dw)/2; }
+  return{x:dx,y:dy,w:dw,h:dh};
+}
+
+function imgToCanvas(ix,iy){
+  const r=getImgRect(vCanvas);
+  return{x:r.x+ix/imgW*r.w, y:r.y+iy/imgH*r.h};
+}
+
+function vImgCoord(pos){
+  const cx=(pos.x-vPanX)/vZoomLevel;
+  const cy=(pos.y-vPanY)/vZoomLevel;
+  const r=getImgRect(vCanvas);
+  return{x:(cx-r.x)/r.w*imgW, y:(cy-r.y)/r.h*imgH};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HIT TEST
+// ═══════════════════════════════════════════════════════════════
+function pointInPoly(pt,poly){
+  if(!poly||poly.length<3) return false;
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+function findItemAt(ip){
+  for(let i=items.length-1;i>=0;i--){
+    if(items[i].type==='lote'&&pointInPoly(ip,items[i].points)) return items[i];
+  }
+  for(let i=items.length-1;i>=0;i--){
+    if(items[i].type==='manzana'&&pointInPoly(ip,items[i].points)) return items[i];
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════════════════════
+function redrawViewer(){
+  const cw=vCanvas.width, ch=vCanvas.height;
+  vCtx.clearRect(0,0,cw,ch);
+  vCtx.fillStyle='#04050A'; vCtx.fillRect(0,0,cw,ch);
+  if(!imgEl){ updateCounters(); return; }
+  vCtx.save();
+  vCtx.translate(vPanX,vPanY);
+  vCtx.scale(vZoomLevel,vZoomLevel);
+  const r=getImgRect(vCanvas);
+  vCtx.drawImage(imgEl,r.x,r.y,r.w,r.h);
+  items.filter(i=>i.type==='manzana').forEach(i=>drawItem(i));
+  items.filter(i=>i.type==='lote').forEach(i=>drawItem(i));
+  vCtx.restore();
+  updateCounters();
+}
+
+function drawItem(item){
+  if(!item.points||item.points.length<3) return;
+  const pts = item.points.map(p=>imgToCanvas(p.x,p.y));
+  const isSelected = item.id===vSelectedId;
+  const isHovered  = item.id===vHoveredId;
+  const isMz = item.type==='manzana';
+
+  let fill,stroke,lw;
+  if(isMz){
+    fill   = isSelected?'rgba(201,168,76,0.10)':'rgba(201,168,76,0.04)';
+    stroke = isSelected?'#E8CC82':isHovered?'rgba(232,204,130,0.7)':'rgba(201,168,76,0.35)';
+    lw     = isSelected?3:isHovered?2.5:2;
+  } else if(item.status==='sold'){
+    fill   = (isHovered||isSelected)?'rgba(46,204,113,0.45)':'rgba(46,204,113,0.22)';
+    stroke = isSelected?'#2ECC71':isHovered?'rgba(46,204,113,0.9)':'#2ECC71';
+    lw     = isSelected?3:1.8;
+  } else if(item.status==='reserved'){
+    fill   = (isHovered||isSelected)?'rgba(243,156,18,0.42)':'rgba(243,156,18,0.22)';
+    stroke = isSelected?'#F39C12':isHovered?'rgba(243,156,18,0.9)':'#F39C12';
+    lw     = isSelected?3:1.8;
+  } else {
+    fill   = isSelected?'rgba(201,168,76,0.14)':isHovered?'rgba(255,255,255,0.13)':'rgba(255,255,255,0.06)';
+    stroke = isSelected?'#C9A84C':isHovered?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.40)';
+    lw     = isSelected?3:1.5;
+  }
+
+  const lwActual = lw/vZoomLevel;
+  vCtx.beginPath();
+  vCtx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>vCtx.lineTo(p.x,p.y));
+  vCtx.closePath();
+  vCtx.fillStyle=fill; vCtx.fill();
+  if(isHovered||isSelected){
+    vCtx.shadowColor = isMz?'#C9A84C':item.status==='sold'?'#2ECC71':item.status==='reserved'?'#F39C12':'#ffffff';
+    vCtx.shadowBlur  = (isSelected?20:12)/vZoomLevel;
+  }
+  vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
+  vCtx.shadowBlur=0;
+
+  // Label — tamaño adaptado al zoom Y al dispositivo
+  const isMobile = vCanvas.width < 600;
+  const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
+  const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+  const label = isMz
+    ? (item.mzName||'?')
+    : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
+
+  // Tamaño base más pequeño en móvil
+  const baseMz = isMobile ? 11 : 16;
+  const baseAt = isMobile ? 8  : 11;
+  const fs = isMz
+    ? Math.max(baseMz, Math.min(baseMz+4, pts.length*1.8))
+    : Math.max(baseAt, Math.min(baseAt+3, pts.length*1.2));
+  const fsActual = fs/vZoomLevel;
+
+  vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
+  vCtx.textAlign='center'; vCtx.textBaseline='middle';
+  vCtx.strokeStyle='rgba(0,0,0,0.75)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
+  vCtx.strokeText(label,cx,cy);
+  vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
+  vCtx.fillText(label,cx,cy);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COUNTERS
+// ═══════════════════════════════════════════════════════════════
+function updateCounters(){
+  const lts=items.filter(i=>i.type==='lote');
+  const av=lts.filter(i=>i.status==='available').length;
+  const so=lts.filter(i=>i.status==='sold').length;
+  const re=lts.filter(i=>i.status==='reserved').length;
+  ['v-cnt-av','cnt-av2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=av; });
+  ['v-cnt-so','cnt-so2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=so; });
+  ['v-cnt-re','cnt-re2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=re; });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ZOOM / PAN — DESKTOP
+// ═══════════════════════════════════════════════════════════════
+function vZoom(factor){
+  const cx=vCanvas.width/2, cy=vCanvas.height/2;
+  const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
+  vPanX=cx-(cx-vPanX)*(newZ/vZoomLevel);
+  vPanY=cy-(cy-vPanY)*(newZ/vZoomLevel);
+  vZoomLevel=newZ;
+  document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
+  redrawViewer();
+}
+function vZoomReset(){
+  vZoomLevel=1; vPanX=0; vPanY=0;
+  document.getElementById('v-zoom-lbl').textContent='100%';
+  redrawViewer();
+}
+
+vCanvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const pos=evPos(e);
+  const factor=e.deltaY<0?1.12:0.89;
+  const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
+  vPanX=pos.x-(pos.x-vPanX)*(newZ/vZoomLevel);
+  vPanY=pos.y-(pos.y-vPanY)*(newZ/vZoomLevel);
+  vZoomLevel=newZ;
+  document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
+  redrawViewer();
+},{passive:false});
+
+vCanvas.addEventListener('mousedown',e=>{
+  if(e.button===1||e.button===2){ e.preventDefault(); vIsPanning=true; vPanStart={x:e.clientX-vPanX,y:e.clientY-vPanY}; vCanvas.style.cursor='grab'; }
+});
+vCanvas.addEventListener('mousemove',e=>{
+  if(vIsPanning){ vPanX=e.clientX-vPanStart.x; vPanY=e.clientY-vPanStart.y; vCanvas.style.cursor='grabbing'; redrawViewer(); return; }
+  onViewerHover(e);
+});
+vCanvas.addEventListener('mouseup',e=>{ if(vIsPanning){ vIsPanning=false; vCanvas.style.cursor='default'; } });
+vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+vCanvas.addEventListener('click',onViewerClick);
+
+// ═══════════════════════════════════════════════════════════════
+//  TOUCH — ZOOM / PAN / TAP
+// ═══════════════════════════════════════════════════════════════
+let touchStartX=0, touchStartY=0, touchMoved=false;
+
+vCanvas.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  touches=[...e.touches];
+  if(touches.length===1){
+    touchStartX=touches[0].clientX; touchStartY=touches[0].clientY;
+    touchMoved=false;
+    vPanStart={x:touches[0].clientX-vPanX, y:touches[0].clientY-vPanY};
+  } else if(touches.length===2){
+    lastPinchDist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
+  }
+},{passive:false});
+
+vCanvas.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  touches=[...e.touches];
+  if(touches.length===1){
+    const dx=touches[0].clientX-touchStartX, dy=touches[0].clientY-touchStartY;
+    if(Math.hypot(dx,dy)>6) touchMoved=true;
+    vPanX=touches[0].clientX-vPanStart.x;
+    vPanY=touches[0].clientY-vPanStart.y;
+    redrawViewer();
+  } else if(touches.length===2){
+    // Pinch zoom
+    const dist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
+    const factor=dist/lastPinchDist;
+    const midX=(touches[0].clientX+touches[1].clientX)/2;
+    const midY=(touches[0].clientY+touches[1].clientY)/2;
+    const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
+    const r=vCanvas.getBoundingClientRect();
+    const px=midX-r.left, py=midY-r.top;
+    vPanX=px-(px-vPanX)*(newZ/vZoomLevel);
+    vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
+    vZoomLevel=newZ;
+    lastPinchDist=dist;
+    document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
+    redrawViewer();
+  }
+},{passive:false});
+
+vCanvas.addEventListener('touchend',e=>{
+  e.preventDefault();
+  if(!touchMoved&&e.changedTouches.length===1){
+    const t=e.changedTouches[0];
+    const r=vCanvas.getBoundingClientRect();
+    const pos={x:t.clientX-r.left, y:t.clientY-r.top};
+    const ip=vImgCoord(pos);
+    const found=findItemAt(ip);
+    if(found){
+      if(vSelectedId===found.id){ clearSelection(); }
+      else{
+        vSelectedId=found.id;
+        hidePopup();
+        showSelPanel(found,pos);
+        playSelect(found);
+        redrawViewer();
+      }
+    } else {
+      clearSelection();
+    }
+  }
+},{passive:false});
+
+// ═══════════════════════════════════════════════════════════════
+//  VIEWER HOVER / CLICK (desktop)
+// ═══════════════════════════════════════════════════════════════
+function evPos(e,c){
+  const r=(c||vCanvas).getBoundingClientRect();
+  const src=e.touches?e.touches[0]:e;
+  return{x:src.clientX-r.left, y:src.clientY-r.top};
+}
+
+let hoverThrottle=0;
+function onViewerHover(e){
+  const now=Date.now(); if(now-hoverThrottle<30) return; hoverThrottle=now;
+  const pos=evPos(e); const ip=vImgCoord(pos);
+  const found=findItemAt(ip);
+  const newHov=found?found.id:null;
+  if(newHov!==vHoveredId){
+    vHoveredId=newHov;
+    if(found&&found.id!==vSelectedId){ showPopup(found,pos); playHover(found); }
+    else{ hidePopup(); }
+    redrawViewer();
+  } else if(found&&found.id!==vSelectedId){ movePopup(pos); }
+  vCanvas.style.cursor=found?'pointer':'default';
+}
+
+function onViewerClick(e){
+  if(vIsPanning) return;
+  const pos=evPos(e); const ip=vImgCoord(pos);
+  const found=findItemAt(ip);
+  if(found){
+    if(vSelectedId===found.id){ clearSelection(); }
+    else{ vSelectedId=found.id; hidePopup(); showSelPanel(found,pos); playSelect(found); redrawViewer(); }
+  } else { clearSelection(); }
+}
+
+function clearSelection(){
+  vSelectedId=null;
+  document.getElementById('v-sel-panel').classList.remove('on');
+  redrawViewer();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  POPUP (hover — desktop only)
+// ═══════════════════════════════════════════════════════════════
+function showPopup(item,pos){
+  const isMz=item.type==='manzana';
+  const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
+  document.getElementById('vp-badge').textContent=isMz?'Manzana':(labels[item.status]||'');
+  document.getElementById('vp-badge').className='pop-badge '+(isMz?'manzana':item.status);
+  document.getElementById('vp-name').textContent=isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
+  document.getElementById('vp-area').textContent=item.area?item.area+' m²':'—';
+  const pr=document.getElementById('vp-price-row');
+  if(!isMz&&showPriceViewer&&item.price){ pr.style.display='flex'; document.getElementById('vp-price').textContent='$'+Number(item.price).toLocaleString('es-CO'); }
+  else pr.style.display='none';
+  movePopup(pos);
+  const popup=document.getElementById('v-popup'); popup.style.display='block'; requestAnimationFrame(()=>popup.classList.add('on'));
+}
+function movePopup(pos){
+  const popup=document.getElementById('v-popup');
+  const cw=vCanvas.width, ch=vCanvas.height;
+  let left=pos.x-90, top=pos.y-150;
+  left=Math.max(6,Math.min(left,cw-210)); top=Math.max(6,Math.min(top,ch-200));
+  popup.style.left=left+'px'; popup.style.top=top+'px';
+}
+function hidePopup(){
+  const popup=document.getElementById('v-popup'); popup.classList.remove('on');
+  setTimeout(()=>{ if(!popup.classList.contains('on')) popup.style.display='none'; },200);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SELECTION PANEL
+// ═══════════════════════════════════════════════════════════════
+function showSelPanel(item, pos){
+  const isMz=item.type==='manzana';
+  const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
+  document.getElementById('vs-name').textContent=isMz?'Manzana '+(item.mzName||'?'):(item.mzRef?'Mzn '+item.mzRef+' · ':'')+'Lote '+(item.num||item.id);
+  const badge=document.getElementById('vs-badge'); badge.textContent=isMz?'Manzana':(labels[item.status]||''); badge.className='sel-badge '+(isMz?'manzana':item.status);
+  document.getElementById('vs-area').textContent=item.area?item.area+' m²':'—';
+  const dr=document.getElementById('vs-dims-row');
+  if(!isMz&&(item.frente||item.fondo)){ dr.style.display='flex'; document.getElementById('vs-dims').textContent=(item.frente||'?')+'m × '+(item.fondo||'?')+'m'; } else dr.style.display='none';
+  const or=document.getElementById('vs-orient-row');
+  if(!isMz&&item.orientacion){ or.style.display='flex'; document.getElementById('vs-orient').textContent=item.orientacion; } else or.style.display='none';
+  const descr=document.getElementById('vs-desc-row');
+  if(!isMz&&(item.desc||item.description)){ descr.style.display='flex'; document.getElementById('vs-desc').textContent=item.desc||item.description; } else descr.style.display='none';
+  const pr=document.getElementById('vs-price-row');
+  if(!isMz&&showPriceViewer&&item.price){ pr.style.display='flex'; document.getElementById('vs-price').textContent='$'+Number(item.price).toLocaleString('es-CO'); } else pr.style.display='none';
+  const mzr=document.getElementById('vs-mz-row');
+  if(!isMz&&item.mzRef){ mzr.style.display='flex'; document.getElementById('vs-mz').textContent=item.mzRef; } else mzr.style.display='none';
+
+  // Posición dinámica (desktop)
+  const panel=document.getElementById('v-sel-panel');
+  const isMobile=vCanvas.width<600;
+  if(!isMobile && pos){
+    const cw=vCanvas.width, ch=vCanvas.height;
+    let left=pos.x+20, top=pos.y-80;
+    if(left+300>cw) left=pos.x-310;
+    top=Math.max(10,Math.min(top,ch-320));
+    panel.style.left=left+'px'; panel.style.top=top+'px';
+    panel.style.bottom=''; panel.style.transform='';
+  }
+  panel.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CANVAS RESIZE
+// ═══════════════════════════════════════════════════════════════
+function resizeCanvas(){
+  const w=vWrap.clientWidth||window.innerWidth;
+  const h=vWrap.clientHeight||(window.innerHeight-48);
+  if(w>0&&h>0){ vCanvas.width=w; vCanvas.height=h; }
+  redrawViewer();
+}
+window.addEventListener('resize',resizeCanvas);
+
+// ═══════════════════════════════════════════════════════════════
+//  PRICE TOGGLE
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('tog-price-v').addEventListener('change',e=>{
+  showPriceViewer=e.target.checked; redrawViewer();
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  MÚSICA — HTML Audio (MP3 real)
+// ═══════════════════════════════════════════════════════════════
+function initMusic(){
+  if(musicAudio) return;
+  musicAudio = new Audio(MUSIC_URL);
+  musicAudio.loop = true;
+  musicAudio.volume = 0.55;
+}
+
+function toggleMusic(){
+  initMusic();
+  musicOn = !musicOn;
+  const btn=document.getElementById('music-btn');
+  btn.classList.toggle('on',musicOn);
+  if(musicOn){
+    musicAudio.play().catch(()=>{
+      // Autoplay blocked — browser necesita interacción previa, ya la hay al tocar el botón
+      sbToast('Reproduciendo música…','ok',2000);
+    });
+  } else {
+    musicAudio.pause();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EFECTOS DE SONIDO — Web Audio API (mejorados)
+// ═══════════════════════════════════════════════════════════════
+let audioCtx=null;
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function createReverb(ctx,duration,decay){
+  const sr=ctx.sampleRate, len=sr*duration;
+  const impulse=ctx.createBuffer(2,len,sr);
+  for(let c=0;c<2;c++){
+    const ch=impulse.getChannelData(c);
+    for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);
+  }
+  const conv=ctx.createConvolver(); conv.buffer=impulse; return conv;
+}
+
+let _reverb=null, _reverbGain=null;
+function getChain(){
+  const ctx=getAudioCtx();
+  if(!_reverb){
+    _reverb=createReverb(ctx,1.8,3.2);
+    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.45;
+    _reverb.connect(_reverbGain); _reverbGain.connect(ctx.destination);
+  }
+  return{reverb:_reverb,gain:_reverbGain};
+}
+
+let hoverCooldown=0;
+function playHover(item){
+  if(!fxOn||!item) return;
+  const now=Date.now(); if(now-hoverCooldown<200) return; hoverCooldown=now;
+  const ctx=getAudioCtx(); const{reverb}=getChain();
+  const baseMap={available:659.25, sold:523.25, reserved:493.88, manzana:698.46};
+  const base=item.type==='manzana'?baseMap.manzana:(baseMap[item.status]||659.25);
+  // Dos partiales suaves con envolvente rápida
+  [[base,0.04],[base*2.01,0.015]].forEach(([f,amp],i)=>{
+    const osc=ctx.createOscillator(); osc.type='sine';
+    osc.frequency.value=f;
+    const g=ctx.createGain();
+    const t0=ctx.currentTime+i*.008;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(amp,t0+.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+.28+i*.05);
+    osc.connect(g); g.connect(reverb);
+    osc.start(t0); osc.stop(t0+.35);
+  });
+}
+
+function playSelect(item){
+  if(!fxOn||!item) return;
+  const ctx=getAudioCtx(); const{reverb}=getChain();
+  const isMz=item.type==='manzana';
+  // Acorde de 3 notas con ataque suave — feel de piano
+  const root=isMz?349.23:523.25;
+  const chord=isMz?[root,root*1.25,root*1.5,root*2]:[root,root*1.2,root*1.5];
+  chord.forEach((f,i)=>{
+    const osc=ctx.createOscillator(); osc.type='triangle';
+    // Slight detune para warmth
+    osc.frequency.value=f*(1+( (Math.random()-.5)*.004 ));
+    const g=ctx.createGain();
+    const t0=ctx.currentTime+i*.08;
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(0.065,t0+.018);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+.9+i*.1);
+    osc.connect(g); g.connect(reverb);
+    osc.start(t0); osc.stop(t0+1.1);
+  });
+}
+
+function toggleFx(){
+  fxOn=!fxOn;
+  document.getElementById('fx-btn').classList.toggle('on',fxOn);
+  if(fxOn) getAudioCtx();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VIDEO MODAL
+// ═══════════════════════════════════════════════════════════════
+let videoModalOpen=false;
+
+function openVideo(idx){
+  const v=VIDEO_SOURCES[idx];
+  if(!v) return;
+
+  // Actualiza título
+  document.getElementById('video-modal-title').textContent=v.title;
+
+  // Usamos iframe embed de Google Drive (mejor compatibilidad que <video src>)
+  const modal=document.getElementById('video-modal');
+
+  // Elimina iframe anterior si existe
+  const oldIframe=modal.querySelector('iframe');
+  if(oldIframe) oldIframe.remove();
+
+  // Oculta el <video> nativo y usa iframe
+  const videoEl=document.getElementById('video-player');
+  videoEl.style.display='none';
+
+  const iframe=document.createElement('iframe');
+  iframe.src=v.embed+'&autoplay=1';
+  iframe.style.cssText='width:100%;height:75vmin;min-height:260px;max-height:75vh;border:none;display:block;background:#000';
+  iframe.allow='autoplay; fullscreen';
+  iframe.setAttribute('allowfullscreen','');
+  // Insertar antes de la barra inferior
+  modal.insertBefore(iframe,document.getElementById('video-modal-bar'));
+
+  // Abre overlay con animación
+  const overlay=document.getElementById('video-overlay');
+  overlay.style.display='flex';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>overlay.classList.add('open'));
+  });
+  videoModalOpen=true;
+
+  // Baja volumen de música mientras el video está abierto
+  if(musicAudio&&musicOn) musicAudio.volume=0.18;
+}
+
+function closeVideo(){
+  const overlay=document.getElementById('video-overlay');
+  overlay.classList.remove('open');
+  setTimeout(()=>{
+    overlay.style.display='none';
+    // Elimina iframe para detener reproducción
+    const modal=document.getElementById('video-modal');
+    const iframe=modal.querySelector('iframe');
+    if(iframe) iframe.remove();
+    document.getElementById('video-player').style.display='block';
+    // Restaura volumen de música
+    if(musicAudio&&musicOn) musicAudio.volume=0.55;
+    videoModalOpen=false;
+  },420);
+}
+
+function handleOverlayClick(e){
+  // Cierra al tocar fuera del modal
+  if(e.target===document.getElementById('video-overlay')) closeVideo();
+}
+
+// Cerrar con Escape
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(videoModalOpen) closeVideo();
+    else clearSelection();
+  }
+  if(e.key==='='||e.key==='+') vZoom(1.2);
+  if(e.key==='-') vZoom(0.83);
+  if(e.key==='0'&&(e.ctrlKey||e.metaKey)){e.preventDefault();vZoomReset();}
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+(async function init(){
+  resizeCanvas();
+  sbToast('Cargando plano…','saving',0);
+  await cargarImagen(PLANO_URL);
+  await cargarDatos();
+  resizeCanvas();
+  redrawViewer();
+})();
+</script>
+</body>
+</html>
