@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Araguatos · Visor de Lotes</title>
-<!-- FIX 2: favicon vacío para evitar el 404 de favicon.ico -->
 <link rel="icon" href="data:,">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -109,15 +108,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
 .pop-price{color:var(--gold);font-weight:700}
 
-/* Panel de selección desktop */
 #v-sel-panel{position:absolute;display:none;z-index:100;pointer-events:none}
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
 #v-sel-panel.visible{display:block;opacity:1;pointer-events:all}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
-/* ══════════════════════════════════════════════════════════════
-   OVERLAY MÓVIL — fondo oscuro + inner centrado
-══════════════════════════════════════════════════════════════ */
 #v-sel-overlay{
   position:fixed;inset:0;z-index:8000;
   background:rgba(0,0,0,0);
@@ -141,9 +136,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   pointer-events:all;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   CANVAS GENIO — cubre toda la pantalla, z-index máximo
-══════════════════════════════════════════════════════════════ */
 #genie-canvas{
   position:fixed;inset:0;
   z-index:9800;
@@ -180,9 +172,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #sb-toast.saving{border-color:rgba(201,168,76,.4);color:var(--gold)}
 .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
-/* ══════════════════════════════════════════════════════════════
-   VIDEO MODAL
-══════════════════════════════════════════════════════════════ */
 #video-overlay{
   position:fixed;inset:0;z-index:9000;
   background:rgba(0,0,0,0);
@@ -216,7 +205,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #video-close-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid var(--bdr2);background:var(--surf2);color:var(--txt2);font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:var(--tr);letter-spacing:.3px;}
 #video-close-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* ── RESPONSIVE ── */
 @media(max-width:600px){
   #topbar{padding:0 8px;gap:5px;height:42px}
   .brand{font-size:13px}
@@ -242,7 +230,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .cnt-n{font-size:14px}
   .cnt-l{font-size:7px}
   .cnt-div{height:20px}
-  /* En móvil el panel de selección SOLO va en el overlay, no como panel fijo */
   #v-sel-panel{display:none !important}
   #v-popup{display:none !important}
   #video-modal{width:98vw;border-radius:10px}
@@ -262,7 +249,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </head>
 <body>
 
-<!-- CANVAS GENIO — único canvas para todos los efectos -->
 <canvas id="genie-canvas"></canvas>
 
 <div id="sb-toast"><span class="sb-dot"></span><span id="sb-msg">Conectando…</span></div>
@@ -318,7 +304,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </button>
     </div>
 
-    <!-- Popup hover (desktop) -->
     <div id="v-popup">
       <div class="pop-card">
         <div class="pop-badge" id="vp-badge"></div>
@@ -329,7 +314,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </div>
     </div>
 
-    <!-- Panel selección (desktop) -->
     <div id="v-sel-panel">
       <div class="sel-card" id="sel-card-template">
         <div class="sel-header">
@@ -365,12 +349,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   </div>
 </div>
 
-<!-- SELECTION OVERLAY (móvil y tablet) -->
 <div id="v-sel-overlay" onclick="handleSelOverlayClick(event)">
   <div id="v-sel-overlay-inner"></div>
 </div>
 
-<!-- VIDEO MODAL -->
 <div id="video-overlay" onclick="handleOverlayClick(event)">
   <div id="video-modal">
     <video id="video-player" muted playsinline preload="none"></video>
@@ -384,9 +366,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <script>
 'use strict';
 
-// ═══════════════════════════════════════════════════════════════
-//  CONFIGURACIÓN
-// ═══════════════════════════════════════════════════════════════
 const PLANO_URL    = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
 const SUPABASE_URL = 'https://ninaxwddpqqgaflacdfm.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
@@ -406,9 +385,6 @@ const C = {
            stroke:'rgba(201,168,76,0.35)',strokeH:'rgba(232,204,130,0.7)',strokeS:'#E8CC82' }
 };
 
-// ═══════════════════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════════════════
 let items = [];
 let imgEl = null;
 let imgNatW = 1920, imgNatH = 1080;
@@ -427,18 +403,12 @@ const vCanvas = document.getElementById('viewer-canvas');
 const vCtx    = vCanvas.getContext('2d');
 const vWrap   = document.getElementById('viewer-wrap');
 
-// ═══════════════════════════════════════════════════════════════
-//  FIX 1: Resumir AudioContext en el primer gesto del usuario
-// ═══════════════════════════════════════════════════════════════
 document.addEventListener('click',  resumeAudioCtx, {capture: true });
 document.addEventListener('touchend', resumeAudioCtx, {capture: true });
 function resumeAudioCtx(){
   if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SUPABASE
-// ═══════════════════════════════════════════════════════════════
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let _toastTimer = null;
@@ -500,9 +470,6 @@ function activarRealtime(){
     });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  IMAGEN
-// ═══════════════════════════════════════════════════════════════
 async function cargarImagen(url){
   return new Promise(resolve=>{
     const img = new Image();
@@ -530,9 +497,6 @@ async function cargarImagen(url){
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  COORDINATE HELPERS
-// ═══════════════════════════════════════════════════════════════
 function getImgRect(c){
   const cw = c.width, ch = c.height;
   if(!imgEl) return{x:0,y:0,w:cw,h:ch};
@@ -558,9 +522,6 @@ function vImgCoord(pos){
           y: (cy-r.y)/r.h * imgNatH };
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  HIT TEST
-// ═══════════════════════════════════════════════════════════════
 function pointInPoly(pt, poly){
   if(!poly||poly.length<3) return false;
   let inside=false;
@@ -580,9 +541,6 @@ function findItemAt(ip){
   return null;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  DRAW
-// ═══════════════════════════════════════════════════════════════
 function redrawViewer(){
   const cw=vCanvas.width, ch=vCanvas.height;
   vCtx.clearRect(0,0,cw,ch);
@@ -676,9 +634,6 @@ function drawItem(item){
   vCtx.fillText(label,cx,cy);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  COUNTERS
-// ═══════════════════════════════════════════════════════════════
 function updateCounters(){
   const lts=items.filter(i=>i.type==='lote');
   const av=lts.filter(i=>i.status==='available').length;
@@ -689,9 +644,6 @@ function updateCounters(){
   ['v-cnt-re','cnt-re2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=re; });
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ZOOM / PAN
-// ═══════════════════════════════════════════════════════════════
 function vZoom(factor){
   const cx=vCanvas.width/2, cy=vCanvas.height/2;
   const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
@@ -728,34 +680,36 @@ vCanvas.addEventListener('mousemove',e=>{
 });
 vCanvas.addEventListener('mouseup',()=>{ if(vIsPanning){ vIsPanning=false; vCanvas.style.cursor='default'; } });
 vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+
 let lastTouchEnd = 0;
 vCanvas.addEventListener('click', e => {
-  // Si el click viene justo después de un touch, ignorarlo
   if(Date.now() - lastTouchEnd < 500) return;
   onViewerClick(e);
 });
 
-// ── TOUCH ──
+// ══════════════════════════════════════════════════════
+//  TOUCH — bloque ÚNICO y definitivo
+// ══════════════════════════════════════════════════════
 let touchStartX=0, touchStartY=0, touchMoved=false;
 let pinchStartDist=0, pinchStartZoom=1, pinchStartPanX=0, pinchStartPanY=0;
 let pinchMidX=0, pinchMidY=0;
 let cachedCanvasRect=null;
-let isPinching=false; // ← flag nuevo
+let isPinching=false;
 
-vCanvas.addEventListener('touchstart',e=>{
+vCanvas.addEventListener('touchstart', e=>{
   e.preventDefault();
   touches=[...e.touches];
   cachedCanvasRect = vCanvas.getBoundingClientRect();
 
   if(touches.length===1){
-    isPinching=false; // ← reset solo si es un dedo desde el inicio
+    isPinching=false;
     touchStartX=touches[0].clientX;
     touchStartY=touches[0].clientY;
     touchMoved=false;
     vPanStart={x:touches[0].clientX - vPanX, y:touches[0].clientY - vPanY};
 
   } else if(touches.length===2){
-    isPinching=true; // ← activar flag de pinch
+    isPinching=true;
     pinchStartDist = Math.hypot(
       touches[0].clientX - touches[1].clientX,
       touches[0].clientY - touches[1].clientY
@@ -768,11 +722,11 @@ vCanvas.addEventListener('touchstart',e=>{
   }
 },{passive:false});
 
-vCanvas.addEventListener('touchmove',e=>{
+vCanvas.addEventListener('touchmove', e=>{
   e.preventDefault();
   touches=[...e.touches];
 
-  if(touches.length===1 && !isPinching){ // ← solo pan si no venimos de pinch
+  if(touches.length===1 && !isPinching){
     const dx=touches[0].clientX - touchStartX;
     const dy=touches[0].clientY - touchStartY;
     if(Math.hypot(dx,dy)>12) touchMoved=true;
@@ -795,17 +749,15 @@ vCanvas.addEventListener('touchmove',e=>{
   }
 },{passive:false});
 
-vCanvas.addEventListener('touchend',e=>{
+vCanvas.addEventListener('touchend', e=>{
   lastTouchEnd = Date.now();
   e.preventDefault();
   touches=[...e.touches];
 
   if(touches.length===0){
-    // ← Guardar isPinching antes de resetearlo
     const wasPinching = isPinching;
     isPinching=false;
 
-    // ← Solo registrar tap si NO venimos de un pinch y el movimiento fue mínimo
     if(!wasPinching && !touchMoved && e.changedTouches.length===1){
       const t=e.changedTouches[0];
       const r=cachedCanvasRect||vCanvas.getBoundingClientRect();
@@ -817,54 +769,18 @@ vCanvas.addEventListener('touchend',e=>{
         else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
       } else { clearSelection(); }
     }
-  }
-  else if(touches.length===1 && isPinching){
+  } else if(touches.length===1 && isPinching){
+    // Transición de 2 dedos a 1: reiniciar pan desde la posición actual
     touchStartX=touches[0].clientX;
     touchStartY=touches[0].clientY;
     touchMoved=false;
     vPanStart={x:touches[0].clientX - vPanX, y:touches[0].clientY - vPanY};
   }
 },{passive:false});
+// ══════════════════════════════════════════════════════
+//  FIN TOUCH
+// ══════════════════════════════════════════════════════
 
-vCanvas.addEventListener('touchmove',e=>{
-  e.preventDefault(); touches=[...e.touches];
-  if(touches.length===1){
-    const dx=touches[0].clientX-touchStartX, dy=touches[0].clientY-touchStartY;
-    if(Math.hypot(dx,dy)>6) touchMoved=true;
-    vPanX=touches[0].clientX-vPanStart.x; vPanY=touches[0].clientY-vPanStart.y;
-    redrawViewer();
-  } else if(touches.length===2){
-    const dist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
-    const factor=dist/lastPinchDist;
-    const midX=(touches[0].clientX+touches[1].clientX)/2;
-    const midY=(touches[0].clientY+touches[1].clientY)/2;
-    const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
-    const r=vCanvas.getBoundingClientRect();
-    const px=midX-r.left, py=midY-r.top;
-    vPanX=px-(px-vPanX)*(newZ/vZoomLevel);
-    vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
-    vZoomLevel=newZ; lastPinchDist=dist;
-    document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
-    redrawViewer();
-  }
-},{passive:false});
-
-vCanvas.addEventListener('touchend',e=>{
-  e.preventDefault();
-  if(!touchMoved&&e.changedTouches.length===1){
-    const t=e.changedTouches[0];
-    const r=vCanvas.getBoundingClientRect();
-    const pos={x:t.clientX-r.left, y:t.clientY-r.top};
-    const screenPos={x:t.clientX, y:t.clientY};
-    const ip=vImgCoord(pos), found=findItemAt(ip);
-    if(found){
-      if(vSelectedId===found.id){ clearSelection(); }
-      else{ vSelectedId=found.id; hidePopup(); showSelPanel(found, screenPos); playSelect(found); redrawViewer(); }
-    } else { clearSelection(); }
-  }
-},{passive:false});
-
-// ── DESKTOP HOVER / CLICK ──
 function evPos(e, c){
   const r=(c||vCanvas).getBoundingClientRect();
   const src=e.touches?e.touches[0]:e;
@@ -924,7 +840,6 @@ function closeSelDesktop(){
   });
 }
 
-// ── POPUP ──
 function showPopup(item,pos){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
@@ -950,7 +865,6 @@ function hidePopup(){
   setTimeout(()=>{ if(!popup.classList.contains('on')) popup.style.display='none'; },200);
 }
 
-// ── SELECTION PANEL ──
 function buildSelContent(item, container){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
@@ -1049,9 +963,6 @@ function handleSelOverlayClick(e){
   if(e.target===document.getElementById('v-sel-overlay')) clearSelection();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  EFECTO GENIO MAC
-// ═══════════════════════════════════════════════════════════════
 const genieC   = document.getElementById('genie-canvas');
 const genieCtx = genieC.getContext('2d');
 let genieRAF   = null;
@@ -1314,9 +1225,6 @@ function genieClose(el, ox, oy, onDone, snapFn){
   genieRAF=requestAnimationFrame(frame);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  CANVAS RESIZE
-// ═══════════════════════════════════════════════════════════════
 function resizeCanvas(){
   const w=vWrap.clientWidth||window.innerWidth;
   const h=vWrap.clientHeight||(window.innerHeight-48);
@@ -1329,9 +1237,6 @@ document.getElementById('tog-price-v').addEventListener('change',e=>{
   showPriceViewer=e.target.checked; redrawViewer();
 });
 
-// ═══════════════════════════════════════════════════════════════
-//  MÚSICA
-// ═══════════════════════════════════════════════════════════════
 function initMusic(){
   if(musicAudio) return;
   musicAudio=new Audio(MUSIC_URL);
@@ -1343,9 +1248,6 @@ function toggleMusic(){
   if(musicOn){ musicAudio.play().catch(()=>{}); } else { musicAudio.pause(); }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  EFECTOS DE SONIDO
-// ═══════════════════════════════════════════════════════════════
 let audioCtx=null;
 function getAudioCtx(){
   if(!audioCtx){
@@ -1394,12 +1296,8 @@ function playSelect(item){
 function toggleFx(){
   fxOn = !fxOn;
   document.getElementById('fx-btn').classList.toggle('on', fxOn);
-  // No llamar getAudioCtx() aquí; se creará en el primer playHover/playSelect
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL
-// ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
 
 function openVideo(idx){
@@ -1414,7 +1312,6 @@ function openVideo(idx){
   if(oldIframe) oldIframe.remove();
   document.getElementById('video-player').style.display='none';
 
-  // FIX 3: eliminar setAttribute('allowfullscreen','') — redundante con allow="fullscreen"
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
@@ -1466,9 +1363,6 @@ document.addEventListener('keydown',e=>{
   if(e.key==='0'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); vZoomReset(); }
 });
 
-// ═══════════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════════
 (async function init(){
   resizeCanvas();
   sbToast('Cargando plano…','saving',0);
