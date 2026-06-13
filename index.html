@@ -11,8 +11,52 @@
   --bg:#06080D;--surf:#0C0F18;--surf2:#121726;--surf3:#181E2E;
   --bdr:#1A2035;--bdr2:#242D45;
   --gold:#C9A84C;--gold2:#E8CC82;--gold3:#F5E4A8;--golda:rgba(201,168,76,.15);--goldb:rgba(201,168,76,.08);
-  --green:#2ECC71;--greena:rgba(46,204,113,.18);
-  --amber:#F39C12;--ambera:rgba(243,156,18,.18);
+
+  /* ═══════════════════════════════════════════════════════════
+     COLORES DE ESTADOS — AJUSTA AQUÍ PARA CAMBIAR LOS LOTES
+     ─────────────────────────────────────────────────────────
+     VENDIDO (verde):
+       --sold-fill   = relleno del polígono (rgba)
+       --sold-fill-h = relleno al hover/selección (rgba)
+       --sold-stroke = color del borde
+       --sold-shadow = color del glow al seleccionar
+     RESERVADO (ámbar):
+       --res-fill    = relleno del polígono (rgba)
+       --res-fill-h  = relleno al hover/selección (rgba)
+       --res-stroke  = color del borde
+       --res-shadow  = color del glow al seleccionar
+     DISPONIBLE (blanco tenue):
+       --avail-fill    = relleno normal
+       --avail-fill-h  = relleno hover
+       --avail-fill-s  = relleno selección
+       --avail-stroke  = borde normal
+       --avail-stroke-h= borde hover
+       --avail-stroke-s= borde selección
+  ═══════════════════════════════════════════════════════════ */
+
+  /* VENDIDO — verde, borde y relleno más oscuros / más opacos */
+  --sold-fill:   rgba(22,145,75,0.32);
+  --sold-fill-h: rgba(22,145,75,0.55);
+  --sold-stroke: #1a9148;
+  --sold-shadow: #1a9148;
+
+  /* RESERVADO — ámbar, borde y relleno más oscuros / más opacos */
+  --res-fill:    rgba(178,104,5,0.32);
+  --res-fill-h:  rgba(178,104,5,0.52);
+  --res-stroke:  #b06803;
+  --res-shadow:  #b06803;
+
+  /* DISPONIBLE — blanco tenue (igual que antes) */
+  --avail-fill:    rgba(255,255,255,0.06);
+  --avail-fill-h:  rgba(255,255,255,0.13);
+  --avail-fill-s:  rgba(201,168,76,0.14);
+  --avail-stroke:  rgba(255,255,255,0.40);
+  --avail-stroke-h:rgba(255,255,255,0.85);
+  --avail-stroke-s:#C9A84C;
+
+  /* ─── Resto de variables ─── */
+  --green:#1a9148;--greena:rgba(22,145,75,.22);
+  --amber:#b06803;--ambera:rgba(178,104,5,.22);
   --red:#E74C3C;--reda:rgba(231,76,60,.18);
   --blue:#5DADE2;--bluea:rgba(93,173,226,.18);
   --txt:#DCE3F5;--txt2:#8A94AD;--txt3:#4A5270;
@@ -79,8 +123,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .leg-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)}
 .leg-box{width:11px;height:11px;border-radius:2px;border:1.5px solid;flex-shrink:0}
 .leg-box.available{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.4)}
-.leg-box.sold{background:var(--greena);border-color:var(--green)}
-.leg-box.reserved{background:var(--ambera);border-color:var(--amber)}
+.leg-box.sold{background:var(--sold-fill);border-color:var(--sold-stroke)}
+.leg-box.reserved{background:var(--res-fill);border-color:var(--res-stroke)}
 #v-counters{position:absolute;bottom:18px;right:12px;background:rgba(6,8,13,.85);border:1px solid var(--bdr2);border-radius:10px;padding:10px 16px;backdrop-filter:blur(14px);display:flex;gap:12px;align-items:center;z-index:40}
 .cnt-n{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--gold)}
 .cnt-l{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
@@ -92,8 +136,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-card{background:rgba(6,8,13,.97);border:1px solid var(--bdr2);border-radius:12px;padding:13px 16px;min-width:180px;box-shadow:0 16px 48px rgba(0,0,0,.85);backdrop-filter:blur(18px)}
 .pop-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:2px 7px;border-radius:20px;margin-bottom:7px}
 .pop-badge.available{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
-.pop-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(46,204,113,.25)}
-.pop-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(243,156,18,.25)}
+.pop-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(26,145,72,.3)}
+.pop-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(176,104,3,.3)}
 .pop-badge.manzana{background:var(--golda);color:var(--gold2);border:1px solid rgba(201,168,76,.25)}
 .pop-name{font-family:'DM Serif Display',serif;font-size:16px;color:var(--txt);margin-bottom:9px;line-height:1.3}
 .pop-div{height:1px;background:var(--bdr);margin-bottom:9px}
@@ -107,13 +151,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
-/* ── SELECTION OVERLAY — móvil: centrado, igual que video modal ── */
+/* ══════════════════════════════════════════════════════
+   EFECTO GENIO MAC — Selection Overlay (móvil)
+   El panel emerge desde una esquina inferior y se estira
+   hacia el centro, como la animación Genie de macOS.
+══════════════════════════════════════════════════════ */
 #v-sel-overlay{
   position:fixed;inset:0;z-index:8000;
   background:rgba(0,0,0,0);
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
-  transition:background .28s ease;
+  transition:background .3s ease;
 }
 #v-sel-overlay.open{
   background:rgba(0,0,0,.65);
@@ -122,22 +170,34 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #v-sel-overlay-inner{
   position:relative;
   width:88vw;max-width:340px;
-  transform:scale(0.04);
+  /* Estado inicial: aplastado abajo, estirado verticalmente — efecto genio */
+  transform-origin: 50% 100%;
+  transform: scaleY(0.04) scaleX(0.3) translateY(60px);
   opacity:0;
-  transform-origin:center center;
-  transition:transform .38s cubic-bezier(.34,1.35,.64,1), opacity .24s ease;
+  transition:
+    transform .44s cubic-bezier(.34,1.22,.64,1),
+    opacity .22s ease;
 }
 #v-sel-overlay.open #v-sel-overlay-inner{
-  transform:scale(1);
+  transform: scaleY(1) scaleX(1) translateY(0);
   opacity:1;
 }
+/* Cierre: vuelve a aplastarse abajo */
+#v-sel-overlay.closing #v-sel-overlay-inner{
+  transform: scaleY(0.04) scaleX(0.25) translateY(70px);
+  opacity:0;
+  transition:
+    transform .32s cubic-bezier(.4,0,.8,.6),
+    opacity .2s ease;
+}
+
 .sel-card{background:rgba(6,8,13,.97);border:1px solid var(--gold);border-radius:14px;padding:16px 20px;min-width:220px;max-width:280px;box-shadow:0 24px 64px rgba(0,0,0,.9),0 0 40px rgba(201,168,76,.06);backdrop-filter:blur(20px)}
 .sel-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .sel-name{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold3);line-height:1.2}
 .sel-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:20px;margin-top:4px;display:inline-block}
 .sel-badge.available{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
-.sel-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(46,204,113,.3)}
-.sel-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(243,156,18,.3)}
+.sel-badge.sold{background:var(--greena);color:var(--green);border:1px solid rgba(26,145,72,.35)}
+.sel-badge.reserved{background:var(--ambera);color:var(--amber);border:1px solid rgba(176,104,3,.35)}
 .sel-badge.manzana{background:var(--golda);color:var(--gold2);border:1px solid rgba(201,168,76,.3)}
 .sel-div{height:1px;background:var(--bdr2);margin:10px 0}
 .sel-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
@@ -157,20 +217,22 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 /* ── TOAST ── */
 #sb-toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(6,8,13,.95);border:1px solid var(--bdr2);border-radius:20px;padding:7px 16px;font-size:11px;color:var(--txt2);z-index:9998;display:none;align-items:center;gap:7px;backdrop-filter:blur(12px);white-space:nowrap}
 #sb-toast.show{display:flex}
-#sb-toast.ok{border-color:rgba(46,204,113,.4);color:var(--green)}
+#sb-toast.ok{border-color:rgba(26,145,72,.4);color:var(--green)}
 #sb-toast.err{border-color:rgba(231,76,60,.4);color:var(--red)}
 #sb-toast.saving{border-color:rgba(201,168,76,.4);color:var(--gold)}
 .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
-/* ══════════════════════════════════════════════
-   VIDEO MODAL — apertura tipo Mac
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   EFECTO GENIO MAC — Video Modal
+   Emerge aplastado desde el borde inferior del botón
+   y se estira hacia arriba / centro de pantalla.
+══════════════════════════════════════════════════════ */
 #video-overlay{
   position:fixed;inset:0;z-index:9000;
   background:rgba(0,0,0,0);
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
-  transition:background .35s ease;
+  transition:background .3s ease;
 }
 #video-overlay.open{
   background:rgba(0,0,0,.78);
@@ -184,14 +246,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   border:1px solid rgba(201,168,76,.3);
   overflow:hidden;
   box-shadow:0 40px 120px rgba(0,0,0,.9);
-  transform:scale(0.04);
+  /* Estado inicial: aplastado desde el borde inferior derecho (origen de los botones de video) */
+  transform-origin: 85% 110%;
+  transform: scaleY(0.05) scaleX(0.2) translateY(40px);
   opacity:0;
-  transform-origin:center center;
-  transition:transform .42s cubic-bezier(.34,1.35,.64,1), opacity .28s ease;
+  transition:
+    transform .46s cubic-bezier(.34,1.18,.64,1),
+    opacity .24s ease;
 }
 #video-overlay.open #video-modal{
-  transform:scale(1);
+  transform: scaleY(1) scaleX(1) translateY(0);
   opacity:1;
+}
+/* Cierre tipo genio: se contrae hacia el origen */
+#video-overlay.closing #video-modal{
+  transform: scaleY(0.04) scaleX(0.18) translateY(50px);
+  opacity:0;
+  transition:
+    transform .34s cubic-bezier(.4,0,.8,.5),
+    opacity .22s ease;
 }
 #video-modal video{
   display:block;
@@ -228,7 +301,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .top-stat{font-size:9px}
   .top-stat b{font-size:11px}
   .togwrap{font-size:9px;gap:4px}
-  /* En móvil ocultamos stats individuales del topbar — los counters del canvas ya los muestran */
   .top-sep{display:none}
   .top-stat:not(:last-child){display:none}
 
@@ -240,41 +312,39 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .zoom-btn{width:30px;height:30px;font-size:17px;border-radius:7px}
   .zoom-level{width:30px;font-size:8px}
 
-  /* Botones de video: apilados a la derecha, más compactos */
   #video-btns{bottom:88px;right:6px;gap:5px}
   .vid-btn{padding:8px 10px;font-size:10px;border-radius:11px;gap:7px}
   .vid-icon{width:24px;height:24px;font-size:11px}
 
-  /* Leyenda más pequeña */
   #v-legend{padding:7px 10px;bottom:12px;left:6px;gap:5px}
   .leg-row{font-size:9px;gap:6px}
   .leg-box{width:9px;height:9px}
 
-  /* Contadores más compactos */
   #v-counters{padding:7px 10px;bottom:12px;right:6px;gap:8px}
   .cnt-n{font-size:14px}
   .cnt-l{font-size:7px}
   .cnt-div{height:20px}
 
-  /* Panel desktop oculto en móvil — se usa el overlay centrado */
+  /* Panel desktop oculto en móvil */
   #v-sel-panel{display:none !important}
-  /* Overlay sel-card en móvil */
+
   #v-sel-overlay .sel-card{min-width:unset;max-width:unset;width:100%;padding:14px 16px;border-radius:14px}
   #v-sel-overlay .sel-name{font-size:17px}
   #v-sel-overlay .sel-val{font-size:11px}
 
-  /* Popup hover: oculto en móvil (usamos el panel de selección) */
+  /* Popup hover: oculto en móvil */
   #v-popup{display:none !important}
 
-  /* Video modal más alto en móvil */
   #video-modal{width:98vw;border-radius:10px}
   #video-modal iframe{height:52vw !important;min-height:200px !important}
   #video-modal-bar{padding:8px 12px}
   #video-modal-title{font-size:12px}
   #video-close-btn{padding:5px 11px;font-size:10px}
+
+  /* En móvil el origen del genio cambia para video */
+  #video-modal{transform-origin: 80% 115%;}
 }
 
-/* Pantallas muy pequeñas */
 @media(max-width:380px){
   .vid-btn .vid-label{display:none}
   .vid-btn{padding:8px}
@@ -397,7 +467,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 <!-- SELECTION OVERLAY (móvil) -->
 <div id="v-sel-overlay" onclick="handleSelOverlayClick(event)">
   <div id="v-sel-overlay-inner">
-    <!-- mismo sel-card, clonado dinámicamente por JS -->
   </div>
 </div>
 
@@ -421,22 +490,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 const PLANO_URL      = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
 const SUPABASE_URL   = 'https://ninaxwddpqqgaflacdfm.supabase.co';
 const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
-
-// ⬇ Pon la URL del MP3 de música en tu repositorio GitHub (raw link)
-// Ejemplo: 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3'
 const MUSIC_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3';
 
-// Videos de sobrevuelo — YouTube (sin sonido, sin controles de YT visibles)
 const VIDEO_SOURCES = [
-  {
-    title: 'Sobrevuelo 1 — Vista Aérea',
-    ytId: '4YAm9b35Fm8'
-  },
-  {
-    title: 'Sobrevuelo 2 — Vista Aérea',
-    ytId: 'OUJycxmSaJk'
-  }
+  { title: 'Sobrevuelo 1 — Vista Aérea', ytId: '4YAm9b35Fm8' },
+  { title: 'Sobrevuelo 2 — Vista Aérea', ytId: 'OUJycxmSaJk' }
 ];
+
+// ═══════════════════════════════════════════════════════════════
+//  COLORES DE CANVAS — sincronizados con las CSS vars
+//  (si cambias las vars CSS de arriba, cambia estos también)
+// ═══════════════════════════════════════════════════════════════
+const C = {
+  sold:   { fill:'rgba(22,145,75,0.32)',  fillH:'rgba(22,145,75,0.55)',  stroke:'#1a9148', shadow:'#1a9148'  },
+  res:    { fill:'rgba(178,104,5,0.32)',  fillH:'rgba(178,104,5,0.52)',  stroke:'#b06803', shadow:'#b06803'  },
+  avail:  { fill:'rgba(255,255,255,0.06)',fillH:'rgba(255,255,255,0.13)',fillS:'rgba(201,168,76,0.14)',
+            stroke:'rgba(255,255,255,0.40)',strokeH:'rgba(255,255,255,0.85)',strokeS:'#C9A84C' },
+  mz:     { fill:'rgba(201,168,76,0.04)',fillS:'rgba(201,168,76,0.10)',
+            stroke:'rgba(201,168,76,0.35)',strokeH:'rgba(232,204,130,0.7)',strokeS:'#E8CC82' }
+};
 
 // ═══════════════════════════════════════════════════════════════
 //  STATE
@@ -450,7 +522,6 @@ let vHoveredId = null, vSelectedId = null;
 let musicOn = false, fxOn = true;
 let musicAudio = null;
 
-// Touch state
 let touches = [], lastPinchDist = 0;
 
 const vCanvas = document.getElementById('viewer-canvas');
@@ -496,7 +567,6 @@ async function cargarDatos(){
   }
 }
 
-// ── SUPABASE REALTIME — actualización automática al instante ──
 function activarRealtime(){
   sb.channel('lotes-realtime')
     .on('postgres_changes',
@@ -504,18 +574,14 @@ function activarRealtime(){
       payload=>{
         const {eventType, new:newRow, old:oldRow} = payload;
         if(eventType==='INSERT'){
-          const item={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
-          items.push(item);
+          items.push({...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])});
         } else if(eventType==='UPDATE'){
           const idx=items.findIndex(i=>i.id===newRow.id);
-          if(idx>=0){
-            items[idx]={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
-          }
+          if(idx>=0) items[idx]={...newRow, desc:newRow.description||newRow.desc||'', points:normalizePts(newRow.points||[])};
         } else if(eventType==='DELETE'){
           items=items.filter(i=>i.id!==oldRow.id);
         }
-        redrawViewer();
-        updateCounters();
+        redrawViewer(); updateCounters();
         sbToast('🔄 Mapa actualizado','ok',2000);
       }
     )
@@ -529,18 +595,14 @@ async function cargarImagen(url){
   return new Promise(resolve=>{
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = ()=>{
-      imgEl = img; imgW = 1920; imgH = 1080;
-      document.getElementById('v-placeholder').classList.add('hidden');
-      resolve();
-    };
+    img.onload = ()=>{ imgEl=img; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
     img.onerror = ()=>{
-      const img2 = new Image();
-      img2.onload = ()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
-      img2.onerror = ()=>resolve();
-      img2.src = url;
+      const img2=new Image();
+      img2.onload=()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
+      img2.onerror=()=>resolve();
+      img2.src=url;
     };
-    img.src = url;
+    img.src=url;
   });
 }
 
@@ -618,23 +680,28 @@ function drawItem(item){
   const isHovered  = item.id===vHoveredId;
   const isMz = item.type==='manzana';
 
-  let fill,stroke,lw;
+  let fill, stroke, shadowColor, lw;
+
   if(isMz){
-    fill   = isSelected?'rgba(201,168,76,0.10)':'rgba(201,168,76,0.04)';
-    stroke = isSelected?'#E8CC82':isHovered?'rgba(232,204,130,0.7)':'rgba(201,168,76,0.35)';
-    lw     = isSelected?3:isHovered?2.5:2;
+    fill        = isSelected ? C.mz.fillS  : C.mz.fill;
+    stroke      = isSelected ? C.mz.strokeS : isHovered ? C.mz.strokeH : C.mz.stroke;
+    shadowColor = C.mz.strokeS;
+    lw          = isSelected ? 3 : isHovered ? 2.5 : 2;
   } else if(item.status==='sold'){
-    fill   = (isHovered||isSelected)?'rgba(46,204,113,0.45)':'rgba(46,204,113,0.22)';
-    stroke = isSelected?'#2ECC71':isHovered?'rgba(46,204,113,0.9)':'#2ECC71';
-    lw     = isSelected?3:1.8;
+    fill        = (isHovered||isSelected) ? C.sold.fillH : C.sold.fill;
+    stroke      = C.sold.stroke;
+    shadowColor = C.sold.shadow;
+    lw          = isSelected ? 3 : 1.8;
   } else if(item.status==='reserved'){
-    fill   = (isHovered||isSelected)?'rgba(243,156,18,0.42)':'rgba(243,156,18,0.22)';
-    stroke = isSelected?'#F39C12':isHovered?'rgba(243,156,18,0.9)':'#F39C12';
-    lw     = isSelected?3:1.8;
+    fill        = (isHovered||isSelected) ? C.res.fillH : C.res.fill;
+    stroke      = C.res.stroke;
+    shadowColor = C.res.shadow;
+    lw          = isSelected ? 3 : 1.8;
   } else {
-    fill   = isSelected?'rgba(201,168,76,0.14)':isHovered?'rgba(255,255,255,0.13)':'rgba(255,255,255,0.06)';
-    stroke = isSelected?'#C9A84C':isHovered?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.40)';
-    lw     = isSelected?3:1.5;
+    fill        = isSelected ? C.avail.fillS : isHovered ? C.avail.fillH : C.avail.fill;
+    stroke      = isSelected ? C.avail.strokeS : isHovered ? C.avail.strokeH : C.avail.stroke;
+    shadowColor = C.avail.strokeS;
+    lw          = isSelected ? 3 : 1.5;
   }
 
   const lwActual = lw/vZoomLevel;
@@ -643,46 +710,74 @@ function drawItem(item){
   pts.slice(1).forEach(p=>vCtx.lineTo(p.x,p.y));
   vCtx.closePath();
   vCtx.fillStyle=fill; vCtx.fill();
+
   if(isHovered||isSelected){
-    vCtx.shadowColor = isMz?'#C9A84C':item.status==='sold'?'#2ECC71':item.status==='reserved'?'#F39C12':'#ffffff';
+    vCtx.shadowColor = shadowColor;
     vCtx.shadowBlur  = (isSelected?20:12)/vZoomLevel;
   }
   vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
   vCtx.shadowBlur=0;
 
-  // Label — tamaño proporcional al polígono y al dispositivo
-  const isMobile = vCanvas.width < 600;
+  // ── ETIQUETAS MÓVIL MEJORADAS ──────────────────────────────
+  // En móvil: calculamos el tamaño del polígono en píxeles de
+  // pantalla (incluyendo el zoom actual) para decidir si dibujamos
+  // y a qué tamaño. Esto soluciona vertical (muy pequeños) y
+  // horizontal (demasiado grandes).
+  const isMobile = vCanvas.width < 700;
+
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
   const label = isMz
     ? (item.mzName||'?')
     : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
 
-  // Dimensiones del polígono en canvas (ya con zoom aplicado)
+  // Tamaño del polígono en coordenadas de canvas (espacio de imagen, sin zoom)
   const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
   const polyW = Math.max(...xs) - Math.min(...xs);
   const polyH = Math.max(...ys) - Math.min(...ys);
   const polyShort = Math.min(polyW, polyH);
 
-  // En móvil sin zoom suficiente, si el polígono es muy pequeño no dibujamos etiqueta
-  if(isMobile && polyShort < 16) return;
+  // Tamaño EFECTIVO en pantalla (pixels reales) para umbral de visibilidad
+  const screenShort = polyShort * vZoomLevel;
 
-  // Tamaño base fuertemente reducido en móvil, acotado por el lado corto del polígono
-  const baseMz = isMobile ? 6  : 14;
-  const baseAt = isMobile ? 5  : 10;
-  const maxMz  = isMobile ? 9  : 20;
-  const maxAt  = isMobile ? 7  : 14;
-  const fs = isMz
-    ? Math.min(maxMz, Math.max(baseMz, polyShort * (isMobile ? 0.055 : 0.085)))
-    : Math.min(maxAt, Math.max(baseAt, polyShort * (isMobile ? 0.040 : 0.065)));
-  const fsActual = fs / vZoomLevel;
+  if(isMobile){
+    // Umbral mínimo en píxeles de pantalla para mostrar etiqueta
+    const minScreenPx = isMz ? 20 : 14;
+    if(screenShort < minScreenPx) return;
 
-  vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
-  vCtx.textAlign='center'; vCtx.textBaseline='middle';
-  vCtx.strokeStyle='rgba(0,0,0,0.75)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
-  vCtx.strokeText(label,cx,cy);
-  vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
-  vCtx.fillText(label,cx,cy);
+    // Tamaño en el espacio del canvas (se divide por vZoomLevel porque
+    // estamos dentro de save/scale, así que el ctx ya tiene el zoom aplicado)
+    // Queremos ~11px en pantalla para lotes, ~13px para manzanas
+    const targetScreenPx = isMz ? 13 : 11;
+    // fs en espacio-imagen = targetScreenPx / vZoomLevel
+    // pero acotado para no crecer demasiado en horizontal
+    const maxScreenPx = isMz ? 18 : 14;
+    const clampedTarget = Math.min(maxScreenPx, targetScreenPx);
+    const fsActual = clampedTarget / vZoomLevel;
+
+    vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
+    vCtx.textAlign='center'; vCtx.textBaseline='middle';
+    vCtx.strokeStyle='rgba(0,0,0,0.8)'; vCtx.lineWidth=3/vZoomLevel; vCtx.lineJoin='round';
+    vCtx.strokeText(label,cx,cy);
+    vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
+    vCtx.fillText(label,cx,cy);
+
+  } else {
+    // Desktop: comportamiento original mejorado
+    if(polyShort < 16) return;
+    const baseMz=14, baseAt=10, maxMz=20, maxAt=14;
+    const fs = isMz
+      ? Math.min(maxMz, Math.max(baseMz, polyShort * 0.085))
+      : Math.min(maxAt, Math.max(baseAt, polyShort * 0.065));
+    const fsActual = fs / vZoomLevel;
+
+    vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
+    vCtx.textAlign='center'; vCtx.textBaseline='middle';
+    vCtx.strokeStyle='rgba(0,0,0,0.75)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
+    vCtx.strokeText(label,cx,cy);
+    vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
+    vCtx.fillText(label,cx,cy);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -735,7 +830,7 @@ vCanvas.addEventListener('mousemove',e=>{
   if(vIsPanning){ vPanX=e.clientX-vPanStart.x; vPanY=e.clientY-vPanStart.y; vCanvas.style.cursor='grabbing'; redrawViewer(); return; }
   onViewerHover(e);
 });
-vCanvas.addEventListener('mouseup',e=>{ if(vIsPanning){ vIsPanning=false; vCanvas.style.cursor='default'; } });
+vCanvas.addEventListener('mouseup',()=>{ if(vIsPanning){ vIsPanning=false; vCanvas.style.cursor='default'; } });
 vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
 vCanvas.addEventListener('click',onViewerClick);
 
@@ -766,7 +861,6 @@ vCanvas.addEventListener('touchmove',e=>{
     vPanY=touches[0].clientY-vPanStart.y;
     redrawViewer();
   } else if(touches.length===2){
-    // Pinch zoom
     const dist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
     const factor=dist/lastPinchDist;
     const midX=(touches[0].clientX+touches[1].clientX)/2;
@@ -898,22 +992,20 @@ function buildSelContent(item){
 
 function showSelPanel(item, pos){
   buildSelContent(item);
-  const isMobile = vCanvas.width < 600;
+  const isMobile = vCanvas.width < 700;
 
   if(isMobile){
-    // ── Móvil: overlay centrado con animación Mac ──
     const overlay = document.getElementById('v-sel-overlay');
     const inner   = document.getElementById('v-sel-overlay-inner');
-    // Mover el sel-card al overlay
-    const card = document.getElementById('v-sel-panel');
+    const card    = document.getElementById('v-sel-panel');
+    // Limpiamos clase closing si quedó de antes
+    overlay.classList.remove('closing');
     inner.innerHTML = '';
     inner.appendChild(card.querySelector('.sel-card').cloneNode(true));
-    // Re-bind close button en el clon
     inner.querySelector('.sel-close').onclick = clearSelection;
     overlay.style.display = 'flex';
     requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   } else {
-    // ── Desktop: flotante junto al lote ──
     const panel = document.getElementById('v-sel-panel');
     if(pos){
       const cw=vCanvas.width, ch=vCanvas.height;
@@ -927,10 +1019,18 @@ function showSelPanel(item, pos){
   }
 }
 
+// ── Cierre con efecto genio (inverso) ──
+let _selCloseTimer=null;
 function closeSelOverlay(){
   const overlay=document.getElementById('v-sel-overlay');
+  if(!overlay.classList.contains('open')) return;
   overlay.classList.remove('open');
-  setTimeout(()=>{ overlay.style.display='none'; },380);
+  overlay.classList.add('closing');
+  clearTimeout(_selCloseTimer);
+  _selCloseTimer=setTimeout(()=>{
+    overlay.classList.remove('closing');
+    overlay.style.display='none';
+  }, 360);
 }
 
 function handleSelOverlayClick(e){
@@ -956,7 +1056,7 @@ document.getElementById('tog-price-v').addEventListener('change',e=>{
 });
 
 // ═══════════════════════════════════════════════════════════════
-//  MÚSICA — HTML Audio (MP3 real)
+//  MÚSICA
 // ═══════════════════════════════════════════════════════════════
 function initMusic(){
   if(musicAudio) return;
@@ -964,31 +1064,22 @@ function initMusic(){
   musicAudio.loop = true;
   musicAudio.volume = 0.55;
 }
-
 function toggleMusic(){
   initMusic();
   musicOn = !musicOn;
-  const btn=document.getElementById('music-btn');
-  btn.classList.toggle('on',musicOn);
-  if(musicOn){
-    musicAudio.play().catch(()=>{
-      // Autoplay blocked — browser necesita interacción previa, ya la hay al tocar el botón
-      sbToast('Reproduciendo música…','ok',2000);
-    });
-  } else {
-    musicAudio.pause();
-  }
+  document.getElementById('music-btn').classList.toggle('on',musicOn);
+  if(musicOn){ musicAudio.play().catch(()=>{}); }
+  else{ musicAudio.pause(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  EFECTOS DE SONIDO — Web Audio API (mejorados)
+//  EFECTOS DE SONIDO
 // ═══════════════════════════════════════════════════════════════
 let audioCtx=null;
 function getAudioCtx(){
   if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   return audioCtx;
 }
-
 function createReverb(ctx,duration,decay){
   const sr=ctx.sampleRate, len=sr*duration;
   const impulse=ctx.createBuffer(2,len,sr);
@@ -998,18 +1089,16 @@ function createReverb(ctx,duration,decay){
   }
   const conv=ctx.createConvolver(); conv.buffer=impulse; return conv;
 }
-
 let _reverb=null, _reverbGain=null;
 function getChain(){
   const ctx=getAudioCtx();
   if(!_reverb){
     _reverb=createReverb(ctx,1.8,3.2);
-    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.75; // subido de 0.45
+    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.75;
     _reverb.connect(_reverbGain); _reverbGain.connect(ctx.destination);
   }
-  return{reverb:_reverb,gain:_reverbGain};
+  return{reverb:_reverb};
 }
-
 let hoverCooldown=0;
 function playHover(item){
   if(!fxOn||!item) return;
@@ -1017,7 +1106,6 @@ function playHover(item){
   const ctx=getAudioCtx(); const{reverb}=getChain();
   const baseMap={available:659.25, sold:523.25, reserved:493.88, manzana:698.46};
   const base=item.type==='manzana'?baseMap.manzana:(baseMap[item.status]||659.25);
-  // Volumen aumentado x5 para que se escuche claramente
   [[base,0.22],[base*2.01,0.10]].forEach(([f,amp],i)=>{
     const osc=ctx.createOscillator(); osc.type='sine';
     osc.frequency.value=f;
@@ -1030,7 +1118,6 @@ function playHover(item){
     osc.start(t0); osc.stop(t0+.40);
   });
 }
-
 function playSelect(item){
   if(!fxOn||!item) return;
   const ctx=getAudioCtx(); const{reverb}=getChain();
@@ -1039,17 +1126,16 @@ function playSelect(item){
   const chord=isMz?[root,root*1.25,root*1.5,root*2]:[root,root*1.2,root*1.5];
   chord.forEach((f,i)=>{
     const osc=ctx.createOscillator(); osc.type='triangle';
-    osc.frequency.value=f*(1+( (Math.random()-.5)*.004 ));
+    osc.frequency.value=f*(1+((Math.random()-.5)*.004));
     const g=ctx.createGain();
     const t0=ctx.currentTime+i*.08;
     g.gain.setValueAtTime(0,t0);
-    g.gain.linearRampToValueAtTime(0.28,t0+.022); // volumen x4
+    g.gain.linearRampToValueAtTime(0.28,t0+.022);
     g.gain.exponentialRampToValueAtTime(0.0001,t0+1.0+i*.1);
     osc.connect(g); g.connect(reverb);
     osc.start(t0); osc.stop(t0+1.2);
   });
 }
-
 function toggleFx(){
   fxOn=!fxOn;
   document.getElementById('fx-btn').classList.toggle('on',fxOn);
@@ -1057,26 +1143,26 @@ function toggleFx(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL — YouTube embed (muted, autoplay)
+//  VIDEO MODAL — Efecto Genio Mac
 // ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
+let _videoCloseTimer=null;
 
 function openVideo(idx){
   const v=VIDEO_SOURCES[idx];
   if(!v) return;
-
   document.getElementById('video-modal-title').textContent=v.title;
   const modal=document.getElementById('video-modal');
+  const overlay=document.getElementById('video-overlay');
 
-  // Elimina iframe anterior
+  // Limpia iframe anterior y clase closing
   const oldIframe=modal.querySelector('iframe');
   if(oldIframe) oldIframe.remove();
+  overlay.classList.remove('closing');
 
-  // Oculta el <video> nativo
   const videoEl=document.getElementById('video-player');
   videoEl.style.display='none';
 
-  // YouTube embed: mute=1, autoplay=1, rel=0 (sin videos relacionados), modestbranding=1
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
@@ -1084,38 +1170,36 @@ function openVideo(idx){
   iframe.setAttribute('allowfullscreen','');
   modal.insertBefore(iframe,document.getElementById('video-modal-bar'));
 
-  // Abre overlay con animación Mac
-  const overlay=document.getElementById('video-overlay');
   overlay.style.display='flex';
   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   videoModalOpen=true;
 
-  // Baja volumen música mientras el video está abierto
-  if(musicAudio&&musicOn){
-    musicAudio.volume=0.15;
-  }
+  if(musicAudio&&musicOn) musicAudio.volume=0.15;
 }
 
 function closeVideo(){
   const overlay=document.getElementById('video-overlay');
+  // Activa efecto genio de cierre
   overlay.classList.remove('open');
-  setTimeout(()=>{
+  overlay.classList.add('closing');
+  clearTimeout(_videoCloseTimer);
+  _videoCloseTimer=setTimeout(()=>{
+    overlay.classList.remove('closing');
     overlay.style.display='none';
     const modal=document.getElementById('video-modal');
     const iframe=modal.querySelector('iframe');
     if(iframe) iframe.remove();
     document.getElementById('video-player').style.display='none';
-    // Restaura volumen música
     if(musicAudio&&musicOn) musicAudio.volume=0.55;
     videoModalOpen=false;
-  },420);
+  }, 380);
 }
 
 function handleOverlayClick(e){
   if(e.target===document.getElementById('video-overlay')) closeVideo();
 }
 
-// Cerrar con Escape
+// ── Teclado ──
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(videoModalOpen) closeVideo();
