@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Araguatos · Visor de Lotes</title>
+<!-- FIX 2: favicon vacío para evitar el 404 de favicon.ico -->
+<link rel="icon" href="data:,">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -409,7 +411,7 @@ const C = {
 // ═══════════════════════════════════════════════════════════════
 let items = [];
 let imgEl = null;
-let imgNatW = 1920, imgNatH = 1080; // ← se actualiza con las dimensiones reales de la imagen
+let imgNatW = 1920, imgNatH = 1080;
 let showPriceViewer = false;
 let vZoomLevel = 1, vPanX = 0, vPanY = 0;
 let vIsPanning = false, vPanStart = {x:0,y:0};
@@ -418,14 +420,21 @@ let musicOn = false, fxOn = true;
 let musicAudio = null;
 let touches = [], lastPinchDist = 0;
 
-// Guardamos el origen del genio para el cierre (posición donde nació el panel)
 let genieOriginX = 0, genieOriginY = 0;
-// Índice del video abierto (para el cierre)
 let openVideoIdx = -1;
 
 const vCanvas = document.getElementById('viewer-canvas');
 const vCtx    = vCanvas.getContext('2d');
 const vWrap   = document.getElementById('viewer-wrap');
+
+// ═══════════════════════════════════════════════════════════════
+//  FIX 1: Resumir AudioContext en el primer gesto del usuario
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('click',  resumeAudioCtx, { once: true, capture: true });
+document.addEventListener('touchend', resumeAudioCtx, { once: true, capture: true });
+function resumeAudioCtx(){
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  SUPABASE
@@ -467,7 +476,7 @@ async function cargarDatos(){
 }
 
 function activarRealtime(){
-  sb.channel('lotes-realtime-v2') // nombre único para evitar conflictos con suscripciones previas
+  sb.channel('lotes-realtime-v2')
     .on('postgres_changes',
       {event:'*', schema:'public', table:'lotes'},
       payload=>{
@@ -492,7 +501,7 @@ function activarRealtime(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  IMAGEN — usa dimensiones naturales reales
+//  IMAGEN
 // ═══════════════════════════════════════════════════════════════
 async function cargarImagen(url){
   return new Promise(resolve=>{
@@ -506,7 +515,6 @@ async function cargarImagen(url){
       resolve();
     };
     img.onerror = ()=>{
-      // Intento sin crossOrigin
       const img2 = new Image();
       img2.onload = ()=>{
         imgEl  = img2;
@@ -524,7 +532,6 @@ async function cargarImagen(url){
 
 // ═══════════════════════════════════════════════════════════════
 //  COORDINATE HELPERS
-//  *** FIX PRINCIPAL: usa imgNatW/imgNatH reales ***
 // ═══════════════════════════════════════════════════════════════
 function getImgRect(c){
   const cw = c.width, ch = c.height;
@@ -574,7 +581,7 @@ function findItemAt(ip){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  DRAW — etiquetas mejoradas para móvil
+//  DRAW
 // ═══════════════════════════════════════════════════════════════
 function redrawViewer(){
   const cw=vCanvas.width, ch=vCanvas.height;
@@ -625,58 +632,46 @@ function drawItem(item){
   vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
   vCtx.shadowBlur=0;
 
-  // ── ETIQUETAS ADAPTATIVAS ──────────────────────────────────
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
 
-  // Etiqueta: solo número del lote (sin prefijo de manzana) para ahorrar espacio en móvil
   const isMobile = vCanvas.width < 700;
   const label = isMz
     ? (item.mzName||'?')
     : isMobile
-      ? String(item.num||item.id)                              // solo el número en móvil
-      : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id)); // con manzana en desktop
+      ? String(item.num||item.id)
+      : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
 
-  // Bounding box del polígono en espacio-imagen (sin zoom)
   const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
   const polyW  = Math.max(...xs)-Math.min(...xs);
   const polyH  = Math.max(...ys)-Math.min(...ys);
   const polyShort = Math.min(polyW,polyH);
   const polyLong  = Math.max(polyW,polyH);
 
-  // Tamaño en pantalla (px de dispositivo)
   const screenShort = polyShort * vZoomLevel;
   const screenLong  = polyLong  * vZoomLevel;
 
-  // Umbrales de visibilidad más exigentes en móvil
   const minShort = isMz ? 22 : (isMobile ? 18 : 12);
   const minLong  = isMz ? 30 : (isMobile ? 22 : 16);
   if(screenShort < minShort || screenLong < minLong) return;
 
-  // Tamaño de fuente objetivo en píxeles de pantalla — más conservador en móvil
-  // Fórmula: proporcional al lado corto del polígono, con techo más bajo en móvil
   const maxFsPx  = isMz ? (isMobile?14:20) : (isMobile?11:15);
   const minFsPx  = isMz ? 9 : 8;
   const factor   = isMz ? 0.18 : (isMobile ? 0.13 : 0.16);
   const targetPx = Math.min(maxFsPx, Math.max(minFsPx, screenShort * factor));
-
-  // Convertir a espacio de imagen (el ctx está bajo vZoomLevel)
   const fsCanvas = targetPx / vZoomLevel;
 
   vCtx.font=`${isMz?'400':'600'} ${fsCanvas}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
   vCtx.textAlign='center'; vCtx.textBaseline='middle';
 
-  // Si el texto medido es más ancho que el 85% del polígono → no dibujar
   const measured = vCtx.measureText(label).width;
   if(measured > polyLong * 0.85) return;
 
-  // Contorno negro para legibilidad
   vCtx.strokeStyle='rgba(0,0,0,0.88)';
   vCtx.lineWidth=3.2/vZoomLevel;
   vCtx.lineJoin='round';
   vCtx.strokeText(label,cx,cy);
 
-  // Texto
   vCtx.fillStyle = isMz ? '#E8CC82' : isSelected ? '#fff' : 'rgba(255,255,255,0.93)';
   vCtx.fillText(label,cx,cy);
 }
@@ -776,7 +771,6 @@ vCanvas.addEventListener('touchend',e=>{
     const t=e.changedTouches[0];
     const r=vCanvas.getBoundingClientRect();
     const pos={x:t.clientX-r.left, y:t.clientY-r.top};
-    // Posición en pantalla (para el genio)
     const screenPos={x:t.clientX, y:t.clientY};
     const ip=vImgCoord(pos), found=findItemAt(ip);
     if(found){
@@ -814,7 +808,6 @@ function onViewerClick(e){
     if(vSelectedId===found.id){ clearSelection(); }
     else{
       vSelectedId=found.id; hidePopup();
-      // Posición absoluta en pantalla para el genio
       const r=vCanvas.getBoundingClientRect();
       const screenPos={x:e.clientX, y:e.clientY};
       showSelPanel(found, screenPos); playSelect(found); redrawViewer();
@@ -823,8 +816,6 @@ function onViewerClick(e){
 }
 
 function clearSelection(){
-  // No hacemos return si vSelectedId===null porque puede llamarse desde el botón ✕
-  // cuando ya se limpió el estado pero el panel sigue visible
   vSelectedId=null;
   const isMobile=vCanvas.width<700;
   if(isMobile){
@@ -837,7 +828,6 @@ function clearSelection(){
 
 function closeSelDesktop(){
   const panel=document.getElementById("v-sel-panel");
-  // El panel está visible si tiene display distinto de none/vacío o tiene clase visible
   const isVisible = panel && (
     panel.classList.contains("visible") ||
     (panel.style.display && panel.style.display !== "none")
@@ -891,24 +881,19 @@ function buildSelContent(item, container){
     if(show&&val){ const v=row.querySelector('.sel-val'); if(v) v.textContent=val; }
   }
 
-  // Área
   const areaVal=container.querySelector('#vs-area')||container.querySelectorAll('.sel-row .sel-val')[0];
   if(areaVal) areaVal.textContent=item.area?item.area+' m²':'—';
 
-  // Medidas
   const dimsRow=container.querySelector('#vs-dims-row');
   if(!isMz&&(item.frente||item.fondo)){ setRow(dimsRow,(item.frente||'?')+'m × '+(item.fondo||'?')+'m',true); }
   else setRow(dimsRow,'',false);
 
-  // Orientación
   const orRow=container.querySelector('#vs-orient-row');
   setRow(orRow,item.orientacion,!isMz&&!!item.orientacion);
 
-  // Descripción
   const descRow=container.querySelector('#vs-desc-row');
   setRow(descRow,item.desc||item.description,!isMz&&!!(item.desc||item.description));
 
-  // Precio
   const prRow=container.querySelector('#vs-price-row');
   if(!isMz&&showPriceViewer&&item.price){
     setRow(prRow,'$'+Number(item.price).toLocaleString('es-CO'),true);
@@ -916,7 +901,6 @@ function buildSelContent(item, container){
     if(pv) pv.textContent='$'+Number(item.price).toLocaleString('es-CO');
   } else setRow(prRow,'',false);
 
-  // Manzana
   const mzRow=container.querySelector('#vs-mz-row');
   setRow(mzRow,item.mzRef,!isMz&&!!item.mzRef);
 }
@@ -927,7 +911,6 @@ function showSelPanel(item, screenPos){
   if(isMobile){
     const overlay = document.getElementById('v-sel-overlay');
     const inner   = document.getElementById('v-sel-overlay-inner');
-    // Clonar la card template
     const template = document.getElementById('sel-card-template');
     inner.innerHTML='';
     const clone = template.cloneNode(true);
@@ -936,26 +919,20 @@ function showSelPanel(item, screenPos){
     inner.appendChild(clone);
     buildSelContent(item, inner);
 
-    // Guardar origen para el cierre
     genieOriginX = screenPos ? screenPos.x : window.innerWidth/2;
     genieOriginY = screenPos ? screenPos.y : window.innerHeight/2;
 
     overlay.style.display='flex';
     requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
-
-    // Efecto genio de apertura
     genieOpen(inner, genieOriginX, genieOriginY);
 
   } else {
-    // Desktop — panel flotante con efecto genio
     const panel = document.getElementById('v-sel-panel');
     buildSelContent(item, panel);
 
-    // Guardar origen (posición del click en pantalla)
     genieOriginX = screenPos ? screenPos.x : window.innerWidth/2;
     genieOriginY = screenPos ? screenPos.y : window.innerHeight/2;
 
-    // Calcular posición del panel relativa al canvas
     const r   = vCanvas.getBoundingClientRect();
     const cw  = r.width, ch = r.height;
     const cx  = screenPos ? screenPos.x - r.left : cw/2;
@@ -967,11 +944,8 @@ function showSelPanel(item, screenPos){
     panel.style.left=left+'px'; panel.style.top=top+'px';
     panel.style.bottom=''; panel.style.transform='';
 
-    // Mostrar panel (invisible aún para que genieOpen lo mida)
     panel.style.display='block';
     panel.classList.remove('on','visible');
-
-    // Efecto genio de apertura
     genieOpen(panel, genieOriginX, genieOriginY);
   }
 }
@@ -981,7 +955,6 @@ function closeSelOverlay(){
   const inner   = document.getElementById('v-sel-overlay-inner');
   if(!overlay.classList.contains('open')&&overlay.style.display==='none') return;
 
-  // Cierre hacia el origen (donde nació)
   genieClose(inner, genieOriginX, genieOriginY, ()=>{
     overlay.classList.remove('open');
     setTimeout(()=>{ overlay.style.display='none'; },50);
@@ -993,28 +966,12 @@ function handleSelOverlayClick(e){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ╔══════════════════════════════════════════════════════════╗
-//  ║          EFECTO GENIO MAC  —  Versión Definitiva        ║
-//  ╚══════════════════════════════════════════════════════════╝
-//
-//  El genio real de macOS funciona así:
-//  APERTURA:  El panel nace en un punto (origen) y se expande
-//             hacia su posición final. Las columnas superiores
-//             llegan TARDE → produce la curva sigmoidal.
-//  CIERRE:    El panel se succiona hacia el mismo punto origen.
-//             Las columnas inferiores se van PRIMERO.
-//
-//  Implementación:
-//  1. Render del panel en offscreen canvas (snapshot fiel)
-//  2. División en N slices verticales
-//  3. Cada slice se divide en M filas (distorsión vertical)
-//  4. Cada celda (slice×fila) tiene su propio progreso temporal
-//     con un retraso que depende de la posición Y → curva sigmoidal
+//  EFECTO GENIO MAC
 // ═══════════════════════════════════════════════════════════════
 const genieC   = document.getElementById('genie-canvas');
 const genieCtx = genieC.getContext('2d');
 let genieRAF   = null;
-let genieActiveEl = null; // elemento actualmente animado
+let genieActiveEl = null;
 
 function resizeGenieCanvas(){
   genieC.width  = window.innerWidth;
@@ -1023,10 +980,7 @@ function resizeGenieCanvas(){
 resizeGenieCanvas();
 window.addEventListener('resize', resizeGenieCanvas);
 
-// ── Snapshot fiel del elemento ──────────────────────────────
-// Renderiza el panel como canvas usando sus estilos computados
 function snapshotElement(el){
-  // Forzar layout para obtener dimensiones correctas
   const r   = el.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const w   = Math.max(Math.ceil(r.width),  200);
@@ -1038,7 +992,6 @@ function snapshotElement(el){
   const oc = off.getContext('2d');
   oc.scale(dpr, dpr);
 
-  // ── Fondo del panel ──
   const rad = 14;
   oc.beginPath();
   oc.moveTo(rad,0); oc.lineTo(w-rad,0);
@@ -1048,7 +1001,6 @@ function snapshotElement(el){
   oc.quadraticCurveTo(0,0,rad,0); oc.closePath();
   oc.fillStyle='rgba(6,8,13,0.97)'; oc.fill();
 
-  // ── Borde dorado ──
   oc.strokeStyle='#C9A84C'; oc.lineWidth=1.5;
   oc.beginPath();
   oc.moveTo(rad,0); oc.lineTo(w-rad,0);
@@ -1058,27 +1010,22 @@ function snapshotElement(el){
   oc.quadraticCurveTo(0,0,rad,0); oc.closePath();
   oc.stroke();
 
-  // ── Contenido textual ──
   const nameEl  = el.querySelector('.sel-name');
   const badgeEl = el.querySelector('.sel-badge');
   const name    = nameEl  ? nameEl.textContent  : '';
   const badge   = badgeEl ? badgeEl.textContent  : '';
 
-  // Nombre
   oc.fillStyle='#F5E4A8';
   oc.font="400 19px 'DM Serif Display',Georgia,serif";
   oc.textBaseline='top'; oc.fillText(name, 18, 16);
 
-  // Badge
   oc.fillStyle='rgba(201,168,76,0.85)';
   oc.font="700 9px 'Plus Jakarta Sans',system-ui,sans-serif";
   oc.fillText(badge.toUpperCase(), 18, 42);
 
-  // Divisor
   oc.strokeStyle='rgba(36,45,69,0.9)'; oc.lineWidth=1;
   oc.beginPath(); oc.moveTo(16,58); oc.lineTo(w-16,58); oc.stroke();
 
-  // Filas de datos
   const rows = el.querySelectorAll('.sel-row');
   let yRow=68;
   rows.forEach(row=>{
@@ -1101,7 +1048,6 @@ function snapshotElement(el){
   return{ canvas:off, w, h, dpr, rect:r };
 }
 
-// ── Snapshot del video-modal (solo fondo sólido + título) ──
 function snapshotVideoModal(el){
   const r   = el.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -1114,7 +1060,6 @@ function snapshotVideoModal(el){
   const oc  = off.getContext('2d');
   oc.scale(dpr, dpr);
 
-  // Fondo negro del modal
   oc.fillStyle='#000'; oc.beginPath();
   const rad=16;
   oc.moveTo(rad,0); oc.lineTo(w-rad,0);
@@ -1123,7 +1068,6 @@ function snapshotVideoModal(el){
   oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
   oc.quadraticCurveTo(0,0,rad,0); oc.closePath(); oc.fill();
 
-  // Borde
   oc.strokeStyle='rgba(201,168,76,0.3)'; oc.lineWidth=1.5;
   oc.beginPath();
   oc.moveTo(rad,0); oc.lineTo(w-rad,0);
@@ -1132,13 +1076,11 @@ function snapshotVideoModal(el){
   oc.quadraticCurveTo(0,h,0,h-rad); oc.lineTo(0,rad);
   oc.quadraticCurveTo(0,0,rad,0); oc.closePath(); oc.stroke();
 
-  // Icono video centrado
   oc.fillStyle='rgba(201,168,76,0.5)';
   oc.font=`${Math.min(w,h)*0.25}px serif`;
   oc.textAlign='center'; oc.textBaseline='middle';
   oc.fillText('▶', w/2, h/2-10);
 
-  // Título
   const titleEl=el.querySelector('#video-modal-title');
   const title=titleEl?titleEl.textContent:'Sobrevuelo';
   oc.fillStyle='#E8CC82';
@@ -1149,25 +1091,11 @@ function snapshotVideoModal(el){
   return{ canvas:off, w, h, dpr, rect:r };
 }
 
-// ── Core: render de un frame del efecto genio ──────────────
-// Parámetros:
-//   snap      — resultado de snapshotElement
-//   ox, oy    — punto origen en pantalla (coordenadas del click/botón)
-//   dstX,dstY — centro del destino en pantalla
-//   dstW,dstH — tamaño del destino
-//   t         — progreso 0→1
-//   opening   — true=apertura, false=cierre
 function genieFrame(snap, ox, oy, dstX, dstY, dstW, dstH, t, opening){
   genieCtx.clearRect(0,0,genieC.width,genieC.height);
 
-  const SLICES = 48; // columnas
-  const ROWS   = 36; // filas por columna
-
-  // El warp sigmoidal del genio:
-  // En apertura: las filas superiores llegan TARDE (retraso máximo arriba)
-  // En cierre:   las filas inferiores se van PRIMERO (retraso máximo abajo)
-  // El retraso máximo es ~50% del tiempo total
-
+  const SLICES = 48;
+  const ROWS   = 36;
   const MAX_DELAY = 0.50;
 
   for(let i=0; i<SLICES; i++){
@@ -1178,54 +1106,41 @@ function genieFrame(snap, ox, oy, dstX, dstY, dstW, dstH, t, opening){
       const v  = j/ROWS;
       const v1 = (j+1)/ROWS;
 
-      // Retraso según posición Y
-      // Apertura: top (v=0) → retraso MAX_DELAY, bottom (v=1) → retraso 0
-      // Cierre:   bottom (v=1) → retraso MAX_DELAY, top (v=0) → retraso 0
       const delay = opening
-        ? (1-v) * MAX_DELAY        // arriba llega tarde
-        : v     * MAX_DELAY;       // abajo se va primero (en cierre)
+        ? (1-v) * MAX_DELAY
+        : v     * MAX_DELAY;
 
-      // Progreso local de esta celda
       const tLocal = Math.max(0, Math.min(1, (t - delay) / (1 - delay)));
 
-      // Easing: ease-out-cubic para apertura, ease-in para cierre
       const ease = opening
         ? 1 - Math.pow(1-tLocal, 3)
         : Math.pow(tLocal, 2.2);
 
-      // Posición X de la columna en destino final (centro del panel expandido)
       const xDst  = dstX - dstW/2 + u  * dstW;
       const xDst1 = dstX - dstW/2 + u1 * dstW;
-
-      // Posición Y de la fila en destino final
       const yDst  = dstY - dstH/2 + v  * dstH;
       const yDst1 = dstY - dstH/2 + v1 * dstH;
 
-      // Interpolación apertura vs cierre
       let xCur, xCur1, yCur, yCur1;
       if(opening){
-        // De ox,oy → hacia destino
         xCur  = ox + (xDst  - ox) * ease;
         xCur1 = ox + (xDst1 - ox) * ease;
         yCur  = oy + (yDst  - oy) * ease;
         yCur1 = oy + (yDst1 - oy) * ease;
       } else {
-        // De destino → hacia ox,oy
         xCur  = xDst  + (ox - xDst)  * ease;
         xCur1 = xDst1 + (ox - xDst1) * ease;
         yCur  = yDst  + (oy - yDst)  * ease;
         yCur1 = yDst1 + (oy - yDst1) * ease;
       }
 
-      // Opacidad
       const alpha = opening
-        ? Math.min(1, t * 2.2)           // fade in rápido al abrir
-        : Math.max(0, 1 - t * 1.6);      // fade out al cerrar
+        ? Math.min(1, t * 2.2)
+        : Math.max(0, 1 - t * 1.6);
 
       if(alpha <= 0.01) continue;
       genieCtx.globalAlpha = alpha;
 
-      // Source rect en el snapshot (coordenadas escaladas por dpr)
       const sx  = u  * snap.canvas.width;
       const sx1 = u1 * snap.canvas.width;
       const sy  = v  * snap.canvas.height;
@@ -1243,18 +1158,14 @@ function genieFrame(snap, ox, oy, dstX, dstY, dstW, dstH, t, opening){
   genieCtx.globalAlpha=1;
 }
 
-// ── Apertura ────────────────────────────────────────────────
 function genieOpen(el, ox, oy, snapFn){
   cancelAnimationFrame(genieRAF);
   genieActiveEl = el;
   genieC.style.display='block';
 
-  // Ocultar el elemento real durante la animación
   el.style.opacity='0';
   el.classList.remove('visible');
 
-  // Necesitamos un frame para que el DOM aplique el display:flex del overlay
-  // y podamos medir el elemento
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
       const snap = snapFn ? snapFn(el) : snapshotElement(el);
@@ -1286,7 +1197,6 @@ function genieOpen(el, ox, oy, snapFn){
   });
 }
 
-// ── Cierre ──────────────────────────────────────────────────
 function genieClose(el, ox, oy, onDone, snapFn){
   cancelAnimationFrame(genieRAF);
   genieActiveEl = el;
@@ -1299,7 +1209,6 @@ function genieClose(el, ox, oy, onDone, snapFn){
   const srcW = Math.max(rect.width,  snap.w);
   const srcH = Math.max(rect.height, snap.h);
 
-  // Ocultar el HTML inmediatamente (el canvas toma el relevo)
   el.classList.remove('visible');
   el.style.opacity='0';
 
@@ -1354,7 +1263,12 @@ function toggleMusic(){
 //  EFECTOS DE SONIDO
 // ═══════════════════════════════════════════════════════════════
 let audioCtx=null;
-function getAudioCtx(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  // FIX 1: resumir si está suspendido (política autoplay del navegador)
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
 function createReverb(ctx,duration,decay){
   const sr=ctx.sampleRate, len=sr*duration;
   const impulse=ctx.createBuffer(2,len,sr);
@@ -1396,7 +1310,7 @@ function playSelect(item){
 function toggleFx(){ fxOn=!fxOn; document.getElementById('fx-btn').classList.toggle('on',fxOn); if(fxOn) getAudioCtx(); }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL — con efecto genio desde/hacia el botón
+//  VIDEO MODAL
 // ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
 
@@ -1408,33 +1322,28 @@ function openVideo(idx){
   const modal   = document.getElementById('video-modal');
   const overlay = document.getElementById('video-overlay');
 
-  // Limpiar iframe previo
   const oldIframe=modal.querySelector('iframe');
   if(oldIframe) oldIframe.remove();
   document.getElementById('video-player').style.display='none';
 
-  // Crear iframe
+  // FIX 3: eliminar setAttribute('allowfullscreen','') — redundante con allow="fullscreen"
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
   iframe.allow='autoplay; fullscreen; picture-in-picture';
-  iframe.setAttribute('allowfullscreen','');
   modal.insertBefore(iframe, document.getElementById('video-modal-bar'));
 
-  // Origen: botón que se pulsó
   const btnEl = document.getElementById('vid-btn-'+idx);
   const btnR  = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-80,top:window.innerHeight-100,width:60,height:40};
   genieOriginX = btnR.left + btnR.width/2;
   genieOriginY = btnR.top  + btnR.height/2;
 
-  // Mostrar overlay (fade del fondo)
   overlay.style.display='flex';
   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   videoModalOpen=true;
 
   if(musicAudio&&musicOn) musicAudio.volume=0.15;
 
-  // Efecto genio de apertura del modal (necesita un frame para el layout)
   requestAnimationFrame(()=>{
     genieOpen(modal, genieOriginX, genieOriginY, snapshotVideoModal);
   });
@@ -1444,7 +1353,6 @@ function closeVideo(){
   const modal   = document.getElementById('video-modal');
   const overlay = document.getElementById('video-overlay');
 
-  // Cierre hacia el botón origen
   genieClose(modal, genieOriginX, genieOriginY, ()=>{
     overlay.classList.remove('open');
     setTimeout(()=>{
