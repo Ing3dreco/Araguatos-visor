@@ -430,8 +430,8 @@ const vWrap   = document.getElementById('viewer-wrap');
 // ═══════════════════════════════════════════════════════════════
 //  FIX 1: Resumir AudioContext en el primer gesto del usuario
 // ═══════════════════════════════════════════════════════════════
-document.addEventListener('click',  resumeAudioCtx, { once: true, capture: true });
-document.addEventListener('touchend', resumeAudioCtx, { once: true, capture: true });
+document.addEventListener('click',  resumeAudioCtx, {capture: true });
+document.addEventListener('touchend', resumeAudioCtx, {capture: true });
 function resumeAudioCtx(){
   if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
@@ -1264,9 +1264,9 @@ function toggleMusic(){
 // ═══════════════════════════════════════════════════════════════
 let audioCtx=null;
 function getAudioCtx(){
-  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  // FIX 1: resumir si está suspendido (política autoplay del navegador)
-  if(audioCtx.state==='suspended') audioCtx.resume();
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
   return audioCtx;
 }
 function createReverb(ctx,duration,decay){
@@ -1307,7 +1307,11 @@ function playSelect(item){
     osc.connect(g); g.connect(reverb); osc.start(t0); osc.stop(t0+1.2);
   });
 }
-function toggleFx(){ fxOn=!fxOn; document.getElementById('fx-btn').classList.toggle('on',fxOn); if(fxOn) getAudioCtx(); }
+function toggleFx(){
+  fxOn = !fxOn;
+  document.getElementById('fx-btn').classList.toggle('on', fxOn);
+  // No llamar getAudioCtx() aquí; se creará en el primer playHover/playSelect
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  VIDEO MODAL
