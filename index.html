@@ -563,15 +563,15 @@ function buildRow(item){
 // ═══════════════════════════════════════════════════════════════
 //  IMAGEN
 // ═══════════════════════════════════════════════════════════════
-function cargarImagenDesdeURL(url){
+async function cargarImagenDesdeURL(url){
   return new Promise((resolve)=>{
     const img=new Image();
     img.crossOrigin='anonymous';
     img.onload=()=>{
       imgEl=img;
-      imgW=img.naturalWidth||1920;
-      imgH=img.naturalHeight||1080;
-      console.log('[Imagen] Cargada OK:',imgW,'x',imgH);
+      imgW=1920;   // ← forzado, coincide con el artboard de Illustrator
+      imgH=1080;   // ← forzado
+      console.log('[Imagen] Cargada OK — usando 1920×1080 fijo');
       document.getElementById('placeholder').classList.add('hidden');
       document.getElementById('v-placeholder').classList.add('hidden');
       resolve();
@@ -581,11 +581,11 @@ function cargarImagenDesdeURL(url){
       const img2=new Image();
       img2.onload=()=>{
         imgEl=img2;
-        imgW=img2.naturalWidth||1920;
-        imgH=img2.naturalHeight||1080;
+        imgW=1920;   // ← forzado
+        imgH=1080;   // ← forzado
         document.getElementById('placeholder').classList.add('hidden');
         document.getElementById('v-placeholder').classList.add('hidden');
-        console.warn('[Imagen] Cargada sin CORS:',imgW,'x',imgH);
+        console.warn('[Imagen] Cargada sin CORS — usando 1920×1080 fijo');
         resolve();
       };
       img2.onerror=()=>{console.error('[Imagen] Falló todo:',url);resolve();};
