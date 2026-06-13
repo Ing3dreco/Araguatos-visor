@@ -11,50 +11,20 @@
   --bg:#06080D;--surf:#0C0F18;--surf2:#121726;--surf3:#181E2E;
   --bdr:#1A2035;--bdr2:#242D45;
   --gold:#C9A84C;--gold2:#E8CC82;--gold3:#F5E4A8;--golda:rgba(201,168,76,.15);--goldb:rgba(201,168,76,.08);
-
-  /* ═══════════════════════════════════════════════════════════
-     COLORES DE ESTADOS — AJUSTA AQUÍ PARA CAMBIAR LOS LOTES
-     ─────────────────────────────────────────────────────────
-     VENDIDO (verde):
-       --sold-fill   = relleno del polígono (rgba)
-       --sold-fill-h = relleno al hover/selección (rgba)
-       --sold-stroke = color del borde
-       --sold-shadow = color del glow al seleccionar
-     RESERVADO (ámbar):
-       --res-fill    = relleno del polígono (rgba)
-       --res-fill-h  = relleno al hover/selección (rgba)
-       --res-stroke  = color del borde
-       --res-shadow  = color del glow al seleccionar
-     DISPONIBLE (blanco tenue):
-       --avail-fill    = relleno normal
-       --avail-fill-h  = relleno hover
-       --avail-fill-s  = relleno selección
-       --avail-stroke  = borde normal
-       --avail-stroke-h= borde hover
-       --avail-stroke-s= borde selección
-  ═══════════════════════════════════════════════════════════ */
-
-  /* VENDIDO — verde, borde y relleno más oscuros / más opacos */
   --sold-fill:   rgba(22,145,75,0.32);
   --sold-fill-h: rgba(22,145,75,0.55);
   --sold-stroke: #1a9148;
   --sold-shadow: #1a9148;
-
-  /* RESERVADO — ámbar, borde y relleno más oscuros / más opacos */
   --res-fill:    rgba(178,104,5,0.32);
   --res-fill-h:  rgba(178,104,5,0.52);
   --res-stroke:  #b06803;
   --res-shadow:  #b06803;
-
-  /* DISPONIBLE — blanco tenue (igual que antes) */
   --avail-fill:    rgba(255,255,255,0.06);
   --avail-fill-h:  rgba(255,255,255,0.13);
   --avail-fill-s:  rgba(201,168,76,0.14);
   --avail-stroke:  rgba(255,255,255,0.40);
   --avail-stroke-h:rgba(255,255,255,0.85);
   --avail-stroke-s:#C9A84C;
-
-  /* ─── Resto de variables ─── */
   --green:#1a9148;--greena:rgba(22,145,75,.22);
   --amber:#b06803;--ambera:rgba(178,104,5,.22);
   --red:#E74C3C;--reda:rgba(231,76,60,.18);
@@ -64,10 +34,7 @@
 }
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:13px}
 
-/* ── APP SHELL ── */
 #app{display:flex;flex-direction:column;height:100vh}
-
-/* ── TOPBAR ── */
 #topbar{display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0;height:48px}
 .brand{font-family:'DM Serif Display',serif;font-size:17px;color:var(--gold);letter-spacing:.4px;flex-shrink:0}
 .brand span{font-size:10px;color:var(--txt3);font-family:'Plus Jakarta Sans',sans-serif;margin-left:6px;letter-spacing:.8px;text-transform:uppercase;font-weight:500}
@@ -83,11 +50,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .tog input:checked+.sl{background:var(--gold)}
 .tog input:checked+.sl:before{transform:translateX(13px)}
 
-/* ── VIEWER MAIN ── */
 #viewer-wrap{flex:1;position:relative;overflow:hidden}
 #viewer-canvas{display:block;position:absolute;top:0;left:0;cursor:default;touch-action:none}
 
-/* ── FLOATING CONTROLS ── */
 #sound-controls{position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:50;flex-wrap:wrap;justify-content:flex-end}
 .sound-btn{padding:7px 13px;border-radius:20px;border:1px solid var(--bdr2);background:rgba(6,8,13,.82);color:var(--txt2);font-size:11px;cursor:pointer;backdrop-filter:blur(8px);transition:var(--tr);font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap;user-select:none}
 .sound-btn:hover{border-color:var(--gold);color:var(--gold)}
@@ -104,21 +69,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #music-btn:not(.on) .sound-wave{display:none}
 #music-btn:not(.on)::before{content:'♪';margin-right:2px}
 
-/* ── VIDEO BUTTONS ── */
 #video-btns{position:absolute;bottom:100px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:50}
 .vid-btn{display:flex;align-items:center;gap:9px;padding:10px 15px;border-radius:14px;border:1px solid rgba(201,168,76,.4);background:rgba(6,8,13,.88);color:var(--gold2);font-size:12px;font-weight:600;cursor:pointer;backdrop-filter:blur(12px);transition:var(--tr);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.2px;white-space:nowrap;user-select:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 .vid-btn:hover{border-color:var(--gold);background:var(--golda);transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,0,0,.6)}
 .vid-btn:active{transform:scale(.97)}
 .vid-icon{width:30px;height:30px;border-radius:50%;background:var(--golda);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 
-/* ── ZOOM CONTROLS ── */
 #zoom-controls{position:absolute;top:60px;right:12px;display:flex;flex-direction:column;gap:5px;z-index:50}
 .zoom-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--bdr2);background:rgba(6,8,13,.85);color:var(--txt2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:var(--tr);line-height:1;font-weight:300;user-select:none}
 .zoom-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--golda)}
 .zoom-btn:active{transform:scale(.93)}
 .zoom-level{width:34px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--txt3);font-family:'JetBrains Mono',monospace}
 
-/* ── LEGEND & COUNTERS ── */
 #v-legend{position:absolute;bottom:18px;left:12px;background:rgba(6,8,13,.85);border:1px solid var(--bdr2);border-radius:10px;padding:10px 14px;backdrop-filter:blur(14px);display:flex;gap:7px;flex-direction:column;z-index:40}
 .leg-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)}
 .leg-box{width:11px;height:11px;border-radius:2px;border:1.5px solid;flex-shrink:0}
@@ -130,7 +92,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .cnt-l{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
 .cnt-div{width:1px;height:28px;background:var(--bdr2)}
 
-/* ── HOVER POPUP ── */
 #v-popup{position:absolute;pointer-events:none;display:none;z-index:200;opacity:0;transition:opacity .16s ease,transform .16s ease;transform:translateY(8px)}
 #v-popup.on{display:block;opacity:1;transform:translateY(0)}
 .pop-card{background:rgba(6,8,13,.97);border:1px solid var(--bdr2);border-radius:12px;padding:13px 16px;min-width:180px;box-shadow:0 16px 48px rgba(0,0,0,.85);backdrop-filter:blur(18px)}
@@ -146,49 +107,43 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .pop-val{font-size:12px;color:var(--txt);font-weight:500;font-family:'JetBrains Mono',monospace}
 .pop-price{color:var(--gold);font-weight:700}
 
-/* ── SELECTION PANEL — desktop: flotante junto al lote ── */
 #v-sel-panel{position:absolute;display:none;z-index:100}
 #v-sel-panel.on{display:block;animation:panelin .22s cubic-bezier(.34,1.56,.64,1)}
 @keyframes panelin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
-/* ══════════════════════════════════════════════════════
-   EFECTO GENIO MAC — Selection Overlay (móvil)
-   El panel emerge desde una esquina inferior y se estira
-   hacia el centro, como la animación Genie de macOS.
-══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   EFECTO GENIO MAC — Overlay para selection (móvil)
+   El fondo aparece con fade simple; la animación genio real
+   se hace en canvas (ver GenieEffect más abajo).
+══════════════════════════════════════════════════════════════ */
 #v-sel-overlay{
   position:fixed;inset:0;z-index:8000;
   background:rgba(0,0,0,0);
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
-  transition:background .3s ease;
+  transition:background .28s ease;
 }
 #v-sel-overlay.open{
   background:rgba(0,0,0,.65);
   pointer-events:all;
 }
+/* El inner es el destino final visible del panel */
 #v-sel-overlay-inner{
   position:relative;
   width:88vw;max-width:340px;
-  /* Estado inicial: aplastado abajo, estirado verticalmente — efecto genio */
-  transform-origin: 50% 100%;
-  transform: scaleY(0.04) scaleX(0.3) translateY(60px);
+  /* Oculto mientras el canvas genio anima; se muestra al terminar */
   opacity:0;
-  transition:
-    transform .44s cubic-bezier(.34,1.22,.64,1),
-    opacity .22s ease;
+  transition:opacity .05s ease;
 }
-#v-sel-overlay.open #v-sel-overlay-inner{
-  transform: scaleY(1) scaleX(1) translateY(0);
+#v-sel-overlay-inner.visible{
   opacity:1;
 }
-/* Cierre: vuelve a aplastarse abajo */
-#v-sel-overlay.closing #v-sel-overlay-inner{
-  transform: scaleY(0.04) scaleX(0.25) translateY(70px);
-  opacity:0;
-  transition:
-    transform .32s cubic-bezier(.4,0,.8,.6),
-    opacity .2s ease;
+
+/* Canvas Genio — overlay encima de todo, mismo tamaño pantalla */
+#genie-canvas{
+  position:fixed;inset:0;z-index:8500;
+  pointer-events:none;
+  display:none;
 }
 
 .sel-card{background:rgba(6,8,13,.97);border:1px solid var(--gold);border-radius:14px;padding:16px 20px;min-width:220px;max-width:280px;box-shadow:0 24px 64px rgba(0,0,0,.9),0 0 40px rgba(201,168,76,.06);backdrop-filter:blur(20px)}
@@ -207,14 +162,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .sel-close{font-size:16px;color:var(--txt3);cursor:pointer;line-height:1;transition:var(--tr);padding:2px;flex-shrink:0}
 .sel-close:hover{color:var(--txt)}
 
-/* ── PLACEHOLDER ── */
 #v-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;z-index:5}
 #v-placeholder.hidden{display:none}
 .ph-ico{font-size:48px;opacity:.12}
 .ph-ttl{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);opacity:.25}
 .ph-sub{color:var(--txt3);font-size:12px;text-align:center;max-width:260px;line-height:1.8}
 
-/* ── TOAST ── */
 #sb-toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(6,8,13,.95);border:1px solid var(--bdr2);border-radius:20px;padding:7px 16px;font-size:11px;color:var(--txt2);z-index:9998;display:none;align-items:center;gap:7px;backdrop-filter:blur(12px);white-space:nowrap}
 #sb-toast.show{display:flex}
 #sb-toast.ok{border-color:rgba(26,145,72,.4);color:var(--green)}
@@ -222,17 +175,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #sb-toast.saving{border-color:rgba(201,168,76,.4);color:var(--gold)}
 .sb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 
-/* ══════════════════════════════════════════════════════
-   EFECTO GENIO MAC — Video Modal
-   Emerge aplastado desde el borde inferior del botón
-   y se estira hacia arriba / centro de pantalla.
-══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   VIDEO MODAL — mismo efecto genio real vía canvas
+══════════════════════════════════════════════════════════════ */
 #video-overlay{
   position:fixed;inset:0;z-index:9000;
   background:rgba(0,0,0,0);
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
-  transition:background .3s ease;
+  transition:background .28s ease;
 }
 #video-overlay.open{
   background:rgba(0,0,0,.78);
@@ -246,54 +197,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   border:1px solid rgba(201,168,76,.3);
   overflow:hidden;
   box-shadow:0 40px 120px rgba(0,0,0,.9);
-  /* Estado inicial: aplastado desde el borde inferior derecho (origen de los botones de video) */
-  transform-origin: 85% 110%;
-  transform: scaleY(0.05) scaleX(0.2) translateY(40px);
   opacity:0;
-  transition:
-    transform .46s cubic-bezier(.34,1.18,.64,1),
-    opacity .24s ease;
+  transition:opacity .05s ease;
 }
-#video-overlay.open #video-modal{
-  transform: scaleY(1) scaleX(1) translateY(0);
-  opacity:1;
-}
-/* Cierre tipo genio: se contrae hacia el origen */
-#video-overlay.closing #video-modal{
-  transform: scaleY(0.04) scaleX(0.18) translateY(50px);
-  opacity:0;
-  transition:
-    transform .34s cubic-bezier(.4,0,.8,.5),
-    opacity .22s ease;
-}
-#video-modal video{
-  display:block;
-  width:100%;
-  max-height:75vh;
-  object-fit:contain;
-  background:#000;
-}
-#video-modal-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;
-  background:rgba(6,8,13,.95);
-  border-top:1px solid var(--bdr);
-}
-#video-modal-title{
-  font-family:'DM Serif Display',serif;
-  font-size:14px;color:var(--gold2);letter-spacing:.3px;
-}
-#video-close-btn{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 14px;border-radius:20px;
-  border:1px solid var(--bdr2);background:var(--surf2);
-  color:var(--txt2);font-size:11px;font-weight:600;
-  cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
-  transition:var(--tr);letter-spacing:.3px;
-}
+#video-modal.visible{opacity:1;}
+
+#video-modal video{display:block;width:100%;max-height:75vh;object-fit:contain;background:#000;}
+#video-modal-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(6,8,13,.95);border-top:1px solid var(--bdr);}
+#video-modal-title{font-family:'DM Serif Display',serif;font-size:14px;color:var(--gold2);letter-spacing:.3px;}
+#video-close-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1px solid var(--bdr2);background:var(--surf2);color:var(--txt2);font-size:11px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:var(--tr);letter-spacing:.3px;}
 #video-close-btn:hover{border-color:var(--red);color:var(--red)}
 
-/* ── MOBILE ADAPTATIONS ── */
+/* Canvas Genio de vídeo — mismo canvas #genie-canvas, z-index 9500 cuando activo */
+#genie-canvas.video-mode{z-index:9500;}
+
 @media(max-width:600px){
   #topbar{padding:0 8px;gap:5px;height:42px}
   .brand{font-size:13px}
@@ -303,48 +220,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   .togwrap{font-size:9px;gap:4px}
   .top-sep{display:none}
   .top-stat:not(:last-child){display:none}
-
   #sound-controls{top:6px;right:6px;gap:4px}
   .sound-btn{padding:5px 9px;font-size:10px;border-radius:16px}
   .snd-label{font-size:9px}
-
   #zoom-controls{top:50px;right:6px}
   .zoom-btn{width:30px;height:30px;font-size:17px;border-radius:7px}
   .zoom-level{width:30px;font-size:8px}
-
   #video-btns{bottom:88px;right:6px;gap:5px}
   .vid-btn{padding:8px 10px;font-size:10px;border-radius:11px;gap:7px}
   .vid-icon{width:24px;height:24px;font-size:11px}
-
   #v-legend{padding:7px 10px;bottom:12px;left:6px;gap:5px}
   .leg-row{font-size:9px;gap:6px}
   .leg-box{width:9px;height:9px}
-
   #v-counters{padding:7px 10px;bottom:12px;right:6px;gap:8px}
   .cnt-n{font-size:14px}
   .cnt-l{font-size:7px}
   .cnt-div{height:20px}
-
-  /* Panel desktop oculto en móvil */
   #v-sel-panel{display:none !important}
-
-  #v-sel-overlay .sel-card{min-width:unset;max-width:unset;width:100%;padding:14px 16px;border-radius:14px}
-  #v-sel-overlay .sel-name{font-size:17px}
-  #v-sel-overlay .sel-val{font-size:11px}
-
-  /* Popup hover: oculto en móvil */
   #v-popup{display:none !important}
-
   #video-modal{width:98vw;border-radius:10px}
-  #video-modal iframe{height:52vw !important;min-height:200px !important}
   #video-modal-bar{padding:8px 12px}
   #video-modal-title{font-size:12px}
   #video-close-btn{padding:5px 11px;font-size:10px}
-
-  /* En móvil el origen del genio cambia para video */
-  #video-modal{transform-origin: 80% 115%;}
 }
-
 @media(max-width:380px){
   .vid-btn .vid-label{display:none}
   .vid-btn{padding:8px}
@@ -357,10 +255,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 </head>
 <body>
 
+<!-- CANVAS GENIO — usado para ambos efectos (selection + video) -->
+<canvas id="genie-canvas"></canvas>
+
 <div id="sb-toast"><span class="sb-dot"></span><span id="sb-msg">Conectando…</span></div>
 
 <div id="app">
-  <!-- TOPBAR -->
   <div id="topbar">
     <div class="brand">Araguatos <span>· Visor de Lotes</span></div>
     <div class="top-spacer"></div>
@@ -373,7 +273,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
     <div class="togwrap"><label class="tog"><input type="checkbox" id="tog-price-v"><span class="sl"></span></label>Precios</div>
   </div>
 
-  <!-- CANVAS -->
   <div id="viewer-wrap">
     <canvas id="viewer-canvas"></canvas>
 
@@ -383,7 +282,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <p class="ph-sub">Conectando con Supabase y cargando el plano del proyecto.</p>
     </div>
 
-    <!-- SOUND CONTROLS -->
     <div id="sound-controls">
       <button id="music-btn" class="sound-btn" onclick="toggleMusic()">
         <span class="sound-wave"><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span><span class="sw-bar"></span></span>
@@ -395,7 +293,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </button>
     </div>
 
-    <!-- ZOOM CONTROLS -->
     <div id="zoom-controls">
       <button class="zoom-btn" onclick="vZoom(1.25)">+</button>
       <div class="zoom-level" id="v-zoom-lbl">100%</div>
@@ -403,7 +300,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <button class="zoom-btn" onclick="vZoomReset()" style="font-size:11px">⊙</button>
     </div>
 
-    <!-- VIDEO BUTTONS -->
     <div id="video-btns">
       <button class="vid-btn" onclick="openVideo(0)">
         <span class="vid-icon">🚁</span>
@@ -415,7 +311,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </button>
     </div>
 
-    <!-- HOVER POPUP (desktop) -->
     <div id="v-popup">
       <div class="pop-card">
         <div class="pop-badge" id="vp-badge"></div>
@@ -426,7 +321,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </div>
     </div>
 
-    <!-- SELECTION PANEL -->
     <div id="v-sel-panel">
       <div class="sel-card">
         <div class="sel-header">
@@ -446,14 +340,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       </div>
     </div>
 
-    <!-- LEGEND -->
     <div id="v-legend">
       <div class="leg-row"><div class="leg-box available"></div>Disponible</div>
       <div class="leg-row"><div class="leg-box sold"></div>Vendido</div>
       <div class="leg-row"><div class="leg-box reserved"></div>Reservado</div>
     </div>
 
-    <!-- COUNTERS -->
     <div id="v-counters">
       <div style="text-align:center"><div class="cnt-n" id="cnt-av2">0</div><div class="cnt-l">Disponibles</div></div>
       <div class="cnt-div"></div>
@@ -461,13 +353,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
       <div class="cnt-div"></div>
       <div style="text-align:center"><div class="cnt-n" id="cnt-re2" style="color:var(--amber)">0</div><div class="cnt-l">Reservados</div></div>
     </div>
-  </div><!-- /viewer-wrap -->
-</div><!-- /app -->
+  </div>
+</div>
 
 <!-- SELECTION OVERLAY (móvil) -->
 <div id="v-sel-overlay" onclick="handleSelOverlayClick(event)">
-  <div id="v-sel-overlay-inner">
-  </div>
+  <div id="v-sel-overlay-inner"></div>
 </div>
 
 <!-- VIDEO MODAL -->
@@ -487,27 +378,23 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 // ═══════════════════════════════════════════════════════════════
 //  CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════════════
-const PLANO_URL      = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
-const SUPABASE_URL   = 'https://ninaxwddpqqgaflacdfm.supabase.co';
-const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
-const MUSIC_URL = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3';
+const PLANO_URL    = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/Araguatos%20Lotes.png';
+const SUPABASE_URL = 'https://ninaxwddpqqgaflacdfm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pbmF4d2RkcHFxZ2FmbGFjZGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNTU3MjMsImV4cCI6MjA4OTczMTcyM30.mBmOXS8fi-WYuw0FeRcMBUpruKsW9JnKZHcGLd1zrkQ';
+const MUSIC_URL    = 'https://raw.githubusercontent.com/Ing3dreco/Araguatos-visor/main/bransboynd-real-estate-473237.mp3';
 
 const VIDEO_SOURCES = [
   { title: 'Sobrevuelo 1 — Vista Aérea', ytId: '4YAm9b35Fm8' },
   { title: 'Sobrevuelo 2 — Vista Aérea', ytId: 'OUJycxmSaJk' }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-//  COLORES DE CANVAS — sincronizados con las CSS vars
-//  (si cambias las vars CSS de arriba, cambia estos también)
-// ═══════════════════════════════════════════════════════════════
 const C = {
-  sold:   { fill:'rgba(22,145,75,0.32)',  fillH:'rgba(22,145,75,0.55)',  stroke:'#1a9148', shadow:'#1a9148'  },
-  res:    { fill:'rgba(178,104,5,0.32)',  fillH:'rgba(178,104,5,0.52)',  stroke:'#b06803', shadow:'#b06803'  },
-  avail:  { fill:'rgba(255,255,255,0.06)',fillH:'rgba(255,255,255,0.13)',fillS:'rgba(201,168,76,0.14)',
-            stroke:'rgba(255,255,255,0.40)',strokeH:'rgba(255,255,255,0.85)',strokeS:'#C9A84C' },
-  mz:     { fill:'rgba(201,168,76,0.04)',fillS:'rgba(201,168,76,0.10)',
-            stroke:'rgba(201,168,76,0.35)',strokeH:'rgba(232,204,130,0.7)',strokeS:'#E8CC82' }
+  sold:  { fill:'rgba(22,145,75,0.32)',  fillH:'rgba(22,145,75,0.55)',  stroke:'#1a9148', shadow:'#1a9148' },
+  res:   { fill:'rgba(178,104,5,0.32)',  fillH:'rgba(178,104,5,0.52)',  stroke:'#b06803', shadow:'#b06803' },
+  avail: { fill:'rgba(255,255,255,0.06)',fillH:'rgba(255,255,255,0.13)',fillS:'rgba(201,168,76,0.14)',
+           stroke:'rgba(255,255,255,0.40)',strokeH:'rgba(255,255,255,0.85)',strokeS:'#C9A84C' },
+  mz:    { fill:'rgba(201,168,76,0.04)',fillS:'rgba(201,168,76,0.10)',
+           stroke:'rgba(201,168,76,0.35)',strokeH:'rgba(232,204,130,0.7)',strokeS:'#E8CC82' }
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -521,7 +408,6 @@ let vIsPanning = false, vPanStart = {x:0,y:0};
 let vHoveredId = null, vSelectedId = null;
 let musicOn = false, fxOn = true;
 let musicAudio = null;
-
 let touches = [], lastPinchDist = 0;
 
 const vCanvas = document.getElementById('viewer-canvas');
@@ -596,12 +482,7 @@ async function cargarImagen(url){
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = ()=>{ imgEl=img; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
-    img.onerror = ()=>{
-      const img2=new Image();
-      img2.onload=()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); };
-      img2.onerror=()=>resolve();
-      img2.src=url;
-    };
+    img.onerror = ()=>{ const img2=new Image(); img2.onload=()=>{ imgEl=img2; imgW=1920; imgH=1080; document.getElementById('v-placeholder').classList.add('hidden'); resolve(); }; img2.onerror=()=>resolve(); img2.src=url; };
     img.src=url;
   });
 }
@@ -618,12 +499,10 @@ function getImgRect(c){
   else{ dh=ch; dw=ch*ir; dy=0; dx=(cw-dw)/2; }
   return{x:dx,y:dy,w:dw,h:dh};
 }
-
 function imgToCanvas(ix,iy){
   const r=getImgRect(vCanvas);
   return{x:r.x+ix/imgW*r.w, y:r.y+iy/imgH*r.h};
 }
-
 function vImgCoord(pos){
   const cx=(pos.x-vPanX)/vZoomLevel;
   const cy=(pos.y-vPanY)/vZoomLevel;
@@ -643,7 +522,6 @@ function pointInPoly(pt,poly){
   }
   return inside;
 }
-
 function findItemAt(ip){
   for(let i=items.length-1;i>=0;i--){
     if(items[i].type==='lote'&&pointInPoly(ip,items[i].points)) return items[i];
@@ -681,103 +559,73 @@ function drawItem(item){
   const isMz = item.type==='manzana';
 
   let fill, stroke, shadowColor, lw;
-
   if(isMz){
-    fill        = isSelected ? C.mz.fillS  : C.mz.fill;
-    stroke      = isSelected ? C.mz.strokeS : isHovered ? C.mz.strokeH : C.mz.stroke;
-    shadowColor = C.mz.strokeS;
-    lw          = isSelected ? 3 : isHovered ? 2.5 : 2;
+    fill=isSelected?C.mz.fillS:C.mz.fill; stroke=isSelected?C.mz.strokeS:isHovered?C.mz.strokeH:C.mz.stroke; shadowColor=C.mz.strokeS; lw=isSelected?3:isHovered?2.5:2;
   } else if(item.status==='sold'){
-    fill        = (isHovered||isSelected) ? C.sold.fillH : C.sold.fill;
-    stroke      = C.sold.stroke;
-    shadowColor = C.sold.shadow;
-    lw          = isSelected ? 3 : 1.8;
+    fill=(isHovered||isSelected)?C.sold.fillH:C.sold.fill; stroke=C.sold.stroke; shadowColor=C.sold.shadow; lw=isSelected?3:1.8;
   } else if(item.status==='reserved'){
-    fill        = (isHovered||isSelected) ? C.res.fillH : C.res.fill;
-    stroke      = C.res.stroke;
-    shadowColor = C.res.shadow;
-    lw          = isSelected ? 3 : 1.8;
+    fill=(isHovered||isSelected)?C.res.fillH:C.res.fill; stroke=C.res.stroke; shadowColor=C.res.shadow; lw=isSelected?3:1.8;
   } else {
-    fill        = isSelected ? C.avail.fillS : isHovered ? C.avail.fillH : C.avail.fill;
-    stroke      = isSelected ? C.avail.strokeS : isHovered ? C.avail.strokeH : C.avail.stroke;
-    shadowColor = C.avail.strokeS;
-    lw          = isSelected ? 3 : 1.5;
+    fill=isSelected?C.avail.fillS:isHovered?C.avail.fillH:C.avail.fill;
+    stroke=isSelected?C.avail.strokeS:isHovered?C.avail.strokeH:C.avail.stroke;
+    shadowColor=C.avail.strokeS; lw=isSelected?3:1.5;
   }
-
-  const lwActual = lw/vZoomLevel;
-  vCtx.beginPath();
-  vCtx.moveTo(pts[0].x,pts[0].y);
+  const lwActual=lw/vZoomLevel;
+  vCtx.beginPath(); vCtx.moveTo(pts[0].x,pts[0].y);
   pts.slice(1).forEach(p=>vCtx.lineTo(p.x,p.y));
   vCtx.closePath();
   vCtx.fillStyle=fill; vCtx.fill();
-
-  if(isHovered||isSelected){
-    vCtx.shadowColor = shadowColor;
-    vCtx.shadowBlur  = (isSelected?20:12)/vZoomLevel;
-  }
+  if(isHovered||isSelected){ vCtx.shadowColor=shadowColor; vCtx.shadowBlur=(isSelected?20:12)/vZoomLevel; }
   vCtx.strokeStyle=stroke; vCtx.lineWidth=lwActual; vCtx.lineJoin='round'; vCtx.stroke();
   vCtx.shadowBlur=0;
 
-  // ── ETIQUETAS MÓVIL MEJORADAS ──────────────────────────────
-  // En móvil: calculamos el tamaño del polígono en píxeles de
-  // pantalla (incluyendo el zoom actual) para decidir si dibujamos
-  // y a qué tamaño. Esto soluciona vertical (muy pequeños) y
-  // horizontal (demasiado grandes).
-  const isMobile = vCanvas.width < 700;
-
+  // ── ETIQUETAS — versión corregida ──────────────────────────
+  // Centroide del polígono en coordenadas de canvas (espacio-imagen)
   const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
   const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
   const label = isMz
     ? (item.mzName||'?')
     : ((item.mzRef?item.mzRef+'-':'')+(item.num||'#'+item.id));
 
-  // Tamaño del polígono en coordenadas de canvas (espacio de imagen, sin zoom)
-  const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
-  const polyW = Math.max(...xs) - Math.min(...xs);
-  const polyH = Math.max(...ys) - Math.min(...ys);
-  const polyShort = Math.min(polyW, polyH);
+  // Dimensiones del polígono en el espacio de imagen (sin zoom)
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const polyW=Math.max(...xs)-Math.min(...xs);
+  const polyH=Math.max(...ys)-Math.min(...ys);
+  const polyShort=Math.min(polyW,polyH);
+  const polyLong =Math.max(polyW,polyH);
 
-  // Tamaño EFECTIVO en pantalla (pixels reales) para umbral de visibilidad
+  // Tamaño efectivo en PÍXELES DE PANTALLA reales
+  // (pts ya están en espacio-imagen, y vZoomLevel se aplica encima)
   const screenShort = polyShort * vZoomLevel;
+  const screenLong  = polyLong  * vZoomLevel;
 
-  if(isMobile){
-    // Umbral mínimo en píxeles de pantalla para mostrar etiqueta
-    const minScreenPx = isMz ? 20 : 14;
-    if(screenShort < minScreenPx) return;
+  // Umbral mínimo: el lado corto debe ser al menos este número de px en pantalla
+  const minPx = isMz ? 18 : 10;
+  if(screenShort < minPx) return;
+  // Además el lado largo también debe ser visible
+  if(screenLong < (isMz?24:14)) return;
 
-    // Tamaño en el espacio del canvas (se divide por vZoomLevel porque
-    // estamos dentro de save/scale, así que el ctx ya tiene el zoom aplicado)
-    // Queremos ~11px en pantalla para lotes, ~13px para manzanas
-    const targetScreenPx = isMz ? 13 : 11;
-    // fs en espacio-imagen = targetScreenPx / vZoomLevel
-    // pero acotado para no crecer demasiado en horizontal
-    const maxScreenPx = isMz ? 18 : 14;
-    const clampedTarget = Math.min(maxScreenPx, targetScreenPx);
-    const fsActual = clampedTarget / vZoomLevel;
+  // Tamaño de fuente objetivo en píxeles de pantalla
+  // Crece con el zoom y el tamaño del polígono, pero con límites razonables
+  const targetPxMz  = Math.min(20, Math.max(11, screenShort * 0.22));
+  const targetPxLot = Math.min(15, Math.max( 9, screenShort * 0.18));
+  const targetPx    = isMz ? targetPxMz : targetPxLot;
 
-    vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
-    vCtx.textAlign='center'; vCtx.textBaseline='middle';
-    vCtx.strokeStyle='rgba(0,0,0,0.8)'; vCtx.lineWidth=3/vZoomLevel; vCtx.lineJoin='round';
-    vCtx.strokeText(label,cx,cy);
-    vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
-    vCtx.fillText(label,cx,cy);
+  // Convertimos a espacio-imagen (dividimos por vZoomLevel porque
+  // ctx está dentro de save/scale con vZoomLevel aplicado)
+  const fsCanvas = targetPx / vZoomLevel;
 
-  } else {
-    // Desktop: comportamiento original mejorado
-    if(polyShort < 16) return;
-    const baseMz=14, baseAt=10, maxMz=20, maxAt=14;
-    const fs = isMz
-      ? Math.min(maxMz, Math.max(baseMz, polyShort * 0.085))
-      : Math.min(maxAt, Math.max(baseAt, polyShort * 0.065));
-    const fsActual = fs / vZoomLevel;
+  vCtx.font=`${isMz?'400':'600'} ${fsCanvas}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
+  vCtx.textAlign='center'; vCtx.textBaseline='middle';
 
-    vCtx.font = `${isMz?'400':'600'} ${fsActual}px ${isMz?"'DM Serif Display',serif":"'Plus Jakarta Sans',sans-serif"}`;
-    vCtx.textAlign='center'; vCtx.textBaseline='middle';
-    vCtx.strokeStyle='rgba(0,0,0,0.75)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
-    vCtx.strokeText(label,cx,cy);
-    vCtx.fillStyle = isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
-    vCtx.fillText(label,cx,cy);
-  }
+  // Recorte: si el texto es más ancho que el polígono, saltamos
+  const measured = vCtx.measureText(label).width;
+  if(measured > polyLong * 0.90) return;
+
+  vCtx.strokeStyle='rgba(0,0,0,0.82)'; vCtx.lineWidth=3.5/vZoomLevel; vCtx.lineJoin='round';
+  vCtx.strokeText(label,cx,cy);
+  vCtx.fillStyle=isMz?'#E8CC82':isSelected?'#fff':'rgba(255,255,255,0.92)';
+  vCtx.fillText(label,cx,cy);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -794,7 +642,7 @@ function updateCounters(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ZOOM / PAN — DESKTOP
+//  ZOOM / PAN
 // ═══════════════════════════════════════════════════════════════
 function vZoom(factor){
   const cx=vCanvas.width/2, cy=vCanvas.height/2;
@@ -834,44 +682,30 @@ vCanvas.addEventListener('mouseup',()=>{ if(vIsPanning){ vIsPanning=false; vCanv
 vCanvas.addEventListener('contextmenu',e=>e.preventDefault());
 vCanvas.addEventListener('click',onViewerClick);
 
-// ═══════════════════════════════════════════════════════════════
-//  TOUCH — ZOOM / PAN / TAP
-// ═══════════════════════════════════════════════════════════════
+// ── TOUCH ──
 let touchStartX=0, touchStartY=0, touchMoved=false;
-
 vCanvas.addEventListener('touchstart',e=>{
-  e.preventDefault();
-  touches=[...e.touches];
-  if(touches.length===1){
-    touchStartX=touches[0].clientX; touchStartY=touches[0].clientY;
-    touchMoved=false;
-    vPanStart={x:touches[0].clientX-vPanX, y:touches[0].clientY-vPanY};
-  } else if(touches.length===2){
-    lastPinchDist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
-  }
+  e.preventDefault(); touches=[...e.touches];
+  if(touches.length===1){ touchStartX=touches[0].clientX; touchStartY=touches[0].clientY; touchMoved=false; vPanStart={x:touches[0].clientX-vPanX,y:touches[0].clientY-vPanY}; }
+  else if(touches.length===2){ lastPinchDist=Math.hypot(touches[0].clientX-touches[1].clientX,touches[0].clientY-touches[1].clientY); }
 },{passive:false});
 
 vCanvas.addEventListener('touchmove',e=>{
-  e.preventDefault();
-  touches=[...e.touches];
+  e.preventDefault(); touches=[...e.touches];
   if(touches.length===1){
     const dx=touches[0].clientX-touchStartX, dy=touches[0].clientY-touchStartY;
     if(Math.hypot(dx,dy)>6) touchMoved=true;
-    vPanX=touches[0].clientX-vPanStart.x;
-    vPanY=touches[0].clientY-vPanStart.y;
+    vPanX=touches[0].clientX-vPanStart.x; vPanY=touches[0].clientY-vPanStart.y;
     redrawViewer();
   } else if(touches.length===2){
-    const dist=Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
+    const dist=Math.hypot(touches[0].clientX-touches[1].clientX,touches[0].clientY-touches[1].clientY);
     const factor=dist/lastPinchDist;
-    const midX=(touches[0].clientX+touches[1].clientX)/2;
-    const midY=(touches[0].clientY+touches[1].clientY)/2;
+    const midX=(touches[0].clientX+touches[1].clientX)/2, midY=(touches[0].clientY+touches[1].clientY)/2;
     const newZ=Math.min(8,Math.max(0.2,vZoomLevel*factor));
     const r=vCanvas.getBoundingClientRect();
     const px=midX-r.left, py=midY-r.top;
-    vPanX=px-(px-vPanX)*(newZ/vZoomLevel);
-    vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
-    vZoomLevel=newZ;
-    lastPinchDist=dist;
+    vPanX=px-(px-vPanX)*(newZ/vZoomLevel); vPanY=py-(py-vPanY)*(newZ/vZoomLevel);
+    vZoomLevel=newZ; lastPinchDist=dist;
     document.getElementById('v-zoom-lbl').textContent=Math.round(vZoomLevel*100)+'%';
     redrawViewer();
   }
@@ -880,35 +714,22 @@ vCanvas.addEventListener('touchmove',e=>{
 vCanvas.addEventListener('touchend',e=>{
   e.preventDefault();
   if(!touchMoved&&e.changedTouches.length===1){
-    const t=e.changedTouches[0];
-    const r=vCanvas.getBoundingClientRect();
-    const pos={x:t.clientX-r.left, y:t.clientY-r.top};
-    const ip=vImgCoord(pos);
-    const found=findItemAt(ip);
+    const t=e.changedTouches[0], r=vCanvas.getBoundingClientRect();
+    const pos={x:t.clientX-r.left,y:t.clientY-r.top};
+    const ip=vImgCoord(pos), found=findItemAt(ip);
     if(found){
       if(vSelectedId===found.id){ clearSelection(); }
-      else{
-        vSelectedId=found.id;
-        hidePopup();
-        showSelPanel(found,pos);
-        playSelect(found);
-        redrawViewer();
-      }
-    } else {
-      clearSelection();
-    }
+      else{ vSelectedId=found.id; hidePopup(); showSelPanel(found,pos); playSelect(found); redrawViewer(); }
+    } else { clearSelection(); }
   }
 },{passive:false});
 
-// ═══════════════════════════════════════════════════════════════
-//  VIEWER HOVER / CLICK (desktop)
-// ═══════════════════════════════════════════════════════════════
+// ── DESKTOP HOVER / CLICK ──
 function evPos(e,c){
   const r=(c||vCanvas).getBoundingClientRect();
   const src=e.touches?e.touches[0]:e;
-  return{x:src.clientX-r.left, y:src.clientY-r.top};
+  return{x:src.clientX-r.left,y:src.clientY-r.top};
 }
-
 let hoverThrottle=0;
 function onViewerHover(e){
   const now=Date.now(); if(now-hoverThrottle<30) return; hoverThrottle=now;
@@ -923,7 +744,6 @@ function onViewerHover(e){
   } else if(found&&found.id!==vSelectedId){ movePopup(pos); }
   vCanvas.style.cursor=found?'pointer':'default';
 }
-
 function onViewerClick(e){
   if(vIsPanning) return;
   const pos=evPos(e); const ip=vImgCoord(pos);
@@ -933,7 +753,6 @@ function onViewerClick(e){
     else{ vSelectedId=found.id; hidePopup(); showSelPanel(found,pos); playSelect(found); redrawViewer(); }
   } else { clearSelection(); }
 }
-
 function clearSelection(){
   vSelectedId=null;
   document.getElementById('v-sel-panel').classList.remove('on');
@@ -941,9 +760,7 @@ function clearSelection(){
   redrawViewer();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  POPUP (hover — desktop only)
-// ═══════════════════════════════════════════════════════════════
+// ── POPUP ──
 function showPopup(item,pos){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
@@ -969,9 +786,7 @@ function hidePopup(){
   setTimeout(()=>{ if(!popup.classList.contains('on')) popup.style.display='none'; },200);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SELECTION PANEL
-// ═══════════════════════════════════════════════════════════════
+// ── SELECTION PANEL ──
 function buildSelContent(item){
   const isMz=item.type==='manzana';
   const labels={available:'Disponible',sold:'Vendido',reserved:'Reservado'};
@@ -993,18 +808,27 @@ function buildSelContent(item){
 function showSelPanel(item, pos){
   buildSelContent(item);
   const isMobile = vCanvas.width < 700;
-
   if(isMobile){
     const overlay = document.getElementById('v-sel-overlay');
     const inner   = document.getElementById('v-sel-overlay-inner');
-    const card    = document.getElementById('v-sel-panel');
-    // Limpiamos clase closing si quedó de antes
-    overlay.classList.remove('closing');
-    inner.innerHTML = '';
-    inner.appendChild(card.querySelector('.sel-card').cloneNode(true));
-    inner.querySelector('.sel-close').onclick = clearSelection;
-    overlay.style.display = 'flex';
+    const template= document.getElementById('v-sel-panel').querySelector('.sel-card');
+    inner.innerHTML='';
+    const clone = template.cloneNode(true);
+    clone.querySelector('.sel-close').onclick = clearSelection;
+    inner.appendChild(clone);
+
+    // Botón tap en el lote → origen del genio = posición del tap en pantalla
+    const r = vCanvas.getBoundingClientRect();
+    const originX = (pos ? pos.x : vCanvas.width/2) + r.left;
+    const originY = (pos ? pos.y : vCanvas.height/2) + r.top;
+
+    overlay.style.display='flex';
+    // Fade background
     requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
+
+    // Efecto genio: el panel sube desde el punto de tap
+    genieOpen(inner, originX, originY, 'panel');
+
   } else {
     const panel = document.getElementById('v-sel-panel');
     if(pos){
@@ -1012,29 +836,332 @@ function showSelPanel(item, pos){
       let left=pos.x+20, top=pos.y-80;
       if(left+300>cw) left=pos.x-310;
       top=Math.max(10,Math.min(top,ch-320));
-      panel.style.left=left+'px'; panel.style.top=top+'px';
-      panel.style.bottom=''; panel.style.transform='';
+      panel.style.left=left+'px'; panel.style.top=top+'px'; panel.style.bottom=''; panel.style.transform='';
     }
     panel.classList.add('on');
   }
 }
 
-// ── Cierre con efecto genio (inverso) ──
-let _selCloseTimer=null;
 function closeSelOverlay(){
-  const overlay=document.getElementById('v-sel-overlay');
+  const overlay = document.getElementById('v-sel-overlay');
+  const inner   = document.getElementById('v-sel-overlay-inner');
   if(!overlay.classList.contains('open')) return;
-  overlay.classList.remove('open');
-  overlay.classList.add('closing');
-  clearTimeout(_selCloseTimer);
-  _selCloseTimer=setTimeout(()=>{
-    overlay.classList.remove('closing');
+
+  // Obtener posición destino del genio: borde inferior central de pantalla
+  const originX = window.innerWidth/2;
+  const originY = window.innerHeight - 20;
+
+  genieClose(inner, originX, originY, 'panel', ()=>{
+    overlay.classList.remove('open');
     overlay.style.display='none';
-  }, 360);
+  });
 }
 
 function handleSelOverlayClick(e){
   if(e.target===document.getElementById('v-sel-overlay')) clearSelection();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EFECTO GENIO MAC — implementación real con canvas 2D
+//
+//  El efecto genio auténtico de macOS funciona así:
+//  - La ventana/panel se "succiona" hacia un punto (esquina del dock)
+//  - Cada columna vertical del contenido se desplaza a velocidades distintas:
+//    la parte superior llega al destino DESPUÉS que la inferior
+//  - Esto produce la curva de onda sigmoidal característica
+//  - Se implementa renderizando slices verticales del snapshot
+//    con offsets verticales progresivos y escalas decrecientes
+// ═══════════════════════════════════════════════════════════════
+const genieC = document.getElementById('genie-canvas');
+const genieCtx = genieC.getContext('2d');
+let genieRAF = null;
+
+function resizeGenieCanvas(){
+  genieC.width  = window.innerWidth;
+  genieC.height = window.innerHeight;
+}
+resizeGenieCanvas();
+window.addEventListener('resize', resizeGenieCanvas);
+
+/**
+ * Captura un snapshot del elemento target (usando html2canvas-lite vía
+ * getBoundingClientRect + offscreen canvas).
+ * Como el panel es HTML, lo capturamos con getComputedStyle y dibujamos
+ * un rectángulo sólido de color con el texto — suficiente para el efecto.
+ * Para mayor fidelidad renderizamos el panel temporalmente visible,
+ * hacemos snapshot con drawWindow si disponible, o usamos un fill sólido.
+ */
+function snapshotElement(el){
+  const r = el.getBoundingClientRect();
+  const w = Math.ceil(r.width) || 280;
+  const h = Math.ceil(r.height) || 300;
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = w;
+  offscreen.height = h;
+  const octx = offscreen.getContext('2d');
+
+  // Fondo del panel (oscuro semitransparente → lo pintamos sólido para el efecto)
+  octx.fillStyle = 'rgba(6,8,13,0.97)';
+  octx.beginPath();
+  const radius = 14;
+  octx.moveTo(radius,0); octx.lineTo(w-radius,0);
+  octx.quadraticCurveTo(w,0,w,radius);
+  octx.lineTo(w,h-radius); octx.quadraticCurveTo(w,h,w-radius,h);
+  octx.lineTo(radius,h); octx.quadraticCurveTo(0,h,0,h-radius);
+  octx.lineTo(0,radius); octx.quadraticCurveTo(0,0,radius,0);
+  octx.closePath(); octx.fill();
+
+  // Borde dorado
+  octx.strokeStyle='rgba(201,168,76,0.9)'; octx.lineWidth=1.5;
+  octx.beginPath();
+  octx.moveTo(radius,0); octx.lineTo(w-radius,0);
+  octx.quadraticCurveTo(w,0,w,radius);
+  octx.lineTo(w,h-radius); octx.quadraticCurveTo(w,h,w-radius,h);
+  octx.lineTo(radius,h); octx.quadraticCurveTo(0,h,0,h-radius);
+  octx.lineTo(0,radius); octx.quadraticCurveTo(0,0,radius,0);
+  octx.closePath(); octx.stroke();
+
+  // Título del lote
+  const nameEl = el.querySelector('.sel-name');
+  const name = nameEl ? nameEl.textContent : '';
+  octx.fillStyle='#F5E4A8'; octx.font="400 20px 'DM Serif Display',serif";
+  octx.textBaseline='top'; octx.fillText(name,16,16);
+
+  // Badge
+  const badgeEl = el.querySelector('.sel-badge');
+  const badge = badgeEl ? badgeEl.textContent : '';
+  octx.fillStyle='rgba(201,168,76,0.8)'; octx.font="600 9px 'Plus Jakarta Sans',sans-serif";
+  octx.fillText(badge.toUpperCase(),16,44);
+
+  // Línea divisora
+  octx.strokeStyle='rgba(36,45,69,0.8)'; octx.lineWidth=1;
+  octx.beginPath(); octx.moveTo(16,60); octx.lineTo(w-16,60); octx.stroke();
+
+  // Filas de datos
+  const rows = el.querySelectorAll('.sel-row');
+  let yRow = 72;
+  rows.forEach(row=>{
+    if(row.style.display==='none') return;
+    const lbl = row.querySelector('.sel-lbl');
+    const val = row.querySelector('.sel-val');
+    if(!lbl||!val) return;
+    octx.fillStyle='rgba(74,82,112,0.9)'; octx.font="500 10px 'Plus Jakarta Sans',sans-serif";
+    octx.textBaseline='top'; octx.fillText(lbl.textContent.toUpperCase(),16,yRow);
+    octx.fillStyle='#DCE3F5'; octx.font="500 12px 'JetBrains Mono',monospace";
+    const valText = val.textContent;
+    const valW = octx.measureText(valText).width;
+    octx.fillText(valText, w-16-valW, yRow);
+    yRow += 22;
+  });
+
+  return { canvas: offscreen, w, h, rect: r };
+}
+
+/**
+ * Efecto Genio de apertura:
+ * El panel aparece CRECIENDO desde el punto (ox,oy) hacia su posición final.
+ * Se dibuja con slices verticales que tienen offsets distintos (warp sigmoidal).
+ */
+function genieOpen(el, ox, oy, mode){
+  cancelAnimationFrame(genieRAF);
+  genieC.style.display = 'block';
+  if(mode==='video') genieC.classList.add('video-mode');
+  else genieC.classList.remove('video-mode');
+
+  // Snapshot temporal: primero hacemos el elemento visible a opacity 0
+  // para poder medir su posición final
+  el.style.opacity='0';
+  el.style.transition='none';
+  if(el.id==='v-sel-overlay-inner'){
+    // forzar visible para medir
+  }
+
+  // Necesitamos un frame para que el layout ocurra
+  requestAnimationFrame(()=>{
+    const snap = snapshotElement(el);
+
+    // Posición final del elemento en pantalla
+    const rect = el.getBoundingClientRect();
+    const dstX = rect.left + rect.width/2;
+    const dstY = rect.top  + rect.height/2;
+    const dstW = rect.width  || snap.w;
+    const dstH = rect.height || snap.h;
+
+    const DURATION = 420; // ms — duración del efecto
+    const SLICES   = 40;  // columnas de distorsión
+    let start = null;
+
+    function frame(ts){
+      if(!start) start = ts;
+      const t = Math.min((ts-start)/DURATION, 1);
+
+      // Easing: ease-out-cubic para apertura
+      const ease = 1 - Math.pow(1-t,3);
+
+      genieCtx.clearRect(0, 0, genieC.width, genieC.height);
+
+      for(let i=0; i<SLICES; i++){
+        const u = i/SLICES;       // 0 (izquierda) → 1 (derecha)
+        const u1= (i+1)/SLICES;
+
+        // Posición X de la columna en destino final
+        const xDst  = dstX - dstW/2 + u  * dstW;
+        const xDst1 = dstX - dstW/2 + u1 * dstW;
+
+        // Posición X en origen (punto de tap = ox)
+        // Interpolamos: al inicio todas las columnas parten de ox
+        const xSrc  = ox + (xDst  - ox) * ease;
+        const xSrc1 = ox + (xDst1 - ox) * ease;
+
+        // Offset vertical sigmoidal — la magia del genio:
+        // Las columnas de arriba llegan tarde, las de abajo llegan antes.
+        // El "retraso" es mayor para las columnas superiores del panel.
+        // Usamos una función sigmoidal que varía por fila (v) y tiempo (t).
+        // Cada slice tiene su propio progreso de altura.
+        const sliceH_dst = dstH;
+
+        // Descomponemos la columna en filas para el warp vertical
+        const ROWS = 30;
+        for(let j=0; j<ROWS; j++){
+          const v  = j/ROWS;    // 0 (top) → 1 (bottom)
+          const v1 = (j+1)/ROWS;
+
+          // El warp: las filas inferiores van más rápido que las superiores
+          // Función de retraso: la fila superior tiene retraso máximo de 0.45 del tiempo,
+          // la inferior no tiene retraso → produce la curva sigmoidal
+          const delay    = (1-v) * 0.45;          // retraso según posición vertical
+          const tLocal   = Math.max(0, Math.min(1, (t - delay) / (1-delay)));
+          const easeLocal= 1 - Math.pow(1-tLocal, 3);
+
+          // Origen Y de esta fila (todas parten de oy)
+          const ySrc  = oy;
+          // Destino Y de esta fila
+          const yDst  = dstY - dstH/2 + v  * sliceH_dst;
+          const yDst1 = dstY - dstH/2 + v1 * sliceH_dst;
+
+          // Posición actual interpolada
+          const yCur  = ySrc + (yDst  - ySrc) * easeLocal;
+          const yCur1 = ySrc + (yDst1 - ySrc) * easeLocal;
+
+          // Escala de opacidad: fade in
+          const alpha = Math.min(1, t * 2);
+          genieCtx.globalAlpha = alpha;
+
+          // Source rect en el snapshot
+          const sx  = u  * snap.w;
+          const sx1 = u1 * snap.w;
+          const sy  = v  * snap.h;
+          const sy1 = v1 * snap.h;
+
+          // Dibujamos el trozo del snapshot distorsionado
+          genieCtx.drawImage(
+            snap.canvas,
+            sx, sy, (sx1-sx), (sy1-sy),
+            xSrc, yCur, (xSrc1-xSrc), (yCur1-yCur)
+          );
+        }
+      }
+      genieCtx.globalAlpha=1;
+
+      if(t<1){
+        genieRAF = requestAnimationFrame(frame);
+      } else {
+        genieC.style.display='none';
+        // Mostrar el elemento real
+        el.style.opacity='';
+        el.style.transition='';
+        el.classList.add('visible');
+      }
+    }
+    genieRAF = requestAnimationFrame(frame);
+  });
+}
+
+/**
+ * Efecto Genio de cierre:
+ * El panel se SUCCIONA hacia el punto (ox,oy).
+ */
+function genieClose(el, ox, oy, mode, onDone){
+  cancelAnimationFrame(genieRAF);
+  genieC.style.display='block';
+  if(mode==='video') genieC.classList.add('video-mode');
+  else genieC.classList.remove('video-mode');
+
+  const snap = snapshotElement(el);
+  const rect  = el.getBoundingClientRect();
+  const srcX  = rect.left + rect.width/2;
+  const srcY  = rect.top  + rect.height/2;
+  const srcW  = rect.width  || snap.w;
+  const srcH  = rect.height || snap.h;
+
+  // Ocultar el elemento HTML inmediatamente
+  el.classList.remove('visible');
+  el.style.opacity='0';
+
+  const DURATION = 360;
+  const SLICES   = 40;
+  let start = null;
+
+  function frame(ts){
+    if(!start) start=ts;
+    const t = Math.min((ts-start)/DURATION, 1);
+
+    // Easing: ease-in-cubic para cierre
+    const ease = Math.pow(t, 2.5);
+
+    genieCtx.clearRect(0,0,genieC.width,genieC.height);
+
+    for(let i=0; i<SLICES; i++){
+      const u  = i/SLICES;
+      const u1 = (i+1)/SLICES;
+
+      const xSrc  = srcX - srcW/2 + u  * srcW;
+      const xSrc1 = srcX - srcW/2 + u1 * srcW;
+      const xDst  = ox + (xSrc  - ox) * (1-ease);
+      const xDst1 = ox + (xSrc1 - ox) * (1-ease);
+
+      const ROWS = 30;
+      for(let j=0; j<ROWS; j++){
+        const v  = j/ROWS;
+        const v1 = (j+1)/ROWS;
+
+        // En el cierre las filas inferiores "se van" primero
+        const delay    = v * 0.45;
+        const tLocal   = Math.max(0, Math.min(1, (t - delay)/(1-delay)));
+        const easeLocal= Math.pow(tLocal, 2.5);
+
+        const ySrc  = srcY - srcH/2 + v  * srcH;
+        const ySrc1 = srcY - srcH/2 + v1 * srcH;
+        const yCur  = ySrc  + (oy - ySrc)  * easeLocal;
+        const yCur1 = ySrc1 + (oy - ySrc1) * easeLocal;
+
+        const alpha = Math.max(0, 1 - t * 1.8);
+        genieCtx.globalAlpha = alpha;
+
+        const sx  = u  * snap.w;
+        const sx1 = u1 * snap.w;
+        const sy  = v  * snap.h;
+        const sy1 = v1 * snap.h;
+
+        genieCtx.drawImage(
+          snap.canvas,
+          sx, sy, (sx1-sx), (sy1-sy),
+          xDst, yCur, (xDst1-xDst), (yCur1-yCur)
+        );
+      }
+    }
+    genieCtx.globalAlpha=1;
+
+    if(t<1){
+      genieRAF = requestAnimationFrame(frame);
+    } else {
+      genieC.style.display='none';
+      el.style.opacity='';
+      if(onDone) onDone();
+    }
+  }
+  genieRAF = requestAnimationFrame(frame);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1048,9 +1175,6 @@ function resizeCanvas(){
 }
 window.addEventListener('resize',resizeCanvas);
 
-// ═══════════════════════════════════════════════════════════════
-//  PRICE TOGGLE
-// ═══════════════════════════════════════════════════════════════
 document.getElementById('tog-price-v').addEventListener('change',e=>{
   showPriceViewer=e.target.checked; redrawViewer();
 });
@@ -1061,42 +1185,29 @@ document.getElementById('tog-price-v').addEventListener('change',e=>{
 function initMusic(){
   if(musicAudio) return;
   musicAudio = new Audio(MUSIC_URL);
-  musicAudio.loop = true;
-  musicAudio.volume = 0.55;
+  musicAudio.loop = true; musicAudio.volume = 0.55;
 }
 function toggleMusic(){
-  initMusic();
-  musicOn = !musicOn;
+  initMusic(); musicOn=!musicOn;
   document.getElementById('music-btn').classList.toggle('on',musicOn);
-  if(musicOn){ musicAudio.play().catch(()=>{}); }
-  else{ musicAudio.pause(); }
+  if(musicOn){ musicAudio.play().catch(()=>{}); } else { musicAudio.pause(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  EFECTOS DE SONIDO
 // ═══════════════════════════════════════════════════════════════
 let audioCtx=null;
-function getAudioCtx(){
-  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  return audioCtx;
-}
+function getAudioCtx(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
 function createReverb(ctx,duration,decay){
   const sr=ctx.sampleRate, len=sr*duration;
   const impulse=ctx.createBuffer(2,len,sr);
-  for(let c=0;c<2;c++){
-    const ch=impulse.getChannelData(c);
-    for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);
-  }
+  for(let c=0;c<2;c++){ const ch=impulse.getChannelData(c); for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay); }
   const conv=ctx.createConvolver(); conv.buffer=impulse; return conv;
 }
-let _reverb=null, _reverbGain=null;
+let _reverb=null,_reverbGain=null;
 function getChain(){
   const ctx=getAudioCtx();
-  if(!_reverb){
-    _reverb=createReverb(ctx,1.8,3.2);
-    _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.75;
-    _reverb.connect(_reverbGain); _reverbGain.connect(ctx.destination);
-  }
+  if(!_reverb){ _reverb=createReverb(ctx,1.8,3.2); _reverbGain=ctx.createGain(); _reverbGain.gain.value=0.75; _reverb.connect(_reverbGain); _reverbGain.connect(ctx.destination); }
   return{reverb:_reverb};
 }
 let hoverCooldown=0;
@@ -1104,110 +1215,99 @@ function playHover(item){
   if(!fxOn||!item) return;
   const now=Date.now(); if(now-hoverCooldown<200) return; hoverCooldown=now;
   const ctx=getAudioCtx(); const{reverb}=getChain();
-  const baseMap={available:659.25, sold:523.25, reserved:493.88, manzana:698.46};
+  const baseMap={available:659.25,sold:523.25,reserved:493.88,manzana:698.46};
   const base=item.type==='manzana'?baseMap.manzana:(baseMap[item.status]||659.25);
   [[base,0.22],[base*2.01,0.10]].forEach(([f,amp],i)=>{
-    const osc=ctx.createOscillator(); osc.type='sine';
-    osc.frequency.value=f;
-    const g=ctx.createGain();
-    const t0=ctx.currentTime+i*.008;
-    g.gain.setValueAtTime(0,t0);
-    g.gain.linearRampToValueAtTime(amp,t0+.015);
-    g.gain.exponentialRampToValueAtTime(0.0001,t0+.32+i*.06);
-    osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+.40);
+    const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.value=f;
+    const g=ctx.createGain(); const t0=ctx.currentTime+i*.008;
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(amp,t0+.015); g.gain.exponentialRampToValueAtTime(0.0001,t0+.32+i*.06);
+    osc.connect(g); g.connect(reverb); osc.start(t0); osc.stop(t0+.40);
   });
 }
 function playSelect(item){
   if(!fxOn||!item) return;
   const ctx=getAudioCtx(); const{reverb}=getChain();
-  const isMz=item.type==='manzana';
-  const root=isMz?349.23:523.25;
+  const isMz=item.type==='manzana'; const root=isMz?349.23:523.25;
   const chord=isMz?[root,root*1.25,root*1.5,root*2]:[root,root*1.2,root*1.5];
   chord.forEach((f,i)=>{
-    const osc=ctx.createOscillator(); osc.type='triangle';
-    osc.frequency.value=f*(1+((Math.random()-.5)*.004));
-    const g=ctx.createGain();
-    const t0=ctx.currentTime+i*.08;
-    g.gain.setValueAtTime(0,t0);
-    g.gain.linearRampToValueAtTime(0.28,t0+.022);
-    g.gain.exponentialRampToValueAtTime(0.0001,t0+1.0+i*.1);
-    osc.connect(g); g.connect(reverb);
-    osc.start(t0); osc.stop(t0+1.2);
+    const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.value=f*(1+((Math.random()-.5)*.004));
+    const g=ctx.createGain(); const t0=ctx.currentTime+i*.08;
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(0.28,t0+.022); g.gain.exponentialRampToValueAtTime(0.0001,t0+1.0+i*.1);
+    osc.connect(g); g.connect(reverb); osc.start(t0); osc.stop(t0+1.2);
   });
 }
-function toggleFx(){
-  fxOn=!fxOn;
-  document.getElementById('fx-btn').classList.toggle('on',fxOn);
-  if(fxOn) getAudioCtx();
-}
+function toggleFx(){ fxOn=!fxOn; document.getElementById('fx-btn').classList.toggle('on',fxOn); if(fxOn) getAudioCtx(); }
 
 // ═══════════════════════════════════════════════════════════════
-//  VIDEO MODAL — Efecto Genio Mac
+//  VIDEO MODAL — con efecto genio real
 // ═══════════════════════════════════════════════════════════════
 let videoModalOpen=false;
-let _videoCloseTimer=null;
 
 function openVideo(idx){
-  const v=VIDEO_SOURCES[idx];
-  if(!v) return;
+  const v=VIDEO_SOURCES[idx]; if(!v) return;
   document.getElementById('video-modal-title').textContent=v.title;
-  const modal=document.getElementById('video-modal');
+  const modal  =document.getElementById('video-modal');
   const overlay=document.getElementById('video-overlay');
 
-  // Limpia iframe anterior y clase closing
   const oldIframe=modal.querySelector('iframe');
   if(oldIframe) oldIframe.remove();
-  overlay.classList.remove('closing');
 
-  const videoEl=document.getElementById('video-player');
-  videoEl.style.display='none';
+  document.getElementById('video-player').style.display='none';
 
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
-  iframe.allow='autoplay; fullscreen; picture-in-picture';
-  iframe.setAttribute('allowfullscreen','');
+  iframe.allow='autoplay; fullscreen; picture-in-picture'; iframe.setAttribute('allowfullscreen','');
   modal.insertBefore(iframe,document.getElementById('video-modal-bar'));
 
   overlay.style.display='flex';
   requestAnimationFrame(()=>requestAnimationFrame(()=>overlay.classList.add('open')));
   videoModalOpen=true;
 
+  // Origen del genio = botón de video que se pulsó (esquina inferior derecha)
+  const btnEl = document.querySelectorAll('.vid-btn')[idx];
+  const btnR  = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-40,top:window.innerHeight-80,width:0,height:0};
+  const ox = btnR.left + btnR.width/2;
+  const oy = btnR.top  + btnR.height/2;
+
+  // El modal aún no tiene dimensiones hasta el próximo frame
+  requestAnimationFrame(()=>{
+    genieOpen(modal, ox, oy, 'video');
+  });
+
   if(musicAudio&&musicOn) musicAudio.volume=0.15;
 }
 
 function closeVideo(){
-  const overlay=document.getElementById('video-overlay');
-  // Activa efecto genio de cierre
-  overlay.classList.remove('open');
-  overlay.classList.add('closing');
-  clearTimeout(_videoCloseTimer);
-  _videoCloseTimer=setTimeout(()=>{
-    overlay.classList.remove('closing');
+  const modal  = document.getElementById('video-modal');
+  const overlay= document.getElementById('video-overlay');
+
+  const btnEl  = document.querySelectorAll('.vid-btn')[0];
+  const btnR   = btnEl ? btnEl.getBoundingClientRect() : {left:window.innerWidth-40,top:window.innerHeight-80,width:0,height:0};
+  const ox = btnR.left + btnR.width/2;
+  const oy = btnR.top  + btnR.height/2;
+
+  genieClose(modal, ox, oy, 'video', ()=>{
+    overlay.classList.remove('open');
     overlay.style.display='none';
-    const modal=document.getElementById('video-modal');
     const iframe=modal.querySelector('iframe');
     if(iframe) iframe.remove();
     document.getElementById('video-player').style.display='none';
     if(musicAudio&&musicOn) musicAudio.volume=0.55;
     videoModalOpen=false;
-  }, 380);
+    modal.classList.remove('visible');
+  });
 }
 
 function handleOverlayClick(e){
   if(e.target===document.getElementById('video-overlay')) closeVideo();
 }
 
-// ── Teclado ──
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    if(videoModalOpen) closeVideo();
-    else clearSelection();
-  }
+  if(e.key==='Escape'){ if(videoModalOpen) closeVideo(); else clearSelection(); }
   if(e.key==='='||e.key==='+') vZoom(1.2);
   if(e.key==='-') vZoom(0.83);
-  if(e.key==='0'&&(e.ctrlKey||e.metaKey)){e.preventDefault();vZoomReset();}
+  if(e.key==='0'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); vZoomReset(); }
 });
 
 // ═══════════════════════════════════════════════════════════════
