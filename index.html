@@ -656,23 +656,12 @@ function getImgRect(c,mode_cover){
 function canvasToImg(cx,cy){
   const lx=(cx-ePanX)/eZoomLevel,ly=(cy-ePanY)/eZoomLevel;
   const r=getImgRect(canvas,false);
-
-  const nx=(lx-r.x)/r.w*imgW;
-  const ny=(ly-r.y)/r.h*imgH;
-
-  return{
-    x: nx/imgW/9.313820001196516,
-    y: ny/imgH/12.760761969778525
-  };
+  return{x:(lx-r.x)/r.w*imgW, y:(ly-r.y)/r.h*imgH};
 }
 
 function imgToCanvas(ix,iy,c,cover){
   const r=getImgRect(c||canvas,cover||false);
-  
-  const nx = ix * 9.313820001196516;
-  const ny = iy * 12.760761969778525;
-
-  return{x:r.x+nx/imgW*r.w, y:r.y+ny/imgH*r.h};
+  return{x:r.x+ix/imgW*r.w, y:r.y+iy/imgH*r.h};
 }
 
 // ═══════════════════════════════════════════════════════════════
