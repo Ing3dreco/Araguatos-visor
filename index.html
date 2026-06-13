@@ -1330,7 +1330,7 @@ function openVideo(idx){
   const iframe=document.createElement('iframe');
   iframe.src=`https://www.youtube.com/embed/${v.ytId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&controls=1`;
   iframe.style.cssText='width:100%;height:56.25vw;min-height:240px;max-height:72vh;border:none;display:block;background:#000';
-  iframe.allow='autoplay; fullscreen; picture-in-picture';
+  iframe.allow = 'autoplay; fullscreen; picture-in-picture; compute-pressure';
   modal.insertBefore(iframe, document.getElementById('video-modal-bar'));
 
   const btnEl = document.getElementById('vid-btn-'+idx);
